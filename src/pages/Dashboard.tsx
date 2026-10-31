@@ -91,11 +91,17 @@ export default function Dashboard() {
 
       {targetExams.length > 0 && <ReadinessPanel exams={targetExams} />}
 
-      <section className="grid grid-cols-2 gap-x-14 gap-y-12 lg:grid-cols-4">
-        <Stat label="Streak" value={streak} hint="days in a row" />
-        <Stat label="Study this week" value={`${studyHours}h`} hint="from Pomodoro sessions" />
-        <Stat label="Tests this week" value={weekAttempts} hint="quizzes & past papers" />
-        <Stat label="SSB sets this week" value={weekSSB} hint="WAT, SRT, TAT…" />
+      <section>
+        <div className="mb-8 flex items-center justify-between gap-3">
+          <h2 className="label text-saffron-400">This week</h2>
+          <a href="#/progress" className="label py-3 text-[11px] text-ink-400 hover:text-fg">Progress report →</a>
+        </div>
+        <div className="grid grid-cols-2 gap-x-14 gap-y-12 lg:grid-cols-4">
+          <Stat label="Streak" value={streak} hint="days in a row" />
+          <Stat label="Study this week" value={`${studyHours}h`} hint="from Pomodoro sessions" />
+          <Stat label="Tests this week" value={weekAttempts} hint="quizzes & past papers" />
+          <Stat label="SSB sets this week" value={weekSSB} hint="WAT, SRT, TAT…" />
+        </div>
       </section>
 
       <section className="grid gap-x-20 gap-y-16 lg:grid-cols-2">

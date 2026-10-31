@@ -33,6 +33,10 @@ export type Attempt = {
   negative?: number
   /** Per-question detail (quizzes from v2 on) — the basis for topic analytics. */
   items?: AttemptItem[]
+  /** Which kind of test (quizzes from v3 on; older quizzes count as topic tests). */
+  mode?: 'quick' | 'topic' | 'sectional' | 'mock' | 'weekly'
+  /** Weekly quiz: Monday (local ISO date) of its week. */
+  week?: string
 }
 export type AttemptItem = {
   qid: string
@@ -146,18 +150,22 @@ export function updateSetting<T>(key: string, fallback: T, fn: (v: T) => T) {
   })
 }
 
-/** Days (local ISO) on which anything was practised, newest first. */
-export async function activeDays(): Promise<Set<string>> {
-  const days = new Set<string>()
+/** How much was done on each day (local ISO date → tasks, sessions, tests, reviews, SSB sets and essays). */
+export async function activityByDay(): Promise<Map<string, number>> {
+  const days = new Map<string, number>()
+  const add = (day: string) => days.set(day, (days.get(day) ?? 0) + 1)
   const toDay = (ms: number) => isoOf(new Date(ms))
-  ;(await db.tasks.toArray()).forEach(t => t.done && t.doneAt && days.add(toDay(t.doneAt)))
-  ;(await db.sessions.toArray()).forEach(s => days.add(s.date))
-  ;(await db.attempts.toArray()).forEach(a => days.add(toDay(a.at)))
-  ;(await db.ssb.toArray()).forEach(r => days.add(toDay(r.at)))
-  ;(await db.writings.toArray()).forEach(w => days.add(toDay(w.at)))
-  ;(await db.reviews.toArray()).forEach(r => days.add(toDay(r.at)))
+  ;(await db.tasks.toArray()).forEach(t => t.done && t.doneAt && add(toDay(t.doneAt)))
+  ;(await db.sessions.toArray()).forEach(s => add(s.date))
+  ;(await db.attempts.toArray()).forEach(a => add(toDay(a.at)))
+  ;(await db.ssb.toArray()).forEach(r => add(toDay(r.at)))
+  ;(await db.writings.toArray()).forEach(w => add(toDay(w.at)))
+  ;(await db.reviews.toArray()).forEach(r => add(toDay(r.at)))
   return days
 }
+
+/** Days (local ISO) on which anything was practised. */
+export const activeDays = async () => new Set((await activityByDay()).keys())
 
 export function streakFrom(days: Set<string>) {
   let d = todayISO()
@@ -165,6 +173,18 @@ export function streakFrom(days: Set<string>) {
   let n = 0
   while (days.has(d)) { n++; d = addDays(d, -1) }
   return n
+}
+
+/** Longest run of consecutive active days ever. */
+export function bestStreak(days: Set<string>) {
+  let best = 0
+  for (const d of days) {
+    if (days.has(addDays(d, -1))) continue // not the first day of a run
+    let n = 1
+    while (days.has(addDays(d, n))) n++
+    best = Math.max(best, n)
+  }
+  return best
 }
 
 // ── Backups & storage health ──────────────────────────────────────

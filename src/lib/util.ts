@@ -10,6 +10,12 @@ export function addDays(iso: string, days: number) {
   return isoOf(d)
 }
 
+/** Monday (local ISO date) of the week that contains `iso`. */
+export function weekStart(iso = todayISO()) {
+  const dow = (new Date(iso + 'T00:00:00').getDay() + 6) % 7
+  return addDays(iso, -dow)
+}
+
 export function daysUntil(iso: string) {
   const ms = new Date(iso + 'T00:00:00').getTime() - new Date(todayISO() + 'T00:00:00').getTime()
   return Math.round(ms / 86_400_000)

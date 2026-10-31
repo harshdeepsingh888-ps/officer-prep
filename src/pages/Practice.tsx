@@ -11,13 +11,13 @@ export default function Practice({ sub }: { sub?: string }) {
   const tab: Tab = sub === 'papers' || sub === 'mine' ? sub : sub === 'analytics' || sub === 'history' ? 'analytics' : 'quiz'
   return (
     <div>
-      <PageHeader title="Practice" subtitle="Custom tests with real negative marking, official past papers on an OMR sheet, your own question bank, and analytics that show where marks are slipping." />
+      <PageHeader title="Practice" subtitle="Quick tests, sectional tests and full mocks in each exam's pattern with real negative marking, a weekly quiz, official PYQ papers on an OMR sheet, and analytics that show where marks are slipping." />
       <Tabs<Tab>
         value={tab}
         onChange={t => go(t === 'quiz' ? 'practice' : `practice/${t}`)}
         tabs={[
-          { id: 'quiz', label: 'Test' },
-          { id: 'papers', label: 'Past papers (OMR)' },
+          { id: 'quiz', label: 'Tests' },
+          { id: 'papers', label: 'PYQ papers' },
           { id: 'mine', label: 'My questions' },
           { id: 'analytics', label: 'Analytics' },
         ]}

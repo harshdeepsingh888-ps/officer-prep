@@ -11,6 +11,7 @@ import Study from './pages/Study'
 import Planner from './pages/Planner'
 import Practice from './pages/Practice'
 import Revise from './pages/Revise'
+import Progress from './pages/Progress'
 import SSB from './pages/SSB'
 import Writing from './pages/Writing'
 import Library from './pages/Library'
@@ -22,6 +23,7 @@ const NAV = [
   { id: 'planner', label: 'Planner' },
   { id: 'practice', label: 'Practice' },
   { id: 'revise', label: 'Revise' },
+  { id: 'progress', label: 'Progress' },
   { id: 'ssb', label: 'SSB' },
   { id: 'writing', label: 'Writing' },
   { id: 'documents', label: 'Documents' },
@@ -36,7 +38,7 @@ export default function App() {
   const page = route[0] === 'syllabus' ? 'study' : (route[0] ?? '')
   const tabletNav = useRef<HTMLElement>(null)
 
-  // Tablets: the nav row scrolls sideways, so bring the current page's link into view.
+  // Tablets: the nav row may scroll sideways, so bring the current page's link into view.
   useEffect(() => {
     const nav = tabletNav.current
     const el = nav?.querySelector<HTMLElement>('[aria-current=page]')
@@ -51,6 +53,7 @@ export default function App() {
       case 'planner': return <Planner />
       case 'practice': return <Practice sub={route[1]} />
       case 'revise': return <Revise sub={route[1]} />
+      case 'progress': return <Progress />
       case 'ssb': return <SSB sub={route[1]} />
       case 'writing': return <Writing />
       case 'documents': return <Documents />
@@ -80,13 +83,12 @@ export default function App() {
               <Logo />
               <span className="text-[15px] font-medium tracking-tight text-fg">Officer Prep</span>
             </a>
-            <nav className="hidden gap-6 xl:flex">{navLinks}</nav>
             <div className="flex items-center gap-2">
               <InstallButton />
               <ThemeToggle />
             </div>
           </div>
-          <nav ref={tabletNav} className="relative -mx-8 mt-3 hidden gap-4 overflow-x-auto px-8 [scrollbar-width:none] md:flex lg:-mx-10 lg:justify-between lg:px-10 xl:hidden [&::-webkit-scrollbar]:hidden">{navLinks}</nav>
+          <nav ref={tabletNav} className="relative -mx-8 mt-3 hidden gap-4 overflow-x-auto px-8 [scrollbar-width:none] md:flex lg:-mx-10 lg:justify-between lg:px-10 [&::-webkit-scrollbar]:hidden">{navLinks}</nav>
         </header>
         <main className="pb-[calc(7rem+env(safe-area-inset-bottom))] pt-2 md:pb-28 md:pt-4">{view}</main>
       </div>

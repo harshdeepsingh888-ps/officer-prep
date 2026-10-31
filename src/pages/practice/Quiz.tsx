@@ -1,72 +1,44 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { BUILTIN_QUESTIONS, DIFFICULTY_LABEL, difficultyOf, type Difficulty, type Question } from '../../data/questions'
-import { EXAMS, examById, type ExamId } from '../../data/exams'
-import { shuffle } from '../../data/ssb'
+import { BUILTIN_QUESTIONS, DIFFICULTY_LABEL, difficultyOf, type Question } from '../../data/questions'
+import { examById, type ExamId } from '../../data/exams'
 import { db, useSetting, type AttemptItem, type MistakeReason } from '../../lib/db'
 import { useCountdown } from '../../lib/hooks'
-import { REASONS, recordQuizMistakes, type QuizPreset } from '../../lib/learning'
+import { REASONS, recordQuizMistakes } from '../../lib/learning'
+import { MODE_LABEL, buildMock, buildQuick, buildSectional, buildTopic, buildWeekly, type Pools, type Run, type TestSpec } from '../../lib/tests'
 import { fmtClock, round2 } from '../../lib/util'
-import { Badge, Button, Card, Empty, Passage, Stat, TimerBar, inputBase, inputCls, labelCls } from '../../components/ui'
+import { Badge, Button, Card, Empty, Passage, Stat, TimerBar, inputBase } from '../../components/ui'
+import { TestMenu } from './TestMenu'
 
-const SUBJECTS = ['All', 'English', 'General Knowledge', 'Mathematics', 'Reasoning']
 const RUN_KEY = 'quizRun'
 
-/** An in-progress test — saved after every change so a reload or closed tab can resume it. */
-type Run = {
-  examId: ExamId
-  title: string
-  qs: Question[]
-  answers: (number | null)[]
-  marked: boolean[]
-  ms: number[]
-  changes: number[]
-  idx: number
-  startedAt: number
-  deadline: number | null
-}
 type Result = { run: Run; items: AttemptItem[]; correct: number; wrong: number; skipped: number; score: number; maxScore: number; durationSec: number; saved: number }
 
 export default function Quiz() {
   const [targets] = useSetting<string[]>('targets', [])
   const userQs = useLiveQuery(() => db.questions.toArray(), []) ?? []
   const mistakeQs = useLiveQuery(async () => (await db.mistakes.where('status').equals('active').toArray()).flatMap(m => (m.question ? [m.question] : [])), []) ?? []
+  const attempts = useLiveQuery(() => db.attempts.toArray(), []) ?? []
+  const rows = useLiveQuery(() => db.topics.toArray(), []) ?? []
   const savedRun = useLiveQuery(async () => ((await db.settings.get(RUN_KEY))?.value as Run | undefined) ?? null, [])
 
   const [examSel, setExamSel] = useState('')
   const examId = (examSel || targets[0] || 'cds') as ExamId
-  const exam = examById(examId)!
-  const [source, setSource] = useState<NonNullable<QuizPreset['source']>>('all')
-  const [subject, setSubject] = useState('All')
-  const [topic, setTopic] = useState('')
-  const [difficulty, setDifficulty] = useState<Difficulty | 0>(0)
-  const [count, setCount] = useState(20)
-  const [timed, setTimed] = useState(true)
 
   const [run, setRun] = useState<Run | null>(null)
   const [result, setResult] = useState<Result | null>(null)
   const entered = useRef(Date.now())
 
-  // A preset from the dashboard, analytics or mistake notebook ("practise this topic").
-  useEffect(() => {
-    db.settings.get('quizPreset').then(row => {
-      if (!row) return
-      const p = row.value as QuizPreset
-      if (p.exam) setExamSel(p.exam)
-      if (p.source) setSource(p.source)
-      setSubject(p.subject ?? 'All')
-      setTopic(p.topic ?? '')
-      setDifficulty((p.difficulty ?? 0) as Difficulty | 0)
-      db.settings.delete('quizPreset')
-    })
-  }, [])
+  const mine: Question[] = userQs.map(u => ({ ...u, id: `u${u.id}` }))
+  const pools: Pools = { bank: [...BUILTIN_QUESTIONS, ...mine], mine, mistakes: mistakeQs }
 
-  const all: Question[] = source === 'mistakes' ? mistakeQs
-    : source === 'mine' ? userQs.map(u => ({ ...u, id: `u${u.id}` }))
-    : [...BUILTIN_QUESTIONS, ...userQs.map(u => ({ ...u, id: `u${u.id}` }))]
-  const bySubject = all.filter(q => (source === 'mistakes' || q.exams.includes(examId)) && (subject === 'All' || q.subject === subject))
-  const topics = [...new Set(bySubject.map(q => q.topic))].sort()
-  const pool = bySubject.filter(q => (!topic || q.topic === topic) && (!difficulty || difficultyOf(q) === difficulty))
+  /** Builds a fresh test from its recipe. */
+  const make = (s: TestSpec): Run =>
+    s.mode === 'quick' ? buildQuick(s.exam, pools.bank)
+    : s.mode === 'mock' ? buildMock(s.mock, pools.bank)
+    : s.mode === 'sectional' ? buildSectional(s.mock, s.section, pools.bank)
+    : s.mode === 'weekly' ? buildWeekly(s.exam, pools.bank, { attempts, rows, mistakes: mistakeQs })
+    : buildTopic(s, pools)
 
   // Persist the running test.
   useEffect(() => { if (run && !result) db.settings.put({ key: RUN_KEY, value: run }) }, [run, result])
@@ -83,9 +55,11 @@ export default function Quiz() {
   const addTime = (r: Run, spent: number): Run => ({ ...r, ms: r.ms.map((v, i) => (i === r.idx ? v + spent : v)) })
 
   const begin = (r: Run) => {
+    if (!r.qs.length) return
     setResult(null)
     entered.current = Date.now()
     setRun(r)
+    window.scrollTo(0, 0)
     if (r.deadline) {
       const left = Math.round((r.deadline - Date.now()) / 1000)
       if (left <= 0) { finish(r); return }
@@ -93,20 +67,10 @@ export default function Quiz() {
     } else timer.stop()
   }
 
-  const start = () => {
-    const qs = shuffle(pool).slice(0, count)
-    const label = topic || (subject === 'All' ? 'Mixed' : subject)
-    begin({
-      examId, title: `Quiz · ${exam.short} · ${label}${source === 'mistakes' ? ' · my mistakes' : ''}`, qs,
-      answers: qs.map(() => null), marked: qs.map(() => false), ms: qs.map(() => 0), changes: qs.map(() => 0),
-      idx: 0, startedAt: Date.now(), deadline: timed ? Date.now() + qs.length * 60_000 : null,
-    })
-  }
-
   async function finish(raw: Run) {
     timer.stop()
     const r = addTime(raw, takeTime())
-    const ex = examById(r.examId)!
+    const marks = r.marks ?? examById(r.examId)!.marking
     const items: AttemptItem[] = r.qs.map((q, i) => ({
       qid: q.id, subject: q.subject, topic: q.topic, answer: r.answers[i],
       correct: r.answers[i] === null ? null : r.answers[i] === q.answer, ms: r.ms[i], marked: r.marked[i] || undefined, changes: r.changes[i] || undefined,
@@ -114,11 +78,11 @@ export default function Quiz() {
     const correct = items.filter(i => i.correct === true).length
     const wrong = items.filter(i => i.correct === false).length
     const skipped = items.length - correct - wrong
-    const score = round2(correct * ex.marking.correct - wrong * ex.marking.wrong)
-    const maxScore = round2(items.length * ex.marking.correct)
+    const score = round2(correct * marks.correct - wrong * marks.wrong)
+    const maxScore = round2(items.length * marks.correct)
     const durationSec = Math.round((Date.now() - r.startedAt) / 1000)
     await db.attempts.add({
-      kind: 'quiz', exam: r.examId, title: r.title, at: Date.now(), durationSec, total: items.length, responses: r.answers,
+      kind: 'quiz', mode: r.mode ?? 'topic', week: r.week, exam: r.examId, title: r.title, at: Date.now(), durationSec, total: items.length, responses: r.answers,
       correct, wrong, skipped, score, maxScore, items,
       wrongTopics: items.filter(i => i.correct === false).map(i => `${i.subject} · ${i.topic}`),
     })
@@ -175,63 +139,15 @@ export default function Quiz() {
             <Button variant="ghost" onClick={() => db.settings.delete(RUN_KEY)}>Discard</Button>
           </div>
         )}
-        <Card>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div>
-              <label className={labelCls}>Exam (sets marking)</label>
-              <select className={inputCls} value={examId} onChange={e => setExamSel(e.target.value)}>
-                {EXAMS.map(e => <option key={e.id} value={e.id}>{e.short}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Questions from</label>
-              <select className={inputCls} value={source} onChange={e => { setSource(e.target.value as typeof source); setTopic('') }}>
-                <option value="all">Whole bank</option>
-                <option value="mine">My questions only</option>
-                <option value="mistakes">My mistakes ({mistakeQs.length})</option>
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Subject</label>
-              <select className={inputCls} value={subject} onChange={e => { setSubject(e.target.value); setTopic('') }}>
-                {SUBJECTS.map(s => <option key={s}>{s}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Topic</label>
-              <select className={inputCls} value={topic} onChange={e => setTopic(e.target.value)}>
-                <option value="">All topics</option>
-                {topics.map(t => <option key={t}>{t}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Difficulty</label>
-              <select className={inputCls} value={difficulty} onChange={e => setDifficulty(Number(e.target.value) as Difficulty | 0)}>
-                <option value={0}>Any</option>
-                {([1, 2, 3] as Difficulty[]).map(d => <option key={d} value={d}>{DIFFICULTY_LABEL[d]}</option>)}
-              </select>
-            </div>
-            <div>
-              <label className={labelCls}>Questions</label>
-              <select className={inputCls} value={count} onChange={e => setCount(Number(e.target.value))}>
-                {[10, 20, 30, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
-              </select>
-            </div>
-            <label className="flex items-end gap-2 pb-2.5 text-sm sm:col-span-2">
-              <input type="checkbox" className="size-4 accent-iris-500" checked={timed} onChange={e => setTimed(e.target.checked)} /> Timed (1 min / question)
-            </label>
-          </div>
-          <p className="mt-5 text-sm text-ink-400">
-            {pool.length} questions match · marking {exam.marking.label}.
-            {pool.length < count && source !== 'mistakes' && ' Add or paste your own under My questions to grow the bank.'}
-          </p>
-          <Button className="mt-6" size="lg" disabled={pool.length === 0} onClick={start}>Start {Math.min(count, pool.length)}-question test</Button>
-        </Card>
+        <TestMenu examId={examId} setExam={setExamSel} pools={pools} onStart={s => begin(make(s))} />
       </div>
     )
   }
 
-  if (result) return <ResultView result={result} onAgain={start} onSettings={() => setResult(null)} />
+  if (result) {
+    const spec = result.run.spec
+    return <ResultView result={result} onAgain={spec ? () => begin(make(spec)) : undefined} onBack={() => setResult(null)} />
+  }
 
   // ── Running ──
   const r = run!
@@ -241,6 +157,7 @@ export default function Quiz() {
   return (
     <div className="space-y-14">
       <Card>
+        <div className="label mb-3 text-[11px] text-saffron-400">{r.title}</div>
         <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-ink-400">
           <span className="flex items-center gap-2">
             Question {r.idx + 1} of {r.qs.length} · {q.subject} · {q.topic}
@@ -248,7 +165,7 @@ export default function Quiz() {
           </span>
           <span>{answered} answered{markedCount ? ` · ${markedCount} marked` : ''}</span>
         </div>
-        {r.deadline && <TimerBar remaining={timer.remaining} total={r.qs.length * 60} />}
+        {r.deadline && <TimerBar remaining={timer.remaining} total={r.seconds ?? r.qs.length * 60} />}
         {q.passage && <Passage text={q.passage} />}
         <div className="mt-6 text-[clamp(1.5rem,2.6vw,2rem)] font-normal leading-snug tracking-tight text-fg">{q.text}</div>
         <div className="mt-8 grid gap-2.5">
@@ -290,7 +207,7 @@ export default function Quiz() {
   )
 }
 
-function ResultView({ result, onAgain, onSettings }: { result: Result; onAgain: () => void; onSettings: () => void }) {
+function ResultView({ result, onAgain, onBack }: { result: Result; onAgain?: () => void; onBack: () => void }) {
   const { run, items } = result
   const exam = examById(run.examId)!
   const [filter, setFilter] = useState<'all' | 'wrong' | 'skipped' | 'marked'>('all')
@@ -313,12 +230,18 @@ function ResultView({ result, onAgain, onSettings }: { result: Result; onAgain: 
 
   return (
     <div className="space-y-14">
+      <div className="flex flex-wrap items-center gap-3">
+        <Badge tone="iris">{MODE_LABEL[run.mode ?? 'topic']}</Badge>
+        <span className="text-ink-200">{run.title}</span>
+      </div>
       <section className="grid grid-cols-2 gap-x-14 gap-y-10 md:grid-cols-4">
-        <Stat label="Score" value={`${result.score} / ${result.maxScore}`} hint={exam.marking.label} />
+        <Stat label="Score" value={`${result.score} / ${result.maxScore}`} hint={run.marks ? `+${round2(run.marks.correct)} / −${round2(run.marks.wrong)} a question` : exam.marking.label} />
         <Stat label="Accuracy" value={`${attempted ? Math.round((result.correct / attempted) * 100) : 0}%`} hint={`${attempted} attempted`} />
         <Stat label="Right · Wrong · Skipped" value={`${result.correct} · ${result.wrong} · ${result.skipped}`} />
         <Stat label="Time" value={fmtClock(result.durationSec)} hint={`${avgSec}s per question on average`} />
       </section>
+
+      {run.note && <p className="max-w-2xl text-sm text-ink-400">{run.note}</p>}
 
       {result.saved > 0 && (
         <p className="text-lead font-extralight text-ink-300">
@@ -328,8 +251,9 @@ function ResultView({ result, onAgain, onSettings }: { result: Result; onAgain: 
       )}
 
       <div className="flex flex-wrap gap-2">
-        <Button onClick={onAgain}>New set, same settings</Button>
-        <Button variant="subtle" onClick={onSettings}>Change settings</Button>
+        {onAgain && <Button onClick={onAgain}>New set, same settings</Button>}
+        <Button variant="subtle" onClick={onBack}>Back to tests</Button>
+        <a href="#/progress"><Button variant="ghost">Progress report →</Button></a>
       </div>
 
       <Card title="By topic">

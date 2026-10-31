@@ -1,5 +1,5 @@
 import type { Exam } from '../data/exams'
-import type { Attempt, Card, Review, TopicProgress } from './db'
+import type { Attempt, Card, Review, SSBResponse, StudySession, Task, TopicProgress, Writing } from './db'
 import { addDays, isoOf, todayISO } from './util'
 import { startOfDay } from './srs'
 
@@ -44,6 +44,37 @@ export function coverage(exam: Exam, rows: TopicProgress[]) {
   const total = exam.syllabus.reduce((s, x) => s + x.topics.length, 0)
   const score = rows.filter(r => r.exam === exam.id).reduce((s, r) => s + r.status, 0)
   return total ? score / (total * 3) : 0
+}
+
+/** Each syllabus subject of an exam: share of the way to "mastered", and topics revised or mastered. */
+export function subjectCoverage(exam: Exam, rows: TopicProgress[]) {
+  const status = new Map(rows.filter(r => r.exam === exam.id).map(r => [r.id, r.status]))
+  return exam.syllabus.map(s => {
+    const st = s.topics.map(t => status.get(`${exam.id}|${s.subject}|${t}`) ?? 0)
+    return { subject: s.subject, pct: st.length ? st.reduce((n, x) => n + x, 0) / (st.length * 3) : 0, done: st.filter(x => x >= 2).length, total: st.length }
+  })
+}
+
+export type PeriodStats = { studyMin: number; tests: number; answered: number; right: number; reviews: number; topics: number; tasks: number; ssb: number; writing: number }
+export type History = { attempts: Attempt[]; sessions: StudySession[]; reviews: Review[]; rows: TopicProgress[]; tasks: Task[]; ssb: SSBResponse[]; writings: Writing[] }
+
+/** What got done between two moments (from inclusive, to exclusive). */
+export function periodStats(from: number, to: number, d: History): PeriodStats {
+  const inside = (ms: number) => ms >= from && ms < to
+  const firstDay = isoOf(new Date(from)), lastDay = isoOf(new Date(to - 1))
+  const tests = d.attempts.filter(a => inside(a.at))
+  return {
+    studyMin: d.sessions.filter(s => s.date >= firstDay && s.date <= lastDay).reduce((n, s) => n + s.minutes, 0),
+    tests: tests.length,
+    answered: tests.reduce((n, a) => n + (a.correct ?? 0) + (a.wrong ?? 0), 0),
+    right: tests.reduce((n, a) => n + (a.correct ?? 0), 0),
+    reviews: d.reviews.filter(r => inside(r.at)).length,
+    // One status change writes a guide and its syllabus entries with the same timestamp: count changes, not rows.
+    topics: new Set(d.rows.filter(r => r.status > 0 && inside(r.updatedAt)).map(r => r.updatedAt)).size,
+    tasks: d.tasks.filter(t => t.done && t.doneAt && inside(t.doneAt)).length,
+    ssb: d.ssb.filter(r => inside(r.at)).length,
+    writing: d.writings.filter(w => inside(w.at)).length,
+  }
 }
 
 export type Readiness = { score: number; parts: { label: string; value: number; weight: number; hint: string }[]; hasTests: boolean }
