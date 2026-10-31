@@ -2,7 +2,8 @@
 // Runs in the deploy workflow twice a day; `npm run news` runs it locally. Only titles, a short summary and the
 // link are kept: every headline links back to the publisher's article.
 //
-// PIB blocks automated requests, so it isn't fetched here; the app links to it for reading in the browser.
+// PIB blocks automated requests, and Indian Express blocks GitHub's servers, so neither is fetched here;
+// the app links to PIB and other official sources for reading in the browser.
 
 import { mkdir, readFile, writeFile } from 'node:fs/promises'
 
@@ -18,12 +19,11 @@ const SOURCES = [
   { source: 'The Hindu', desk: 'science', url: 'https://www.thehindu.com/sci-tech/feeder/default.rss' },
   { source: 'The Hindu', desk: 'environment', url: 'https://www.thehindu.com/sci-tech/energy-and-environment/feeder/default.rss' },
   { source: 'The Hindu', desk: 'sports', url: 'https://www.thehindu.com/sport/feeder/default.rss' },
-  { source: 'Indian Express', desk: 'national', url: 'https://indianexpress.com/section/india/feed/' },
-  { source: 'Indian Express', desk: 'international', url: 'https://indianexpress.com/section/world/feed/' },
+  { source: 'The Hindu', desk: 'editorial', url: 'https://www.thehindu.com/opinion/editorial/feeder/default.rss' },
 ]
 
 // Most headlines a category keeps per day, best first.
-const CAP = { national: 15, international: 12, defence: 15, economy: 10, science: 8, environment: 8, sports: 8, appointments: 8 }
+const CAP = { national: 15, international: 12, defence: 15, economy: 10, science: 8, environment: 8, sports: 8, appointments: 8, editorial: 6 }
 
 // India context: international, economy and science stories that involve India rank first.
 const INDIA = /\b(india|indian|indians|new delhi|modi|jaishankar|rajnath)\b/i
@@ -63,7 +63,8 @@ function categorise({ source, desk }, title, summary, feedCategories) {
 
   let category
   let score = 0
-  if (defence) { category = 'defence'; score += 2 }
+  if (desk === 'editorial') category = 'editorial' // the paper's view on the day's big issues: essay material
+  else if (defence) { category = 'defence'; score += 2 }
   else if (APPOINTMENT.test(title) && (desk === 'international' || national)) category = 'appointments'
   else if (desk === 'national') {
     // The Hindu files Union-level stories under "India"; anything else needs a national hook.
@@ -130,5 +131,5 @@ const items = [...groups.entries()]
   .sort((a, b) => b.published.localeCompare(a.published))
 
 await mkdir(new URL('.', OUT), { recursive: true })
-await writeFile(OUT, JSON.stringify({ generatedAt: new Date().toISOString(), sources: [...new Set(SOURCES.map(s => s.source))], items }))
+await writeFile(OUT, JSON.stringify({ generatedAt: new Date().toISOString(), sources: [...new Set(items.map(i => i.source))], items }))
 console.log(`Wrote ${items.length} headlines (${fresh.length} relevant fetched now) to public/news/latest.json`)

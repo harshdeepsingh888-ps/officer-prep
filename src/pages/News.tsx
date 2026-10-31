@@ -18,6 +18,7 @@ export const NEWS_CATEGORIES = [
   { id: 'environment', label: 'Environment' },
   { id: 'sports', label: 'Sports' },
   { id: 'appointments', label: 'Appointments & awards' },
+  { id: 'editorial', label: 'Editorials' },
   { id: 'static', label: 'Static GK' }, // notes only
 ]
 const labelOf = (id: string) => NEWS_CATEGORIES.find(c => c.id === id)?.label ?? id
