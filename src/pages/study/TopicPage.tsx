@@ -1,4 +1,5 @@
 import { Fragment, type ReactNode } from 'react'
+import { hasGenerators } from '../../data/generators'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { examById, type ExamId } from '../../data/exams'
 import { guideRows, guideStatus, type Guide, type NoteBlock } from '../../data/study'
@@ -102,7 +103,9 @@ export default function TopicPage({ guide: g }: { guide: Guide }) {
           <Card title="Practise">
             {g.questions.length > 0 ? (
               <>
-                <p className="mb-4 text-sm text-ink-400">{g.questions.length} questions on this topic, from easy to exam level. Wrong answers go to your mistake notebook automatically.</p>
+                <p className="mb-4 text-sm text-ink-400">
+                  {g.questions.length} questions on this topic, from easy to exam level{hasGenerators({ subject: g.subject, topic: g.topic }) ? ', plus endless freshly generated ones with new numbers every time' : ''}. Wrong answers go to your mistake notebook automatically.
+                </p>
                 <Button size="lg" onClick={() => openQuiz({ subject: g.subject, topic: g.topic, exam })}>Practise {g.topic}</Button>
               </>
             ) : (

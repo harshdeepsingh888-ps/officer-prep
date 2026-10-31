@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { EXAMS, examById, type ExamId } from '../../data/exams'
 import { DIFFICULTY_LABEL, type Difficulty } from '../../data/questions'
+import { generatedTopics, hasGenerators } from '../../data/generators'
 import { mocksFor } from '../../data/patterns'
 import { db } from '../../lib/db'
 import { go } from '../../lib/hooks'
@@ -105,7 +106,7 @@ function MockPanel({ examId, pools, onStart }: { examId: ExamId; pools: Pools; o
       </p>
       <table className="mt-6 w-full max-w-xl text-sm">
         <thead className="text-left text-xs text-ink-500">
-          <tr><th className="pb-2 font-medium">Section</th><th className="pb-2 text-right font-medium">In the paper</th><th className="pb-2 text-right font-medium">In your bank</th></tr>
+          <tr><th className="pb-2 font-medium">Section</th><th className="pb-2 text-right font-medium">In the paper</th><th className="pb-2 text-right font-medium">Available</th></tr>
         </thead>
         <tbody className="divide-y divide-fg/[0.06]">
           {rows.map(({ s, have }) => (
@@ -155,8 +156,13 @@ function SectionalPanel({ examId, pools, onStart }: { examId: ExamId; pools: Poo
 
 function TopicPanel({ spec, setSpec, pools, onStart }: { spec: TopicSpec; setSpec: (f: (s: TopicSpec) => TopicSpec) => void; pools: Pools; onStart: (s: TestSpec) => void }) {
   const set = (patch: Partial<TopicSpec>) => setSpec(s => ({ ...s, ...patch }))
-  const topics = [...new Set(topicPool({ ...spec, topic: '', difficulty: 0 }, pools).map(q => q.topic))].sort()
-  const pool = topicPool(spec, pools)
+  const generating = spec.source === 'all' || spec.source === 'generated'
+  const fixedTopics = spec.source === 'generated' ? [] : topicPool({ ...spec, topic: '', difficulty: 0 }, pools).map(q => q.topic)
+  const topics = [...new Set([...fixedTopics, ...(generating ? generatedTopics(spec.subject) : [])])].sort()
+  const subjects = SUBJECTS.filter(s => spec.source !== 'generated' || s === 'All' || hasGenerators({ subject: s }))
+  const pool = spec.source === 'generated' ? [] : topicPool(spec, pools)
+  const gen = generating && hasGenerators({ subject: spec.subject, topic: spec.topic || undefined, exam: spec.exam, difficulty: spec.difficulty || undefined })
+  const n = gen ? spec.count : Math.min(spec.count, pool.length)
   const exam = examById(spec.exam)!
   return (
     <Card title="Topic test">
@@ -167,12 +173,13 @@ function TopicPanel({ spec, setSpec, pools, onStart }: { spec: TopicSpec; setSpe
             <option value="all">Whole bank</option>
             <option value="mine">My questions only</option>
             <option value="mistakes">My mistakes ({pools.mistakes.length})</option>
+            <option value="generated">Generated only (Maths, Reasoning)</option>
           </select>
         </div>
         <div>
           <label className={labelCls}>Subject</label>
           <select className={inputCls} value={spec.subject} onChange={e => set({ subject: e.target.value, topic: '' })}>
-            {SUBJECTS.map(s => <option key={s}>{s}</option>)}
+            {subjects.map(s => <option key={s}>{s}</option>)}
           </select>
         </div>
         <div>
@@ -200,10 +207,13 @@ function TopicPanel({ spec, setSpec, pools, onStart }: { spec: TopicSpec; setSpe
         </label>
       </div>
       <p className="mt-5 text-sm text-ink-400">
-        {pool.length} questions match · marking {exam.marking.label}.
-        {pool.length < spec.count && spec.source !== 'mistakes' && ' Add or paste your own under My questions to grow the bank.'}
+        {spec.source === 'generated'
+          ? gen ? 'Every question is generated fresh, with new numbers each time.' : 'Generated questions cover Maths and Reasoning only.'
+          : `${pool.length} questions in the bank match${gen ? ', and at least half the test is freshly generated' : ''}.`}
+        {' '}Marking {exam.marking.label}.
+        {!gen && pool.length < spec.count && spec.source !== 'mistakes' && ' Add or paste your own under My questions to grow the bank.'}
       </p>
-      <Button className="mt-6" size="lg" disabled={pool.length === 0} onClick={() => onStart(spec)}>Start {Math.min(spec.count, pool.length)}-question test</Button>
+      <Button className="mt-6" size="lg" disabled={n === 0} onClick={() => onStart(spec)}>Start {n}-question test</Button>
     </Card>
   )
 }

@@ -1,4 +1,5 @@
 import { examById, type ExamId } from '../data/exams'
+import { generate, hasGenerators } from '../data/generators'
 import { mockById, type MockPaper } from '../data/patterns'
 import { difficultyOf, type Question } from '../data/questions'
 import { shuffle } from '../data/ssb'
@@ -12,7 +13,7 @@ export type TestMode = 'quick' | 'topic' | 'sectional' | 'mock' | 'weekly'
 export const MODE_LABEL: Record<TestMode, string> = { quick: 'Quick 10', topic: 'Topic test', sectional: 'Sectional', mock: 'Mock', weekly: 'Weekly quiz' }
 
 export type TopicSpec = {
-  mode: 'topic'; exam: ExamId; source: 'all' | 'mine' | 'mistakes'; subject: string; topic: string; difficulty: number; count: number; timed: boolean
+  mode: 'topic'; exam: ExamId; source: 'all' | 'mine' | 'mistakes' | 'generated'; subject: string; topic: string; difficulty: number; count: number; timed: boolean
 }
 /** What a test was built from, so "New set" can build another one like it. */
 export type TestSpec =
@@ -67,7 +68,18 @@ function draw(bank: Question[], exam: ExamId, subject: Question['subject'], n: n
   const fit = bank.filter(q => q.subject === subject)
   return [...shuffle(fit.filter(q => q.exams.includes(exam))), ...shuffle(fit.filter(q => !q.exams.includes(exam)))].slice(0, n)
 }
-export const available = (bank: Question[], subject: Question['subject']) => bank.filter(q => q.subject === subject).length
+/**
+ * A section's questions. Subjects with generators (Maths, Reasoning) take half from the bank and half freshly
+ * generated, so every mock and sectional is new; other subjects come from the bank only.
+ */
+function sectionQuestions(bank: Question[], exam: ExamId, subject: Question['subject'], n: number) {
+  if (!hasGenerators({ subject, exam })) return draw(bank, exam, subject, n)
+  const fixed = draw(bank, exam, subject, Math.ceil(n / 2))
+  return shuffle([...fixed, ...generate(n - fixed.length, { subject, exam })])
+}
+/** How many questions a section can draw on: unlimited where questions are generated. */
+export const available = (bank: Question[], subject: Question['subject']) =>
+  hasGenerators({ subject }) ? Infinity : bank.filter(q => q.subject === subject).length
 
 /** Where questions come from: the whole bank (built-in + yours), only yours, or your active mistakes. */
 export type Pools = { bank: Question[]; mine: Question[]; mistakes: Question[] }
@@ -79,21 +91,28 @@ export function topicPool(s: TopicSpec, pools: Pools) {
 }
 
 export function buildTopic(s: TopicSpec, pools: Pools): Run {
-  const qs = shuffle(topicPool(s, pools)).slice(0, s.count)
+  // From the whole bank, Maths and Reasoning topics are at least half freshly generated; "generated" is only those.
+  const gen = { subject: s.subject, topic: s.topic || undefined, exam: s.exam, difficulty: s.difficulty || undefined }
+  const fixed = s.source === 'generated' ? [] : topicPool(s, pools)
+  const canGenerate = (s.source === 'all' || s.source === 'generated') && hasGenerators(gen)
+  const fresh = canGenerate ? generate(s.source === 'generated' ? s.count : Math.max(Math.ceil(s.count / 2), s.count - fixed.length), gen) : []
+  const qs = shuffle([...shuffle(fixed).slice(0, s.count - fresh.length), ...fresh])
   const label = s.topic || (s.subject === 'All' ? 'Mixed' : s.subject)
-  return newRun(s.exam, `Topic test · ${examById(s.exam)!.short} · ${label}${s.source === 'mistakes' ? ' · my mistakes' : ''}`, qs,
+  const tag = s.source === 'mistakes' ? ' · my mistakes' : s.source === 'generated' ? ' · generated' : ''
+  return newRun(s.exam, `Topic test · ${examById(s.exam)!.short} · ${label}${tag}`, qs,
     s.timed ? qs.length * 60 : null, { mode: 'topic', spec: s })
 }
 
 export function buildQuick(exam: ExamId, bank: Question[]): Run {
-  const qs = shuffle(bank.filter(q => q.exams.includes(exam))).slice(0, 10)
+  const fixed = shuffle(bank.filter(q => q.exams.includes(exam))).slice(0, 6)
+  const qs = shuffle([...fixed, ...generate(10 - fixed.length, { exam })]).slice(0, 10)
   return newRun(exam, `Quick 10 · ${examById(exam)!.short}`, qs, qs.length * 60, { mode: 'quick', spec: { mode: 'quick', exam } })
 }
 
 export function buildMock(mockId: string, bank: Question[]): Run {
   const m = mockById(mockId)!
   const t = paperTerms(m)
-  const qs = m.sections.flatMap(s => draw(bank, m.exam, s.subject, s.questions))
+  const qs = m.sections.flatMap(s => sectionQuestions(bank, m.exam, s.subject, s.questions))
   const short = qs.length < t.questions
   return newRun(m.exam, `Mock · ${t.exam.short}${m.paper === t.exam.short ? '' : ` · ${m.paper}`}`, qs, Math.round(qs.length * t.secPerQ), {
     mode: 'mock', marks: t.marks, spec: { mode: 'mock', exam: m.exam, mock: m.id },
@@ -107,7 +126,7 @@ export function buildSectional(mockId: string, section: number, bank: Question[]
   const m = mockById(mockId)!
   const t = paperTerms(m)
   const s = m.sections[section]
-  const qs = draw(bank, m.exam, s.subject, Math.min(s.questions, SECTIONAL_MAX))
+  const qs = sectionQuestions(bank, m.exam, s.subject, Math.min(s.questions, SECTIONAL_MAX))
   return newRun(m.exam, `Sectional · ${t.exam.short} · ${s.name}`, qs, Math.round(qs.length * t.secPerQ), {
     mode: 'sectional', marks: t.marks, spec: { mode: 'sectional', exam: m.exam, mock: m.id, section },
   })
@@ -135,7 +154,7 @@ export function buildWeekly(exam: ExamId, bank: Question[], ctx: { attempts: Att
     }
     return out
   }
-  const forExam = bank.filter(q => q.exams.includes(exam))
+  const forExam = [...bank.filter(q => q.exams.includes(exam)), ...generate(12, { exam })]
   const mistakes = take(ctx.mistakes, 6)
   const studied = take(forExam.filter(q => touched.has(q.topic.toLowerCase())), WEEKLY_SIZE - picked.size)
   const weakQs = take(forExam.filter(q => weak.has(q.topic)), WEEKLY_SIZE - picked.size)
