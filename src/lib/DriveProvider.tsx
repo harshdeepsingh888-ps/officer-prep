@@ -1,7 +1,12 @@
-import { createContext, useContext, useEffect, useState, type ReactNode } from 'react'
+import { createContext, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import * as drive from './drive'
-import { db, exportAll, importAll } from './db'
+import { LAST_BACKUP_KEY, db, exportAll, hasProgress, importAll } from './db'
+
+const HOUR = 3_600_000
+const AUTO_KEY = 'driveAutoBackup'
+/** Modified time of the Drive backup this device last wrote or restored. */
+const SYNCED_KEY = 'driveSyncedAt'
 
 type Session = 'signed-out' | 'connecting' | 'ready'
 export type DriveStatus = 'loading' | 'unconfigured' | Session
@@ -28,6 +33,10 @@ type DriveState = {
   remove: (doc: drive.DriveDoc) => Promise<void>
   backupNow: () => Promise<boolean | undefined>
   restore: () => Promise<boolean | undefined>
+  autoBackup: boolean
+  setAutoBackup: (on: boolean) => void
+  /** The Drive backup was made by another device after this one last synced. */
+  remoteNewer: boolean
 }
 
 const DriveContext = createContext<DriveState | null>(null)
@@ -82,6 +91,40 @@ export function DriveProvider({ children }: { children: ReactNode }) {
     drive.preloadAuth()
     if (drive.hasToken()) guard(load)
   }, [saved === 'loading', configured])
+
+  // ── Automatic backup ──
+  // Runs when the app opens (if the Drive copy is >12 h old) and when you switch away (at most hourly).
+  // Never overwrites a Drive backup that another device made after this device last synced.
+  const autoBackup = useLiveQuery(async () => ((await db.settings.get(AUTO_KEY))?.value as boolean | undefined) ?? true, [], true)
+  const syncedAt = useLiveQuery(async () => ((await db.settings.get(SYNCED_KEY))?.value as number | undefined) ?? 0, [], 0)
+  const remoteNewer = !!backup && Date.parse(backup.modifiedTime) > syncedAt + 60_000
+  const lastAuto = useRef(0)
+
+  async function backupQuietly() {
+    if (session !== 'ready' || !drive.hasToken() || !(await hasProgress())) return
+    const remote = await drive.findBackup()
+    const synced = ((await db.settings.get(SYNCED_KEY))?.value as number | undefined) ?? 0
+    if (remote && Date.parse(remote.modifiedTime) > synced + 60_000) { setBackup(remote); return } // another device is ahead
+    try {
+      const b = await drive.saveBackup(await exportAll())
+      setBackup(b)
+      lastAuto.current = Date.now()
+      await db.settings.bulkPut([{ key: SYNCED_KEY, value: Date.parse(b.modifiedTime) || Date.now() }, { key: LAST_BACKUP_KEY, value: Date.now() }])
+    } catch (e) {
+      if (e instanceof drive.AuthError) setSession('signed-out')
+    }
+  }
+
+  useEffect(() => {
+    if (session !== 'ready' || !autoBackup) return
+    const stale = !backup || Date.now() - Date.parse(backup.modifiedTime) > 12 * HOUR
+    if (stale && Date.now() - lastAuto.current > HOUR) backupQuietly().catch(() => {})
+    const onHide = () => {
+      if (document.visibilityState === 'hidden' && Date.now() - lastAuto.current > HOUR) backupQuietly().catch(() => {})
+    }
+    document.addEventListener('visibilitychange', onHide)
+    return () => document.removeEventListener('visibilitychange', onHide)
+  }, [session, autoBackup, backup?.modifiedTime])
 
   const value: DriveState = {
     config,
@@ -144,17 +187,27 @@ export function DriveProvider({ children }: { children: ReactNode }) {
         setDocs(d => d.filter(x => x.id !== doc.id))
       })
     },
+    autoBackup,
+    setAutoBackup: on => { db.settings.put({ key: AUTO_KEY, value: on }) },
+    remoteNewer,
     backupNow: () => guard(async () => {
-      setBackup(await drive.saveBackup(await exportAll()))
+      const b = await drive.saveBackup(await exportAll())
+      setBackup(b)
+      await db.settings.bulkPut([{ key: SYNCED_KEY, value: Date.parse(b.modifiedTime) || Date.now() }, { key: LAST_BACKUP_KEY, value: Date.now() }])
       return true
     }),
     restore: () => guard(async () => {
       const b = await drive.findBackup()
       if (!b) throw new Error('There is no backup in your Drive yet. Use "Back up now" on the other device first.')
       // Keep this device's own Drive settings; everything else comes from the backup.
-      const keep = await db.settings.bulkGet(['driveConfig', 'driveFolderId'])
+      const keep = await db.settings.bulkGet(['driveConfig', 'driveFolderId', AUTO_KEY])
       await importAll(await drive.loadBackup(b.id))
-      await db.settings.bulkPut(keep.filter(k => k !== undefined))
+      await db.settings.bulkPut([
+        ...keep.filter(k => k !== undefined),
+        { key: SYNCED_KEY, value: Date.parse(b.modifiedTime) || Date.now() },
+        { key: LAST_BACKUP_KEY, value: Date.now() },
+      ])
+      setBackup(b)
       return true
     }),
   }

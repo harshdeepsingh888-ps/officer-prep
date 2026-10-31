@@ -167,6 +167,24 @@ export function streakFrom(days: Set<string>) {
   return n
 }
 
+// ── Backups & storage health ──────────────────────────────────────
+export const LAST_BACKUP_KEY = 'lastBackupAt'
+export const markBackedUp = () => db.settings.put({ key: LAST_BACKUP_KEY, value: Date.now() })
+
+/** True once there is progress worth protecting. */
+export async function hasProgress() {
+  const counts = await Promise.all([db.attempts.count(), db.tasks.count(), db.cards.count(), db.ssb.count(), db.writings.count(), db.topics.count(), db.questions.count()])
+  return counts.some(n => n > 0)
+}
+
+/** Whether the browser will keep this site's data even when the device runs low on space. */
+export async function storageStatus() {
+  const s = navigator.storage
+  const [persisted, estimate] = await Promise.all([s?.persisted?.() ?? Promise.resolve(false), s?.estimate?.() ?? Promise.resolve({ usage: 0, quota: 0 })])
+  return { persisted, usage: estimate.usage ?? 0, quota: estimate.quota ?? 0, supported: !!s?.persist }
+}
+export const protectStorage = () => navigator.storage?.persist?.() ?? Promise.resolve(false)
+
 const TABLES = ['settings', 'topics', 'tasks', 'sessions', 'questions', 'attempts', 'ssb', 'writings', 'links', 'customExams', 'mistakes', 'cards', 'reviews'] as const
 
 export async function exportAll() {

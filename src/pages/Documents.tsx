@@ -336,7 +336,20 @@ function SyncCard() {
         On your other device, connect the same Google account and press <b className="text-ink-200">Restore</b>. Practice pictures aren't included.
       </p>
       <div className="mt-3 text-sm">Last Drive backup: <span className="text-ink-200">{last ?? 'none yet'}</span>{drive.backup?.size && <span className="text-ink-500"> · {fmtBytes(Number(drive.backup.size))}</span>}</div>
-      <div className="mt-3 flex flex-wrap gap-2">
+      <label className="mt-4 flex items-start gap-3 text-sm">
+        <input type="checkbox" className="mt-0.5 size-4 accent-iris-500" checked={drive.autoBackup} onChange={e => drive.setAutoBackup(e.target.checked)} />
+        <span>
+          <span className="text-ink-100">Back up automatically</span>
+          <span className="block font-light text-ink-500">When the app opens (if the last backup is over 12 hours old) and when you switch away from it, at most once an hour. It never overwrites a newer backup from another device.</span>
+        </span>
+      </label>
+      {drive.remoteNewer && (
+        <div className="mt-4 rounded-3xl bg-saffron-400/[0.08] px-5 py-4 text-sm">
+          <span className="text-ink-100">Your Drive has a newer backup ({last}) from another device.</span>
+          <span className="ml-1 font-light text-ink-400">Automatic backup is paused on this device so it doesn't overwrite it. Restore it to pick up where you left off, or press "Back up now" to keep this device's data instead.</span>
+        </div>
+      )}
+      <div className="mt-4 flex flex-wrap gap-2">
         <Button disabled={busy} onClick={() => run(drive.backupNow, 'Backed up to Drive ✓')}>Back up now</Button>
         <Button variant="subtle" disabled={busy || !drive.backup}
           onClick={() => { if (confirm(`Replace the progress on this device with the Drive backup from ${last}?`)) run(drive.restore, 'Restored from Drive ✓') }}>

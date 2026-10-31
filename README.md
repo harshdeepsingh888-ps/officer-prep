@@ -1,17 +1,21 @@
 # Officer Prep
 
 A self-study app for officer-level exams: **CDS, AFCAT, CAPF AC, Coast Guard AC (CGCAT) and UPSC CSE**. It covers planning, practice, past papers, SSB psych tests and interview prep.
-All data stays in your browser (IndexedDB). Back it up from **Library → Backup**, or sync it through Google Drive (**Documents**).
+All data stays in your browser (IndexedDB). Back it up from **Library → This device & backups**, or sync it through Google Drive (**Documents**).
 
 **Live:** <https://harshdeepsingh888-ps.github.io/officer-prep/>
 
 ## Install it as an app
-The app is a PWA. After the first visit it works offline, and it updates itself when a new version is deployed.
-- **Android (Chrome):** open the link, tap ⋮ and choose **Install app** (or **Add to Home screen**).
+The app is a PWA. After the first visit it works offline.
+- **Android / laptop (Chrome, Edge):** use the **↓ Install app** button at the top right, or the browser's own install option.
 - **iPhone (Safari):** tap Share and choose **Add to Home Screen**.
-- **Laptop (Chrome / Edge):** click the install icon in the address bar.
 
-Each device keeps its own data. Use **Documents → Back up now** on one device and **Restore** on the other.
+**Updates:** when a new version is deployed, a toast says *"A new version of Officer Prep is ready"*. Press **Update now**, or **Later** to finish what you're doing first. The app checks for updates hourly while open. **Library → This device** shows the build time of the version you're running.
+
+## Keeping your data safe
+- **Storage protection:** an installed app asks the browser to keep its data permanently. You can also press **Protect my data** in Library → This device.
+- **Backups:** export a backup file from Library at any time. The dashboard reminds you if there's no backup for a week.
+- **Drive sync:** once Google Drive is connected (Documents), the app backs up automatically: when it opens (if the last backup is over 12 hours old) and when you switch away (at most hourly). It never overwrites a newer backup made by another device. On a new device, connect Drive and press **Restore**.
 
 ## Run locally
 

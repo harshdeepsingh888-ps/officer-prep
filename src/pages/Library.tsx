@@ -1,31 +1,19 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { OFFICIAL_LINKS, OFFICIAL_PAPERS, DESCRIPTIVE_PAPERS } from '../data/sources'
 import { EXAMS } from '../data/exams'
-import { db, exportAll, importAll } from '../lib/db'
-import { downloadText, todayISO } from '../lib/util'
+import { db } from '../lib/db'
 import { Button, Card, PageHeader, inputCls, labelCls } from '../components/ui'
+import { DeviceCard } from '../components/DeviceCard'
 
 export default function Library() {
   const links = useLiveQuery(() => db.links.toArray(), []) ?? []
   const [title, setTitle] = useState('')
   const [url, setUrl] = useState('')
   const [group, setGroup] = useState('')
-  const [msg, setMsg] = useState('')
-  const fileRef = useRef<HTMLInputElement>(null)
 
   const groups = [...new Set(OFFICIAL_LINKS.map(l => l.group))]
   const paperExams = EXAMS.filter(e => OFFICIAL_PAPERS.some(p => p.exam === e.id))
-
-  const doImport = async (f: File) => {
-    if (!confirm('Replace the progress on this device with this backup?')) return
-    try {
-      await importAll(await f.text())
-      setMsg('Backup restored.')
-    } catch (e) {
-      setMsg(`Import failed: ${(e as Error).message}`)
-    }
-  }
 
   return (
     <div className="space-y-14">
@@ -91,18 +79,7 @@ export default function Library() {
         )}
       </Card>
 
-      <Card title="Backup">
-        <p className="mb-3 text-sm text-ink-400">
-          All your data lives in this browser. Export it now and then, especially before clearing browser data or switching devices. Practice pictures aren't included.
-          To sync between phone and laptop, use <a href="#/documents" className="text-saffron-400 hover:underline">Documents → Google Drive</a>.
-        </p>
-        <div className="flex flex-wrap gap-2">
-          <Button onClick={async () => downloadText(`officer-prep-backup-${todayISO()}.json`, await exportAll())}>Export backup</Button>
-          <Button variant="subtle" onClick={() => fileRef.current?.click()}>Restore from file…</Button>
-          <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={e => e.target.files?.[0] && doImport(e.target.files[0])} />
-        </div>
-        {msg && <p className="mt-2 text-sm text-iris-300">{msg}</p>}
-      </Card>
+      <div id="backup"><DeviceCard /></div>
     </div>
   )
 }

@@ -52,7 +52,7 @@ export function Progress({ value, className = '' }: { value: number; className?:
 
 export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: T; label: string }[]; value: T; onChange: (t: T) => void }) {
   return (
-    <div className="mb-10 flex gap-7 overflow-x-auto">
+    <div className="-mx-5 mb-10 flex gap-7 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
       {tabs.map(t => (
         <button key={t.id} onClick={() => onChange(t.id)}
           className={`label flex shrink-0 items-center gap-2 py-1 transition-colors ${value === t.id ? 'text-fg' : 'text-ink-500 hover:text-ink-200'}`}>

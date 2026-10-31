@@ -2,6 +2,7 @@ import { useRoute } from './lib/hooks'
 import { DriveProvider } from './lib/DriveProvider'
 import { AmbientField, Logo } from './components/Particles'
 import { ThemeToggle } from './components/ThemeToggle'
+import { InstallButton, UpdateToast } from './components/AppUpdates'
 import Dashboard from './pages/Dashboard'
 import Documents from './pages/Documents'
 import Exams from './pages/Exams'
@@ -68,12 +69,16 @@ export default function App() {
               <span className="text-[15px] font-medium tracking-tight text-fg">Officer Prep</span>
             </a>
             <nav className="hidden gap-6 xl:flex">{navLinks}</nav>
-            <ThemeToggle />
+            <div className="flex items-center gap-2">
+              <InstallButton />
+              <ThemeToggle />
+            </div>
           </div>
           <nav className="-mx-5 mt-3 flex gap-5 overflow-x-auto px-5 [scrollbar-width:none] sm:-mx-8 sm:px-8 xl:hidden [&::-webkit-scrollbar]:hidden">{navLinks}</nav>
         </header>
         <main className="pb-28 pt-4">{view}</main>
       </div>
+      <UpdateToast />
     </DriveProvider>
   )
 }

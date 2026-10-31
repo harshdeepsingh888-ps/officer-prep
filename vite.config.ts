@@ -3,14 +3,18 @@ import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
-// Production builds are served from GitHub Pages at /officer-prep/; dev runs at the root.
-export default defineConfig(({ command }) => ({
-  base: command === 'build' ? '/officer-prep/' : '/',
+// Production builds (and `vite preview` of them) are served from GitHub Pages at /officer-prep/; dev runs at the root.
+export default defineConfig(({ command, isPreview }) => ({
+  base: command === 'build' || isPreview ? '/officer-prep/' : '/',
+  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) }, // shown in Library → This device
   plugins: [
     react(),
     tailwindcss(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // 'prompt': a new version waits until you press "Update now" in the toast (src/components/AppUpdates.tsx),
+      // so an update never reloads the page in the middle of a test.
+      registerType: 'prompt',
+      injectRegister: false,
       includeAssets: ['favicon.svg', 'favicon-64.png', 'apple-touch-icon.png'],
       manifest: {
         name: 'Officer Prep',

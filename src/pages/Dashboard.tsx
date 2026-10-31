@@ -7,6 +7,7 @@ import { Badge, Button, Card, Empty, Progress, Stat, inputCls } from '../compone
 import { Constellation } from '../components/Particles'
 import { DailyMission } from '../components/DailyMission'
 import { ReadinessPanel } from '../components/ReadinessPanel'
+import { BackupReminder } from '../components/BackupReminder'
 
 export default function Dashboard() {
   const today = todayISO()
@@ -41,6 +42,7 @@ export default function Dashboard() {
 
   return (
     <div className="space-y-24">
+      <BackupReminder />
       <section className="grid items-center gap-6 lg:grid-cols-2 lg:gap-10">
         <div className="relative z-10">
           <div className="label text-saffron-400">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
