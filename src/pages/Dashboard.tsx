@@ -43,7 +43,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-16 sm:space-y-24">
       <BackupReminder />
-      <section className="grid items-center gap-6 lg:grid-cols-2 lg:gap-10">
+      <section className="grid grid-cols-1 items-center gap-6 lg:grid-cols-2 lg:gap-10">
         <div className="relative z-10">
           <div className="label text-saffron-400">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
           <h1 className="mt-6 text-[clamp(3.75rem,9.5vw,7.0625rem)] font-normal leading-[0.95] tracking-display text-fg">Jai Hind.</h1>
@@ -60,7 +60,7 @@ export default function Dashboard() {
             <a href="#/planner" className="label py-3 text-ink-400 transition-colors hover:text-fg">Open planner →</a>
           </div>
         </div>
-        <div className="-mx-5 -mt-6 h-[280px] sm:mx-0 sm:mt-0 sm:h-[420px] lg:h-[540px]">
+        <div className="-mx-5 -mt-6 h-[330px] sm:mx-0 sm:mt-0 sm:h-[470px] lg:h-[580px]">
           <Constellation />
         </div>
       </section>
