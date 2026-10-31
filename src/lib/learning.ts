@@ -109,7 +109,9 @@ export async function reviewCard(card: Card, grade: Grade) {
 
 /** Today's queue: mistakes first, then due reviews, then up to `newLimit` new flashcards. */
 export async function reviewQueue(newLimit: number, now = Date.now()): Promise<Card[]> {
-  const due = await db.cards.where('due').belowOrEqual(now).filter(c => c.status === 'active').toArray()
+  // Read every active card rather than the `due <= now` range: a live query only re-runs for changes inside the range
+  // it read, and a card added a moment later (due = its creation time) falls outside it, so the count would go stale.
+  const due = (await db.cards.where('status').equals('active').toArray()).filter(c => c.due <= now)
   const newToday = await db.reviews.where('at').aboveOrEqual(startOfDay(now)).filter(r => r.wasNew).count()
   const isFreshFlash = (c: Card) => c.kind === 'flash' && isNew(c)
   const mistakes = due.filter(c => c.kind === 'mistake').sort((a, b) => a.due - b.due)

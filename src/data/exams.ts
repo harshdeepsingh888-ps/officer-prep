@@ -177,6 +177,16 @@ export const EXAMS: Exam[] = [
 
 export const examById = (id: string) => EXAMS.find(e => e.id === id)
 
+/**
+ * The syllabus subject a paper belongs to, from its name ("CDS (II) 2026 — General Knowledge" → General Knowledge).
+ * The longest subject named in the title wins, so "Paper II" beats "Paper I"; otherwise the exam's first subject.
+ */
+export function subjectForPaper(examId: string, title: string): string | undefined {
+  const subjects = examById(examId)?.syllabus.map(s => s.subject) ?? []
+  const t = title.toLowerCase()
+  return subjects.filter(s => t.includes(s.toLowerCase())).sort((a, b) => b.length - a.length)[0] ?? subjects[0]
+}
+
 /** Next upcoming date for an exam, honouring a user override. */
 export function nextDate(exam: Exam, overrides: Record<string, string>): ExamDate | null {
   if (overrides[exam.id]) return { label: exam.short, date: overrides[exam.id], status: 'official', note: 'Your date' }

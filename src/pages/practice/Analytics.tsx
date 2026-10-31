@@ -3,7 +3,7 @@ import { db } from '../../lib/db'
 import { reviewsPerDay, subjectStats, topicStats, weakestTopics } from '../../lib/insights'
 import { REASONS, openQuiz } from '../../lib/learning'
 import { isMastered } from '../../lib/srs'
-import { fmtDate, fmtDateTime, round2 } from '../../lib/util'
+import { fmtDate, fmtDateTime, isoOf, round2 } from '../../lib/util'
 import { BarRows, ColumnChart } from '../../components/charts'
 import { Button, Card, Empty, Stat } from '../../components/ui'
 import History from './History'
@@ -24,7 +24,7 @@ export default function Analytics() {
   const avgSec = items.length ? Math.round(items.reduce((s, i) => s + i.ms, 0) / items.length / 1000) : null
   const trend = scored.slice(-20).map(a => {
     const pct = Math.max(0, (a.score! / a.maxScore!) * 100)
-    return { key: String(a.id), value: pct, label: fmtDate(new Date(a.at).toISOString().slice(0, 10)).replace(/ \d{4}$/, ''), tip: `${a.title} · ${round2(a.score!)} / ${a.maxScore} (${Math.round(pct)}%) · ${fmtDateTime(a.at)}` }
+    return { key: String(a.id), value: pct, label: fmtDate(isoOf(new Date(a.at))).replace(/ \d{4}$/, ''), tip: `${a.title} · ${round2(a.score!)} / ${a.maxScore} (${Math.round(pct)}%) · ${fmtDateTime(a.at)}` }
   })
   const reasonRows = [
     ...REASONS.map(r => ({ key: r.id, label: r.label, value: mistakes.filter(m => m.reason === r.id).length })),

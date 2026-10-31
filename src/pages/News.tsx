@@ -276,7 +276,7 @@ function Recap() {
   const monday = weekStart()
   const today = todayISO()
   const range = period === 'last' ? { from: addDays(monday, -7), to: addDays(monday, -1), label: `week of ${fmtDate(addDays(monday, -7))}` }
-    : period === 'month' ? { from: today.slice(0, 8) + '01', to: today, label: new Date(today).toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) }
+    : period === 'month' ? { from: today.slice(0, 8) + '01', to: today, label: new Date(today + 'T00:00:00').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) }
     : { from: monday, to: today, label: `week of ${fmtDate(monday)}` }
   const inRange = notes.filter(n => n.date >= range.from && n.date <= range.to).sort((a, b) => a.date.localeCompare(b.date))
   const groups = NEWS_CATEGORIES.map(c => ({ ...c, notes: inRange.filter(n => n.category === c.id) })).filter(g => g.notes.length)
@@ -296,7 +296,7 @@ function Recap() {
           <Button variant="subtle" disabled={!cards} onClick={() => go('revise')}>Revise cards · {cards}</Button>
         </div>
       </div>
-      {groups.length === 0 ? <Empty>No notes for the {range.label}. Notes you add on the Headlines or My notes tabs collect here, grouped by category.</Empty> : (
+      {groups.length === 0 ? <Empty>No notes for {period === 'month' ? '' : 'the '}{range.label}. Notes you add on the Headlines or My notes tabs collect here, grouped by category.</Empty> : (
         <div className="grid gap-x-16 gap-y-12 lg:grid-cols-2">
           {groups.map(g => (
             <Card key={g.id} title={`${g.label} · ${g.notes.length}`}>

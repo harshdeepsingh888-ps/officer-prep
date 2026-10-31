@@ -28,8 +28,25 @@ npm run build      # production build in dist/ (served under /officer-prep/)
 npm run preview    # http://localhost:4173/officer-prep/
 ```
 
+## Tests
+
+```bash
+npm test           # unit and module tests (Vitest), about 10 seconds
+npm run test:e2e   # browser regression tests (Playwright): builds, then drives your installed Chrome
+```
+
+- **Unit and module tests** sit next to the code (`src/**/*.test.ts`). They cover the parsers (paste, past papers, answer keys, CSV/JSON import), OMR scoring, spaced repetition, dates, ranks, the test builders (every mock full length with the right time and marking), analytics, the database and backups (in an in-memory IndexedDB), the learning loop, every one of the generator templates (400 random runs each), and the integrity of all built-in content: every question, guide, paper, deck and SSB list.
+- **Browser regression tests** (`e2e/`) open every page, tab and study guide on a desktop and on a phone in dark mode, failing on any error or sideways scrolling. They also walk through the main flows end to end:
+  - Practice: Quick 10, resuming after a reload, a full AFCAT mock, OMR scoring and past-paper import.
+  - Your question bank, flashcards and the mistake notebook.
+  - Study status, the planner and streaks, and exam dates.
+  - News notes and the recap, SSB, Writing.
+  - Backup and restore, the theme, the phone menu and Documents.
+
+  Most flow tests run with reduced motion, since the animated backgrounds slow automated clicks down a lot. A full run takes about 7 minutes; the report is written to `e2e-report/`. These tests are not part of the deploy, so run them before a bigger change.
+
 ## Deploy
-Every push to `main` builds and publishes to GitHub Pages through `.github/workflows/deploy.yml`. Nothing else is needed.
+Every push to `main` builds and publishes to GitHub Pages through `.github/workflows/deploy.yml`. Nothing else is needed. The unit and module tests run first; if any fails, nothing is deployed.
 
 The same workflow also runs at 07:00 and 19:00 IST to refresh the current-affairs headlines (`scripts/fetch-news.mjs`, or `npm run news` locally). Rebuilding unchanged code gives identical files, so these runs don't trigger the update toast. GitHub pauses scheduled workflows in a repository with no activity for 60 days; if the headlines stop updating, re-enable the workflow under **Actions** or push any change.
 

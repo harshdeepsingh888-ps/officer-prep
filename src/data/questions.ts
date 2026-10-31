@@ -112,24 +112,29 @@ export function parseQuestionImport(raw: string): Omit<Question, 'id'>[] {
       exams: x.exams?.length ? x.exams : ALL,
       subject: x.subject ?? 'General Knowledge',
       topic: x.topic ?? 'General',
-      text: String(x.text),
+      text: typeof x.text === 'string' ? x.text.trim() : '',
       options: (x.options ?? []).map(String),
       answer: typeof x.answer === 'number' ? x.answer : 'ABCD'.indexOf(String(x.answer).toUpperCase()),
       explanation: x.explanation,
       difficulty: parseDifficulty(x.difficulty),
       source: x.source,
-    })).filter(x => x.text && x.options.length >= 2 && x.answer >= 0)
+    })).filter(x => x.text && x.options.length >= 2 && x.answer >= 0 && x.answer < x.options.length)
   }
-  return text.split(/\r?\n/).map(splitCsv).filter(c => c.length >= 6 && !/^text$/i.test(c[0])).map(c => ({
-    exams: ALL,
-    text: c[0],
-    options: c.slice(1, 5).filter(Boolean),
-    answer: 'ABCD'.indexOf(c[5].trim().toUpperCase()),
-    subject: (c[6] as Question['subject']) || 'General Knowledge',
-    topic: c[7] || 'General',
-    explanation: c[8] || undefined,
-    difficulty: parseDifficulty(c[9]),
-  })).filter(x => x.answer >= 0)
+  return text.split(/\r?\n/).map(splitCsv).filter(c => c.length >= 6 && !/^text$/i.test(c[0])).map(c => {
+    // Blank option columns are dropped, so the answer letter is mapped to its place among the filled ones.
+    const cols = c.slice(1, 5)
+    const letter = 'ABCD'.indexOf(c[5].trim().toUpperCase())
+    return {
+      exams: ALL,
+      text: c[0],
+      options: cols.filter(Boolean),
+      answer: letter >= 0 && cols[letter] ? cols.slice(0, letter).filter(Boolean).length : -1,
+      subject: (c[6] as Question['subject']) || 'General Knowledge',
+      topic: c[7] || 'General',
+      explanation: c[8] || undefined,
+      difficulty: parseDifficulty(c[9]),
+    }
+  }).filter(x => x.text && x.options.length >= 2 && x.answer >= 0)
 }
 
 export function splitCsvLine(line: string) { return splitCsv(line) }

@@ -164,8 +164,9 @@ export function parsePaper(raw: string): PaperQuestion[] {
     const start: RegExpMatchArray | null = waiting ? null : line.match(PAPER_Q)
     if (start) {
       const n: number = Number(start[1])
-      // Cover instructions the COVER test missed: a "1." before any question has options restarts the count.
-      const restart = !out.length && q && !q.options.length && n === 1 && q.n !== 1
+      // Cover instructions the COVER test missed: a "1." after other numbered lines, before any question has
+      // options, restarts the count. (A statement question's own "1." comes before its "2.", not after.)
+      const restart = !out.length && q && !q.options.length && n === 1 && (q.n !== 1 || q.lines.some(l => PAPER_Q.test(l)))
       if (restart) q = null
       if (!q || (n === q.n + 1 && q.options.length >= 2) || (q.options.length >= 4 && n > q.n)) {
         flush()

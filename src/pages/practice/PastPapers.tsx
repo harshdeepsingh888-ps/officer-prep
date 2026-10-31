@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { EXAMS, examById } from '../../data/exams'
+import { EXAMS, examById, subjectForPaper } from '../../data/exams'
 import { OFFICIAL_PAPERS, type OfficialPaper } from '../../data/sources'
 import { db, useSetting, type MistakeReason } from '../../lib/db'
 import { useDrive } from '../../lib/DriveProvider'
@@ -294,7 +294,7 @@ export function ScoreCard({ res, paper, keyStr }: { res: ScoreResult; paper?: Pa
 function PaperMistakeForm({ paper, qno, correct, onDone }: { paper: PaperRef; qno: number; correct?: string; onDone: () => void }) {
   const exam = examById(paper.exam)
   const subjects = exam?.syllabus ?? []
-  const [subject, setSubject] = useState(subjects[0]?.subject ?? 'General Knowledge')
+  const [subject, setSubject] = useState(subjectForPaper(paper.exam, paper.title) ?? 'General Knowledge')
   const [topic, setTopic] = useState('')
   const [reason, setReason] = useState<MistakeReason | ''>('')
   const [note, setNote] = useState('')

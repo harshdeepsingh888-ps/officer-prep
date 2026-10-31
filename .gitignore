@@ -7,3 +7,6 @@ dev-dist
 .claude/
 # Built by scripts/fetch-news.mjs (in CI before each deploy)
 public/news/
+# Browser test output (npm run test:e2e)
+e2e-report/
+e2e-results/

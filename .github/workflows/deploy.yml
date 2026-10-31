@@ -28,6 +28,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+      # Unit and module tests: a failure stops the deploy, so a broken build never reaches the site.
+      - run: npm test
       # Headlines: start from the copy already on the site so earlier days are kept, then add today's.
       # A failed fetch never stops the deploy; the page just shows the last good copy.
       - name: Fetch current-affairs headlines
