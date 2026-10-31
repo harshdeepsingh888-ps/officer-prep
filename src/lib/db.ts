@@ -28,9 +28,61 @@ export type Attempt = {
   maxScore?: number
   wrongTopics?: string[]
   paperUrl?: string
+  paperId?: string
   marksPerQ?: number
   negative?: number
+  /** Per-question detail (quizzes from v2 on) — the basis for topic analytics. */
+  items?: AttemptItem[]
 }
+export type AttemptItem = {
+  qid: string
+  subject: string
+  topic: string
+  answer: number | null
+  correct: boolean | null
+  ms: number
+  marked?: boolean
+  changes?: number
+}
+
+export type MistakeReason = 'concept' | 'calculation' | 'guess' | 'misread' | 'time'
+export type Mistake = {
+  id: string // q:<questionId> | p:<paperId>:<qno> | n:<timestamp>
+  source: 'quiz' | 'paper' | 'manual'
+  exam?: string
+  subject: string
+  topic: string
+  question?: Question // snapshot, so it can be re-attempted
+  yourAnswer?: number | null
+  prompt?: string // paper / manual: what to revisit
+  answerText?: string // paper / manual: the correct answer or key point
+  paperUrl?: string
+  reason?: MistakeReason
+  note?: string
+  count: number
+  createdAt: number
+  lastWrongAt: number
+  status: 'active' | 'mastered'
+}
+
+/** A spaced-revision card — either a flashcard or a mistake to re-attempt. */
+export type Card = {
+  id: string // f:<deck>:<n> | c:<mistakeId>
+  kind: 'flash' | 'mistake'
+  deck: string
+  front: string
+  back: string
+  mistakeId?: string
+  due: number
+  interval: number // days
+  ease: number
+  reps: number
+  lapses: number
+  createdAt: number
+  status: 'active' | 'suspended'
+}
+export type Grade = 0 | 1 | 2 | 3 // again, hard, good, easy
+export type Review = { id?: number; cardId: string; at: number; grade: Grade; interval: number; wasNew: boolean }
 export type SSBTest = 'WAT' | 'SRT' | 'TAT' | 'PPDT' | 'SD' | 'Lecturette'
 export type SSBResponse = { id?: number; test: SSBTest; at: number; items: { prompt: string; response: string }[]; olqs: string[]; note?: string }
 export type Writing = { id?: number; kind: string; topic: string; text: string; words: number; minutes: number; at: number }
@@ -50,6 +102,9 @@ class PrepDB extends Dexie {
   images!: EntityTable<SSBImage, 'id'>
   links!: EntityTable<CustomLink, 'id'>
   customExams!: EntityTable<CustomExam, 'id'>
+  mistakes!: EntityTable<Mistake, 'id'>
+  cards!: EntityTable<Card, 'id'>
+  reviews!: EntityTable<Review, 'id'>
 
   constructor() {
     super('officer-prep')
@@ -65,6 +120,12 @@ class PrepDB extends Dexie {
       images: '++id',
       links: '++id',
       customExams: '++id',
+    })
+    // v2: learning loop — mistake notebook, spaced-revision cards and their review log.
+    this.version(2).stores({
+      mistakes: 'id, createdAt, status',
+      cards: 'id, due, deck, status',
+      reviews: '++id, at, cardId',
     })
   }
 }
@@ -94,6 +155,7 @@ export async function activeDays(): Promise<Set<string>> {
   ;(await db.attempts.toArray()).forEach(a => days.add(toDay(a.at)))
   ;(await db.ssb.toArray()).forEach(r => days.add(toDay(r.at)))
   ;(await db.writings.toArray()).forEach(w => days.add(toDay(w.at)))
+  ;(await db.reviews.toArray()).forEach(r => days.add(toDay(r.at)))
   return days
 }
 
@@ -105,7 +167,7 @@ export function streakFrom(days: Set<string>) {
   return n
 }
 
-const TABLES = ['settings', 'topics', 'tasks', 'sessions', 'questions', 'attempts', 'ssb', 'writings', 'links', 'customExams'] as const
+const TABLES = ['settings', 'topics', 'tasks', 'sessions', 'questions', 'attempts', 'ssb', 'writings', 'links', 'customExams', 'mistakes', 'cards', 'reviews'] as const
 
 export async function exportAll() {
   const out: Record<string, unknown[]> = {}

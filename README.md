@@ -31,11 +31,12 @@ To change the app icons, edit `scripts/make_icons.py` and run `python scripts/ma
 
 | Page | What it does |
 |---|---|
-| Dashboard | Exam countdowns, streak, weekly study hours, today's tasks, daily drill |
+| Dashboard | Exam countdowns, **readiness score** per exam (syllabus, accuracy, consistency, revision; indicative only), streak, weekly hours, today's tasks, **daily mission** built from what's due, your weakest topic, the next syllabus topic and the SSB test of the day |
 | Exams | Pattern, marking, eligibility, selection stages, 2027 dates (official vs tentative), your own exam dates |
 | Syllabus | Topic tracker: Not started → Learning → Revised → Mastered |
 | Planner | Day planner, Pomodoro (25/50/90), manual time log, 7-day chart |
-| Practice | Timed quiz with each exam's negative marking · **official UPSC past papers on an OMR sheet** with answer-key scoring · your own question bank (form + CSV/JSON import) · history and weak topics |
+| Practice | **Custom tests** by subject, topic, difficulty or "my mistakes", with each exam's negative marking, mark for review, time per question, and resume after a reload · **official UPSC past papers on an OMR sheet** with answer-key scoring (resumable; wrong questions go to the notebook) · your own question bank (form, CSV/JSON, or **paste from Telegram/PDF/notes**) · **analytics**: score trend, accuracy by subject, weakest topics, mistake reasons, review activity |
+| Revise | **Spaced repetition** (SM-2 style): today's review, with mistakes first and new flashcards capped per day · **mistake notebook** (every wrong quiz answer is saved automatically; past-paper and manual mistakes too; reasons and notes; mastered after a 3-week interval) · **flashcards**: starter decks (ranks and commands, exercises, missiles, polity, vocabulary, maths formulas) and your own, added one by one or pasted in bulk |
 | SSB & Interview | WAT, SRT, TAT, PPDT, SD, Lecturette on real timings · OLQ self-assessment · interview questions generated from your PIQ/DAF · your own TAT/PPDT pictures |
 | Writing | Timed essay / précis / report with word count (CAPF Paper II, CSE Mains) |
 | Documents | **Google Drive:** upload or pick papers, notes and books (tagged by exam and type), open them on any device, and back up / restore progress between phone and laptop. Setup: [docs/google-drive-setup.md](docs/google-drive-setup.md) |

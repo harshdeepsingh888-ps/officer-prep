@@ -3,6 +3,7 @@ import type { ExamId } from './exams'
 // Starter question bank — original questions written for this app.
 // Add your own on the Practice page (form or JSON/CSV import).
 
+export type Difficulty = 1 | 2 | 3 // easy, medium, hard
 export type Question = {
   id: string
   exams: ExamId[]
@@ -12,7 +13,12 @@ export type Question = {
   options: string[]
   answer: number
   explanation?: string
+  difficulty?: Difficulty // missing = medium
+  source?: string // e.g. "Telegram — Defence Daily", "My notes"
 }
+
+export const DIFFICULTY_LABEL: Record<Difficulty, string> = { 1: 'Easy', 2: 'Medium', 3: 'Hard' }
+export const difficultyOf = (q: Pick<Question, 'difficulty'>): Difficulty => q.difficulty ?? 2
 
 const ALL: ExamId[] = ['cds', 'afcat', 'capf', 'icg', 'cse']
 const ENG: ExamId[] = ['cds', 'afcat', 'icg', 'capf']
@@ -78,7 +84,20 @@ export const BUILTIN_QUESTIONS: Question[] = [
   q(REASON, 'Reasoning', 'Clock', 'Angle between the hands of a clock at 3:00 is —', ['60°', '90°', '120°', '180°'], 1),
 ]
 
-/** Parse a JSON array or CSV (text,optA,optB,optC,optD,answerLetter,subject,topic,explanation). */
+// Difficulty tags for the starter bank (everything else is medium).
+const EASY = new Set(['b2', 'b5', 'b6', 'b9', 'b14', 'b15', 'b16', 'b18', 'b19', 'b22', 'b23', 'b24', 'b25', 'b26', 'b28', 'b30', 'b33', 'b34', 'b36', 'b38', 'b39', 'b41', 'b44', 'b45'])
+const HARD = new Set(['b7', 'b13', 'b17', 'b20', 'b43'])
+for (const x of BUILTIN_QUESTIONS) x.difficulty = EASY.has(x.id) ? 1 : HARD.has(x.id) ? 3 : 2
+
+/** "easy" / "hard" / 1–3 → Difficulty; anything else is medium. */
+export function parseDifficulty(v: unknown): Difficulty {
+  const s = String(v ?? '').trim().toLowerCase()
+  if (s === '1' || s.startsWith('e')) return 1
+  if (s === '3' || s.startsWith('h')) return 3
+  return 2
+}
+
+/** Parse a JSON array or CSV (text,optA,optB,optC,optD,answerLetter,subject,topic,explanation,difficulty). */
 export function parseQuestionImport(raw: string): Omit<Question, 'id'>[] {
   const text = raw.trim()
   if (!text) return []
@@ -92,6 +111,8 @@ export function parseQuestionImport(raw: string): Omit<Question, 'id'>[] {
       options: (x.options ?? []).map(String),
       answer: typeof x.answer === 'number' ? x.answer : 'ABCD'.indexOf(String(x.answer).toUpperCase()),
       explanation: x.explanation,
+      difficulty: parseDifficulty(x.difficulty),
+      source: x.source,
     })).filter(x => x.text && x.options.length >= 2 && x.answer >= 0)
   }
   return text.split(/\r?\n/).map(splitCsv).filter(c => c.length >= 6 && !/^text$/i.test(c[0])).map(c => ({
@@ -102,8 +123,11 @@ export function parseQuestionImport(raw: string): Omit<Question, 'id'>[] {
     subject: (c[6] as Question['subject']) || 'General Knowledge',
     topic: c[7] || 'General',
     explanation: c[8] || undefined,
+    difficulty: parseDifficulty(c[9]),
   })).filter(x => x.answer >= 0)
 }
+
+export function splitCsvLine(line: string) { return splitCsv(line) }
 
 function splitCsv(line: string): string[] {
   const out: string[] = []

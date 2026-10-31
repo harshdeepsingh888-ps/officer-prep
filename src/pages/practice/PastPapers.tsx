@@ -1,12 +1,18 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useLiveQuery } from 'dexie-react-hooks'
 import { EXAMS, examById } from '../../data/exams'
 import { OFFICIAL_PAPERS, type OfficialPaper } from '../../data/sources'
-import { db, useSetting } from '../../lib/db'
+import { db, useSetting, type MistakeReason } from '../../lib/db'
 import { useDrive } from '../../lib/DriveProvider'
 import { useCountdown } from '../../lib/hooks'
+import { REASONS, addPaperMistake } from '../../lib/learning'
 import { parseKey, scoreOMR, type ScoreResult } from '../../lib/scoring'
-import { round2 } from '../../lib/util'
+import { fmtClock, round2 } from '../../lib/util'
 import { Badge, Button, Card, Stat, TimerBar, inputBase, inputCls, labelCls } from '../../components/ui'
+
+const OMR_KEY = 'omrRun'
+/** An OMR sheet in progress — saved so a reload or closed tab can resume it. */
+type OmrRun = { paperId: string; n: number; minutes: number; resp: (number | null)[]; startedAt: number; deadline: number }
 
 export default function PastPapers() {
   const [targets] = useSetting<string[]>('targets', [])
@@ -14,14 +20,29 @@ export default function PastPapers() {
   const [filter, setFilter] = useState<string | null>(null)
   const active = filter ?? available.find(e => targets.includes(e.id))?.id ?? 'all'
   const [paper, setPaper] = useState<OfficialPaper | null>(null)
+  const [resume, setResume] = useState<OmrRun | null>(null)
+  const saved = useLiveQuery(async () => ((await db.settings.get(OMR_KEY))?.value as OmrRun | undefined) ?? null, [])
+  const savedPaper = saved ? OFFICIAL_PAPERS.find(p => p.id === saved.paperId) : undefined
   const drive = useDrive()
   const copyOf = (p: OfficialPaper) => drive.docs.find(d => d.appProperties?.paperId === p.id)
 
-  if (paper) return <OMRSheet paper={paper} openUrl={copyOf(paper)?.webViewLink ?? paper.url} onExit={() => setPaper(null)} />
+  if (paper) return <OMRSheet paper={paper} resume={resume} openUrl={copyOf(paper)?.webViewLink ?? paper.url} onExit={() => { setPaper(null); setResume(null) }} />
 
   const list = OFFICIAL_PAPERS.filter(p => active === 'all' || p.exam === active)
   return (
     <div className="space-y-14">
+      {saved && savedPaper && (
+        <div className="flex flex-wrap items-center gap-4 rounded-3xl bg-saffron-400/[0.08] px-5 py-4">
+          <div className="min-w-0 flex-1">
+            <div className="text-ink-100">Unfinished OMR · {savedPaper.sitting} — {savedPaper.paper}</div>
+            <div className="text-sm font-light text-ink-400">
+              {saved.resp.filter(r => r !== null).length}/{saved.n} marked · {fmtClock(Math.max(0, Math.round((saved.deadline - Date.now()) / 1000)))} left (the clock kept running)
+            </div>
+          </div>
+          <Button onClick={() => { setResume(saved); setPaper(savedPaper) }}>Resume</Button>
+          <Button variant="ghost" onClick={() => db.settings.delete(OMR_KEY)}>Discard</Button>
+        </div>
+      )}
       <Card>
         <p className="text-sm text-ink-300">
           Official UPSC papers, linked straight from upsc.gov.in. Open the paper on one screen (or print it), answer on the timed OMR sheet here,
@@ -93,23 +114,38 @@ function SaveCopy({ paper }: { paper: OfficialPaper }) {
   )
 }
 
-function OMRSheet({ paper, openUrl, onExit }: { paper: OfficialPaper; openUrl: string; onExit: () => void }) {
+function OMRSheet({ paper, resume, openUrl, onExit }: { paper: OfficialPaper; resume: OmrRun | null; openUrl: string; onExit: () => void }) {
   const exam = examById(paper.exam)!
   const perQ = paper.marks / paper.questions
   const negative = (perQ * exam.marking.wrong) / exam.marking.correct
-  const [phase, setPhase] = useState<'setup' | 'run' | 'key' | 'done'>('setup')
-  const [n, setN] = useState(paper.questions)
-  const [minutes, setMinutes] = useState(paper.minutes)
-  const [resp, setResp] = useState<(number | null)[]>([])
-  const [startedAt, setStartedAt] = useState(0)
+  const [phase, setPhase] = useState<'setup' | 'run' | 'key' | 'done'>(resume ? 'run' : 'setup')
+  const [n, setN] = useState(resume?.n ?? paper.questions)
+  const [minutes, setMinutes] = useState(resume?.minutes ?? paper.minutes)
+  const [resp, setResp] = useState<(number | null)[]>(resume?.resp ?? [])
+  const [startedAt, setStartedAt] = useState(resume?.startedAt ?? 0)
+  const [deadline, setDeadline] = useState(resume?.deadline ?? 0)
   const [attemptId, setAttemptId] = useState<number>()
   const [keyRaw, setKeyRaw] = useState('')
   const [res, setRes] = useState<ScoreResult | null>(null)
   const timer = useCountdown(() => finish())
 
+  // Resuming: continue the clock from the saved deadline.
+  useEffect(() => {
+    if (!resume) return
+    const left = Math.round((resume.deadline - Date.now()) / 1000)
+    if (left > 0) timer.start(left)
+    else finish()
+  }, []) // once, on mount
+
+  useEffect(() => {
+    if (phase === 'run') db.settings.put({ key: OMR_KEY, value: { paperId: paper.id, n, minutes, resp, startedAt, deadline } satisfies OmrRun })
+  }, [phase, resp, n, minutes, startedAt, deadline, paper.id])
+
   const begin = () => {
+    const now = Date.now()
     setResp(Array(n).fill(null))
-    setStartedAt(Date.now())
+    setStartedAt(now)
+    setDeadline(now + minutes * 60_000)
     timer.start(minutes * 60)
     setPhase('run')
   }
@@ -119,8 +155,9 @@ function OMRSheet({ paper, openUrl, onExit }: { paper: OfficialPaper; openUrl: s
     timer.stop()
     const id = await db.attempts.add({
       kind: 'omr', exam: paper.exam, title: `${paper.sitting} — ${paper.paper}`, at: Date.now(),
-      durationSec: Math.round((Date.now() - startedAt) / 1000), total: n, responses: resp, paperUrl: paper.url, marksPerQ: perQ, negative,
+      durationSec: Math.round((Date.now() - startedAt) / 1000), total: n, responses: resp, paperUrl: paper.url, paperId: paper.id, marksPerQ: perQ, negative,
     })
+    await db.settings.delete(OMR_KEY)
     setAttemptId(id)
     setPhase('key')
   }
@@ -214,17 +251,22 @@ function OMRSheet({ paper, openUrl, onExit }: { paper: OfficialPaper; openUrl: s
 
   return (
     <div className="space-y-14">
-      {res && <ScoreCard res={res} />}
+      {res && <ScoreCard res={res} keyStr={key} paper={{ paperId: paper.id, title: `${paper.sitting} — ${paper.paper}`, url: openUrl, exam: paper.exam }} />}
       <Button onClick={onExit}>Back to papers</Button>
     </div>
   )
 }
 
-export function ScoreCard({ res }: { res: ScoreResult }) {
+export type PaperRef = { paperId: string; title: string; url?: string; exam: string }
+
+export function ScoreCard({ res, paper, keyStr }: { res: ScoreResult; paper?: PaperRef; keyStr?: string }) {
   const attempted = res.correct + res.wrong
+  const [adding, setAdding] = useState<number | null>(null)
+  const savedIds = useLiveQuery(async () => (paper ? new Set(await db.mistakes.where('id').startsWith(`p:${paper.paperId}:`).primaryKeys()) : new Set<string>()), [paper?.paperId]) ?? new Set<string>()
+  const isSaved = (q: number) => savedIds.has(`p:${paper?.paperId}:${q}`)
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+    <div className="space-y-12">
+      <div className="grid grid-cols-2 gap-x-14 gap-y-10 md:grid-cols-4">
         <Stat label="Score" value={`${res.score} / ${res.maxScore}`} />
         <Stat label="Accuracy" value={`${attempted ? Math.round((res.correct / attempted) * 100) : 0}%`} hint={`${attempted} attempted`} />
         <Stat label="Right · Wrong" value={`${res.correct} · ${res.wrong}`} />
@@ -232,11 +274,50 @@ export function ScoreCard({ res }: { res: ScoreResult }) {
       </div>
       {res.wrongNums.length > 0 && (
         <Card title="Wrong answers — revisit these in the paper">
+          {paper && <p className="mb-4 text-sm text-ink-400">Tap a question to add it to your mistake notebook with its topic and why you missed it. It comes back for revision from tomorrow.</p>}
           <div className="flex flex-wrap gap-1.5">
-            {res.wrongNums.map(q => <span key={q} className="rounded-full bg-ember-950 px-2 py-0.5 font-mono text-xs text-ember-300">Q{q}</span>)}
+            {res.wrongNums.map(q => paper ? (
+              <button key={q} onClick={() => setAdding(adding === q ? null : q)}
+                className={`rounded-full px-2.5 py-1 text-xs tabular-nums transition-colors ${isSaved(q) ? 'bg-verdant-500/20 text-verdant-300' : adding === q ? 'bg-ember-500 text-white' : 'bg-ember-500/15 text-ember-300 hover:bg-ember-500/25'}`}>
+                Q{q}{isSaved(q) ? ' ✓' : ''}
+              </button>
+            ) : <span key={q} className="rounded-full bg-ember-500/15 px-2.5 py-1 text-xs tabular-nums text-ember-300">Q{q}</span>)}
           </div>
+          {paper && adding !== null && <PaperMistakeForm key={adding} paper={paper} qno={adding} correct={keyStr?.[adding - 1]} onDone={() => setAdding(null)} />}
         </Card>
       )}
+    </div>
+  )
+}
+
+function PaperMistakeForm({ paper, qno, correct, onDone }: { paper: PaperRef; qno: number; correct?: string; onDone: () => void }) {
+  const exam = examById(paper.exam)
+  const subjects = exam?.syllabus ?? []
+  const [subject, setSubject] = useState(subjects[0]?.subject ?? 'General Knowledge')
+  const [topic, setTopic] = useState('')
+  const [reason, setReason] = useState<MistakeReason | ''>('')
+  const [note, setNote] = useState('')
+  const topics = subjects.find(s => s.subject === subject)?.topics ?? []
+  return (
+    <div className="mt-5 rounded-3xl bg-fg/[0.04] p-5">
+      <div className="mb-4 text-sm text-ink-200">Q{qno}{correct && correct !== 'X' ? ` · correct answer ${correct}` : ''}</div>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div><label className={labelCls}>Subject</label>
+          <select className={inputCls} value={subject} onChange={e => { setSubject(e.target.value); setTopic('') }}>{subjects.map(s => <option key={s.subject}>{s.subject}</option>)}</select></div>
+        <div><label className={labelCls}>Topic</label>
+          <input className={inputCls} list={`topics-${qno}`} value={topic} onChange={e => setTopic(e.target.value)} placeholder="Pick or type" />
+          <datalist id={`topics-${qno}`}>{topics.map(t => <option key={t} value={t} />)}</datalist></div>
+        <div><label className={labelCls}>Why I missed it</label>
+          <select className={inputCls} value={reason} onChange={e => setReason(e.target.value as MistakeReason | '')}><option value="">—</option>{REASONS.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}</select></div>
+        <div><label className={labelCls}>Note to self</label><input className={inputCls} value={note} onChange={e => setNote(e.target.value)} placeholder="The rule, the trap, the fact" /></div>
+      </div>
+      <div className="mt-4 flex gap-2">
+        <Button variant="subtle" onClick={async () => {
+          await addPaperMistake({ ...paper, qno, subject, topic: topic.trim() || 'General', correct: correct && correct !== 'X' ? correct : undefined, reason: reason || undefined, note: note.trim() || undefined })
+          onDone()
+        }}>Save to notebook</Button>
+        <Button variant="ghost" onClick={onDone}>Cancel</Button>
+      </div>
     </div>
   )
 }

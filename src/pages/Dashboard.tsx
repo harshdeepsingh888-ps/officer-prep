@@ -5,15 +5,8 @@ import { db, useSetting, activeDays, streakFrom } from '../lib/db'
 import { addDays, daysUntil, fmtDate, fmtDateTime, todayISO, round2 } from '../lib/util'
 import { Badge, Button, Card, Empty, Progress, Stat, inputCls } from '../components/ui'
 import { Constellation } from '../components/Particles'
-
-const DRILLS = [
-  { label: '20-question mixed quiz', href: '#/practice', time: '20 min' },
-  { label: 'Word Association Test — 60 words', href: '#/ssb/wat', time: '15 min' },
-  { label: 'Situation Reaction Test — 30 situations', href: '#/ssb/srt', time: '15 min' },
-  { label: 'One essay or précis', href: '#/writing', time: '30 min' },
-  { label: 'Current affairs from PIB — note 5 items', href: '#/library', time: '20 min' },
-  { label: 'Run / PT — log it as a task', href: '#/planner', time: '45 min' },
-]
+import { DailyMission } from '../components/DailyMission'
+import { ReadinessPanel } from '../components/ReadinessPanel'
 
 export default function Dashboard() {
   const today = todayISO()
@@ -61,7 +54,7 @@ export default function Dashboard() {
           <div className="mt-10 flex flex-wrap items-center gap-7">
             {countdowns.length === 0
               ? <a href="#/exams"><Button size="lg">Choose your exams</Button></a>
-              : <a href="#/practice"><Button size="lg">Start today's drill</Button></a>}
+              : <a href="#/revise"><Button size="lg">Start today's revision</Button></a>}
             <a href="#/planner" className="label text-ink-400 transition-colors hover:text-fg">Open planner →</a>
           </div>
         </div>
@@ -94,6 +87,8 @@ export default function Dashboard() {
         </section>
       )}
 
+      {targetExams.length > 0 && <ReadinessPanel exams={targetExams} />}
+
       <section className="grid grid-cols-2 gap-x-14 gap-y-12 lg:grid-cols-4">
         <Stat label="Streak" value={streak} hint="days in a row" />
         <Stat label="Study this week" value={`${studyHours}h`} hint="from Pomodoro sessions" />
@@ -120,18 +115,7 @@ export default function Dashboard() {
           )}
         </Card>
 
-        <Card title="Daily drill">
-          <ul className="divide-y divide-fg/[0.06]">
-            {DRILLS.map(d => (
-              <li key={d.label}>
-                <a href={d.href} className="group flex items-center justify-between gap-4 py-3">
-                  <span className="text-ink-200 transition-colors group-hover:text-fg">{d.label}</span>
-                  <span className="shrink-0 text-xs text-ink-500 transition-colors group-hover:text-saffron-400">{d.time}</span>
-                </a>
-              </li>
-            ))}
-          </ul>
-        </Card>
+        <DailyMission exams={targetExams} />
 
         <Card title="Syllabus coverage" action={<a href="#/syllabus" className="label text-[11px] text-ink-400 hover:text-fg">Syllabus →</a>}>
           {targetExams.length === 0 ? <Empty>Choose target exams to track coverage.</Empty> : (
@@ -154,7 +138,7 @@ export default function Dashboard() {
           )}
         </Card>
 
-        <Card title="Recent tests" action={<a href="#/practice/history" className="label text-[11px] text-ink-400 hover:text-fg">History →</a>}>
+        <Card title="Recent tests" action={<a href="#/practice/analytics" className="label text-[11px] text-ink-400 hover:text-fg">Analytics →</a>}>
           {recent.length === 0 ? <Empty>No tests yet. Try a quick quiz or a past paper.</Empty> : (
             <ul className="divide-y divide-fg/[0.06]">
               {recent.map(a => (

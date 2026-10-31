@@ -11,22 +11,9 @@ export default function History() {
   const attempts = useLiveQuery(() => db.attempts.orderBy('at').reverse().toArray(), []) ?? []
   const [open, setOpen] = useState<number | null>(null)
 
-  const weak = new Map<string, number>()
-  attempts.forEach(a => a.wrongTopics?.forEach(t => weak.set(t, (weak.get(t) ?? 0) + 1)))
-  const weakTop = [...weak.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8)
-
-  if (attempts.length === 0) return <Empty>No attempts yet.</Empty>
-
   return (
-    <div className="space-y-14">
-      {weakTop.length > 0 && (
-        <Card title="Weak topics (most wrong answers in quizzes)">
-          <div className="flex flex-wrap gap-2">
-            {weakTop.map(([t, c]) => <span key={t} className="rounded-full bg-ember-950/70 px-2 py-1 text-xs text-ember-200">{t} <span className="text-ember-400">×{c}</span></span>)}
-          </div>
-        </Card>
-      )}
-      <Card>
+    <Card title={`All attempts (${attempts.length})`}>
+      {attempts.length === 0 ? <Empty>No attempts yet.</Empty> : (
         <ul className="divide-y divide-fg/[0.06]">
           {attempts.map(a => (
             <li key={a.id} className="py-2.5">
@@ -42,8 +29,8 @@ export default function History() {
             </li>
           ))}
         </ul>
-      </Card>
-    </div>
+      )}
+    </Card>
   )
 }
 
@@ -62,7 +49,7 @@ function Detail({ a }: { a: Attempt }) {
     <div className="mt-3 space-y-3 rounded-3xl bg-fg/[0.04] p-3">
       {a.kind === 'omr' && (
         <>
-          {result && <ScoreCard res={result} />}
+          {result && <ScoreCard res={result} keyStr={a.key} paper={{ paperId: a.paperId ?? `attempt-${a.id}`, title: a.title, url: a.paperUrl, exam: a.exam }} />}
           <div>
             <div className="mb-1 text-xs text-ink-400">{a.key ? 'Edit answer key' : 'Answer key'} — letters in order, X for dropped</div>
             <textarea className={`${inputCls} h-20 font-mono`} value={raw} onChange={e => setRaw(e.target.value)} />
