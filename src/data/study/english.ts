@@ -1,5 +1,6 @@
 import type { ExamId } from '../exams'
-import { PYQ, ex, guide, k, pts, tbl, type ReadItem } from './types'
+import { ENGLISH_EXTRA } from './english-questions'
+import { PYQ, ex, guide, guideQuestions, k, pts, tbl, type ReadItem } from './types'
 
 const EXAMS: ExamId[] = ['cds', 'afcat', 'icg', 'capf']
 const WREN: ReadItem = { title: 'Wren & Martin — High School English Grammar and Composition', detail: 'The standard grammar reference: agreement, tenses, articles, prepositions, voice and narration' }
@@ -17,7 +18,7 @@ The result, in several regions, has been falling water tables: wells must be dug
 
 const CLOZE = `The Siachen Glacier is often called the highest battlefield in the world. Soldiers posted there face temperatures that can (1) ____ to minus fifty degrees Celsius, and the air holds far (2) ____ oxygen than at sea level. Before being deployed, troops spend weeks (3) ____ to the altitude in stages. Even so, frostbite and altitude sickness (4) ____ a constant threat. Serving there demands not only physical (5) ____ but also great mental strength.`
 
-export const ENGLISH = [
+const RAW = [
   guide({
     id: 'eng-rc', track: 'English', subject: 'English', topic: 'Reading comprehension', exams: [...EXAMS, 'cse'],
     syllabus: [k('cds', 'English', 'Reading comprehension'), k('afcat', 'Verbal Ability', 'Comprehension'), k('icg', 'English', 'Comprehension'), k('capf', 'Paper II', 'Comprehension'), k('cse', 'CSAT', 'Comprehension')],
@@ -287,3 +288,8 @@ export const ENGLISH = [
     ],
   }),
 ]
+
+// Each guide's own questions, then its extra practice set (ids <guide>-x-1 … so they never clash).
+export const ENGLISH = RAW.map(g => (ENGLISH_EXTRA[g.id]
+  ? { ...g, questions: [...g.questions, ...guideQuestions({ ...g, id: `${g.id}-x` }, ENGLISH_EXTRA[g.id])] }
+  : g))
