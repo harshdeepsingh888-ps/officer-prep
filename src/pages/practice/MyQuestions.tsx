@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { EXAMS, type ExamId } from '../../data/exams'
 import { DIFFICULTY_LABEL, difficultyOf, parseQuestionImport, type Difficulty, type Question } from '../../data/questions'
+import { OFFICIAL_PAPERS } from '../../data/sources'
 import { db } from '../../lib/db'
-import { parsePastedMCQs } from '../../lib/paste'
+import { answerKeyColumns, parseAnswerKey, parsePaper, parsePastedMCQs } from '../../lib/paste'
 import { downloadText, todayISO } from '../../lib/util'
 import { Badge, Button, Card, Empty, inputBase, inputCls, labelCls } from '../../components/ui'
 
@@ -19,6 +20,40 @@ Q2. Who was the first Chief of Defence Staff of India?
 (b) Gen Bipin Rawat ✅
 (c) Gen Anil Chauhan
 (d) Adm Karambir Singh`
+const SAMPLE_PAPER = `1. Consider the following statements about INS Vikrant:
+1. It is India's first indigenous aircraft carrier.
+2. It was commissioned in 2022.
+Which of the statements given above is/are correct?
+(a) 1 only
+(b) 2 only
+(c) Both 1 and 2
+(d) Neither 1 nor 2
+1. आईएनएस विक्रांत के बारे में निम्नलिखित कथनों पर विचार कीजिए :
+(a) केवल 1 (b) केवल 2
+(c) 1 और 2 दोनों (d) न तो 1, न ही 2
+2. Which one of the following rivers flows westward into the Arabian Sea?
+(a) Godavari (b) Krishna
+(c) Narmada (d) Mahanadi
+2. निम्नलिखित में से कौन-सी नदी पश्चिम की ओर बहकर अरब सागर में गिरती है?
+(a) गोदावरी (b) कृष्णा
+(c) नर्मदा (d) महानदी
+3. In the figure given below, ABCD is a square of side 10 cm. What is the area of the shaded region?
+(a) 25 cm² (b) 50 cm² (c) 75 cm² (d) 100 cm²`
+const SAMPLE_KEY = '1 C  2 C  3 B'
+const PAPER_HINT = `Open the PDF, select all (Ctrl+A), copy and paste here.
+Hindi lines, the cover page and page numbers are dropped.
+
+1. Which one of the following …
+(a) …  (b) …
+(c) …  (d) …`
+const KEY_HINT = `1 C  2 A  3 D …
+or 1-(c) per line
+or a table: 1 c a b d
+or CADB…`
+
+/** The subject a paper's questions default to; mixed papers (CAPF, GS) default to GK. */
+const subjectFor = (paper: string): Question['subject'] =>
+  /english/i.test(paper) ? 'English' : /math/i.test(paper) ? 'Mathematics' : /csat/i.test(paper) ? 'Reasoning' : 'General Knowledge'
 
 function TagFields({ subject, setSubject, topic, setTopic, difficulty, setDifficulty }: {
   subject: Question['subject']; setSubject: (s: Question['subject']) => void; topic: string; setTopic: (t: string) => void
@@ -53,12 +88,13 @@ function ExamChecks({ exams, setExams }: { exams: ExamId[]; setExams: (e: ExamId
   )
 }
 
-export default function MyQuestions() {
+export default function MyQuestions({ paperId }: { paperId?: string }) {
   const qs = useLiveQuery(() => db.questions.toArray(), []) ?? []
   const [msg, setMsg] = useState('')
 
   return (
     <div className="space-y-16">
+      <PaperImport key={paperId} paperId={paperId} have={qs} onDone={setMsg} />
       <PasteImport onDone={setMsg} />
       <AddQuestion onDone={setMsg} />
       <BulkImport onDone={setMsg} />
@@ -84,6 +120,162 @@ export default function MyQuestions() {
         )}
       </Card>
     </div>
+  )
+}
+
+/** A UPSC paper's text plus its answer key, turned into questions in your bank. */
+function PaperImport({ paperId, have, onDone }: { paperId?: string; have: { source?: string }[]; onDone: (m: string) => void }) {
+  const initial = OFFICIAL_PAPERS.find(p => p.id === paperId)
+  const [id, setId] = useState(initial?.id ?? OFFICIAL_PAPERS[0].id)
+  const paper = OFFICIAL_PAPERS.find(p => p.id === id)
+  const [other, setOther] = useState('')
+  const [subject, setSubject] = useState<Question['subject']>(subjectFor((initial ?? OFFICIAL_PAPERS[0]).paper))
+  const [topic, setTopic] = useState(`PYQ · ${(initial ?? OFFICIAL_PAPERS[0]).sitting}`)
+  const [difficulty, setDifficulty] = useState<Difficulty>(3)
+  const [exams, setExams] = useState<ExamId[]>([(initial ?? OFFICIAL_PAPERS[0]).exam])
+  const [raw, setRaw] = useState('')
+  const [keyRaw, setKeyRaw] = useState('')
+  const [series, setSeries] = useState(0)
+  const [picked, setPicked] = useState<Map<number, boolean>>(new Map())
+
+  const choose = (next: string) => {
+    setId(next)
+    const p = OFFICIAL_PAPERS.find(x => x.id === next)
+    if (p) { setSubject(subjectFor(p.paper)); setTopic(`PYQ · ${p.sitting}`); setExams([p.exam]) }
+    else { setTopic('PYQ'); setExams(EXAMS.map(e => e.id)) }
+  }
+
+  const label = paper ? `${paper.sitting} — ${paper.paper}` : other.trim()
+  const questions = useMemo(() => parsePaper(raw), [raw])
+  const columns = useMemo(() => answerKeyColumns(keyRaw), [keyRaw])
+  const key = useMemo(() => parseAnswerKey(keyRaw, series), [keyRaw, series])
+  const sources = new Set(have.map(q => q.source))
+
+  const rows = questions.map(q => {
+    const answer = key.get(q.n)
+    const source = `${label} · Q${q.n}`
+    const dup = sources.has(source)
+    const usable = typeof answer === 'number' && answer < q.options.length && q.options.length >= 2 && !!q.text
+    // Figure questions are left out by default: the figure doesn't copy.
+    return { ...q, answer, source, dup, usable, on: usable && (picked.get(q.n) ?? (!q.figure && !dup)) }
+  })
+  const chosen = rows.filter(r => r.on)
+  const nums = new Set(questions.map(q => q.n))
+  const first = Math.min(...nums), last = Math.max(...nums)
+  const missing = questions.length ? Array.from({ length: last - first + 1 }, (_, i) => first + i).filter(n => !nums.has(n)) : []
+  const figures = rows.filter(r => r.figure).length
+
+  const save = async () => {
+    await db.questions.bulkAdd(chosen.map(r => ({
+      text: r.text, options: r.options, answer: r.answer as number, passage: r.passage,
+      subject, topic: topic.trim() || 'PYQ', difficulty, exams, source: r.source,
+    })))
+    onDone(`Added ${chosen.length} question${chosen.length === 1 ? '' : 's'} from ${label}.`)
+    setRaw(''); setKeyRaw(''); setPicked(new Map())
+  }
+
+  return (
+    <Card title="Import a past paper">
+      <p className="mb-5 text-sm text-ink-400">
+        Turn a UPSC paper into practice questions in your bank: paste the paper's text and its official answer key, check the preview, and add.
+        The questions then turn up in your topic tests and mocks. Everything stays on this device, for your own practice.
+      </p>
+      <div className="grid gap-3 sm:grid-cols-2">
+        <div className="min-w-0">
+          <label className={labelCls}>Paper</label>
+          <select className={inputCls} value={id} onChange={e => choose(e.target.value)}>
+            {EXAMS.filter(e => OFFICIAL_PAPERS.some(p => p.exam === e.id)).map(e => (
+              <optgroup key={e.id} label={e.short}>
+                {OFFICIAL_PAPERS.filter(p => p.exam === e.id).map(p => <option key={p.id} value={p.id}>{p.sitting} — {p.paper}</option>)}
+              </optgroup>
+            ))}
+            <option value="">Another paper…</option>
+          </select>
+        </div>
+        {paper ? (
+          <div className="flex flex-wrap items-end gap-x-4 gap-y-1 pb-2.5 text-sm">
+            <a href={paper.url} target="_blank" rel="noreferrer" className="text-saffron-400 hover:underline">Open the paper ↗</a>
+            <a href="https://www.upsc.gov.in/examinations/answer-key/archives" target="_blank" rel="noreferrer" className="text-saffron-400 hover:underline">UPSC answer keys ↗</a>
+          </div>
+        ) : (
+          <div><label className={labelCls}>Paper name</label><input className={inputCls} value={other} onChange={e => setOther(e.target.value)} placeholder="e.g. AFCAT 2/2025" /></div>
+        )}
+      </div>
+
+      <div className="mt-5 grid gap-4 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]">
+        <div>
+          <label className={labelCls}>Question paper text</label>
+          <textarea className={`${inputBase} h-56 w-full px-4 py-3 font-mono text-xs`} value={raw} onChange={e => { setRaw(e.target.value); setPicked(new Map()) }} placeholder={PAPER_HINT} />
+        </div>
+        <div>
+          <label className={labelCls}>Answer key</label>
+          <textarea className={`${inputBase} h-56 w-full px-4 py-3 font-mono text-xs`} value={keyRaw} onChange={e => { setKeyRaw(e.target.value); setPicked(new Map()) }} placeholder={KEY_HINT} />
+        </div>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-ink-500">
+        <span>The key must be for your PDF's booklet series (the letter on its cover). X marks a dropped question.</span>
+        {columns >= 2 && (
+          <label className="flex items-center gap-2">
+            <span>Series column</span>
+            <select className={`${inputBase} px-3 py-1.5 text-xs`} value={series} onChange={e => setSeries(Number(e.target.value))}>
+              {Array.from({ length: columns }, (_, i) => <option key={i} value={i}>{'ABCD'[i] ?? i + 1}</option>)}
+            </select>
+          </label>
+        )}
+      </div>
+      <p className="mt-1 text-xs text-ink-500">Nothing selects in the PDF? It's a scan: copy its text with an OCR tool such as Google Lens or the Windows Snipping Tool's text actions.</p>
+
+      {raw.trim() && (
+        <div className="mt-6">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-sm">
+            <span className={questions.length ? 'text-verdant-300' : 'text-saffron-400'}>
+              {questions.length ? `${questions.length} questions found (Q${first}–Q${last})` : 'No numbered questions with (a)–(d) options found'}
+            </span>
+            {keyRaw.trim() && <span className="text-ink-400">{key.size} answers in the key</span>}
+            {missing.length > 0 && <span className="text-saffron-400">Missing: Q{missing.slice(0, 8).join(', Q')}{missing.length > 8 ? ` and ${missing.length - 8} more` : ''}</span>}
+          </div>
+          {figures > 0 && <p className="mt-1 text-xs text-ink-500">{figures} question{figures === 1 ? ' has' : 's have'} a figure and {figures === 1 ? 'is' : 'are'} left out, since figures don't copy. Tick one if its text is enough.</p>}
+          {questions.length > 0 && !keyRaw.trim() && <p className="mt-1 text-xs text-ink-500">Paste the answer key to choose the questions to add.</p>}
+          {questions.length > 0 && (
+            <ul className="mt-4 max-h-[32rem] divide-y divide-fg/[0.06] overflow-auto rounded-3xl bg-fg/[0.03] px-5">
+              {rows.map((r, i) => (
+                <li key={i}>
+                  <label className={`flex gap-3 py-3 text-sm ${r.usable ? 'cursor-pointer' : ''}`}>
+                    <input type="checkbox" className="mt-1 shrink-0 accent-iris-500 pointer-coarse:size-5" disabled={!r.usable} checked={r.on}
+                      onChange={e => setPicked(new Map(picked).set(r.n, e.target.checked))} />
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        <span className="font-mono text-xs tabular-nums text-ink-500">Q{r.n}</span>
+                        {keyRaw.trim() && r.answer === undefined && <Badge tone="saffron">not in key</Badge>}
+                        {r.answer === null && <Badge>dropped</Badge>}
+                        {r.options.length < 4 && <Badge tone="saffron">{r.options.length} option{r.options.length === 1 ? '' : 's'}</Badge>}
+                        {r.figure && <Badge tone="ember">figure</Badge>}
+                        {r.passage && <Badge tone="iris">passage</Badge>}
+                        {r.dup && <Badge>already added</Badge>}
+                      </div>
+                      <div className={`mt-1 line-clamp-4 whitespace-pre-line ${r.on ? 'text-ink-100' : 'text-ink-400'}`}>{r.text || 'No question text'}</div>
+                      <div className="mt-1 text-xs text-ink-400">
+                        {r.options.map((o, j) => <span key={j} className={`mr-3 ${j === r.answer ? 'text-verdant-300' : ''}`}>({'abcd'[j]}) {o}</span>)}
+                      </div>
+                    </div>
+                  </label>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-3">
+        <TagFields {...{ subject, setSubject, topic, setTopic, difficulty, setDifficulty }} />
+      </div>
+      <div className="mt-4"><ExamChecks exams={exams} setExams={setExams} /></div>
+      <div className="mt-5 flex flex-wrap gap-2">
+        <Button disabled={!chosen.length || !exams.length || !label} onClick={save}>Add {chosen.length || ''} questions</Button>
+        {!raw && <Button variant="ghost" onClick={() => { setRaw(SAMPLE_PAPER); setKeyRaw(SAMPLE_KEY) }}>Try a sample</Button>}
+        {raw && <Button variant="ghost" onClick={() => { setRaw(''); setKeyRaw(''); setPicked(new Map()) }}>Clear</Button>}
+      </div>
+    </Card>
   )
 }
 

@@ -54,7 +54,7 @@ export default function App() {
       case 'study': return <Study sub={route[1]} />
       case 'syllabus': return <Study /> // old links
       case 'planner': return <Planner />
-      case 'practice': return <Practice sub={route[1]} />
+      case 'practice': return <Practice sub={route[1]} arg={route[2]} />
       case 'revise': return <Revise sub={route[1]} />
       case 'progress': return <Progress />
       case 'news': return <News sub={route[1]} />

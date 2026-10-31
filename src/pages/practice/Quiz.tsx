@@ -167,7 +167,7 @@ export default function Quiz() {
         </div>
         {r.deadline && <TimerBar remaining={timer.remaining} total={r.seconds ?? r.qs.length * 60} />}
         {q.passage && <Passage text={q.passage} />}
-        <div className="mt-6 text-[clamp(1.5rem,2.6vw,2rem)] font-normal leading-snug tracking-tight text-fg">{q.text}</div>
+        <div className="mt-6 whitespace-pre-line text-[clamp(1.5rem,2.6vw,2rem)] font-normal leading-snug tracking-tight text-fg">{q.text}</div>
         <div className="mt-8 grid gap-2.5">
           {q.options.map((o, j) => (
             <button key={j} onClick={() => choose(r.answers[r.idx] === j ? null : j)}
@@ -291,7 +291,7 @@ function ResultView({ result, onAgain, onBack }: { result: Result; onAgain?: () 
                   {item.changes ? <span>· changed answer {item.changes}×</span> : null}
                 </div>
                 {q.passage && <Passage text={q.passage} collapsible />}
-                <div className="mb-2 text-[15px] text-ink-100">{q.text}</div>
+                <div className="mb-2 whitespace-pre-line text-[15px] text-ink-100">{q.text}</div>
                 <ul className="grid gap-1.5 sm:grid-cols-2">
                   {q.options.map((o, j) => {
                     const cls = j === q.answer ? 'bg-verdant-500/15 text-verdant-300' : j === item.answer ? 'bg-ember-500/15 text-ember-200' : 'text-ink-400'

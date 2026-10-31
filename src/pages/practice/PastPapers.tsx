@@ -76,6 +76,7 @@ export default function PastPapers() {
                       <a href={p.url} target="_blank" rel="noreferrer"><Button variant="ghost" size="sm">Open paper ↗</Button></a>
                       {drive.status === 'ready' && <SaveCopy paper={p} />}
                     </>}
+                <a href={`#/practice/mine/${encodeURIComponent(p.id)}`} title="Paste this paper's text and key to turn it into practice questions"><Button variant="ghost" size="sm">Make questions</Button></a>
                 <Button size="sm" onClick={() => setPaper(p)}>OMR sheet</Button>
               </li>
             )

@@ -29,7 +29,9 @@ export function useCountdown(onExpire?: () => void) {
 
 /** Minimal hash router: "#/ssb/wat" → ["ssb", "wat"]. */
 export function useRoute(): string[] {
-  const read = () => window.location.hash.replace(/^#\/?/, '').split('/').filter(Boolean)
+  const read = () => window.location.hash.replace(/^#\/?/, '').split('/').filter(Boolean).map(s => {
+    try { return decodeURIComponent(s) } catch { return s } // ids with spaces arrive encoded
+  })
   const [route, setRoute] = useState(read)
   useEffect(() => {
     const on = () => { setRoute(read()); window.scrollTo(0, 0) }

@@ -146,7 +146,7 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
         {mcq ? (
           <>
             {mcq.passage && <div className="mb-6"><Passage text={mcq.passage} /></div>}
-            <div className="text-[clamp(1.5rem,2.6vw,2rem)] font-normal leading-snug tracking-tight text-fg">{mcq.text}</div>
+            <div className="whitespace-pre-line text-[clamp(1.5rem,2.6vw,2rem)] font-normal leading-snug tracking-tight text-fg">{mcq.text}</div>
             <div className="mt-8 grid gap-2.5">
               {mcq.options.map((o, j) => {
                 const cls = !revealed ? 'bg-fg/[0.04] text-ink-200 hover:bg-fg/[0.08]'

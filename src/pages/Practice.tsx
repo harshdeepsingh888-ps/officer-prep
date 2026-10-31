@@ -7,7 +7,7 @@ import Analytics from './practice/Analytics'
 
 type Tab = 'quiz' | 'papers' | 'mine' | 'analytics'
 
-export default function Practice({ sub }: { sub?: string }) {
+export default function Practice({ sub, arg }: { sub?: string; arg?: string }) {
   const tab: Tab = sub === 'papers' || sub === 'mine' ? sub : sub === 'analytics' || sub === 'history' ? 'analytics' : 'quiz'
   return (
     <div>
@@ -24,7 +24,7 @@ export default function Practice({ sub }: { sub?: string }) {
       />
       {tab === 'quiz' && <Quiz />}
       {tab === 'papers' && <PastPapers />}
-      {tab === 'mine' && <MyQuestions />}
+      {tab === 'mine' && <MyQuestions paperId={arg} />}
       {tab === 'analytics' && <Analytics />}
     </div>
   )

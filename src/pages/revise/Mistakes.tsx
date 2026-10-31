@@ -80,7 +80,7 @@ function MistakeRow({ m, due }: { m: Mistake; due?: number }) {
         {m.count > 1 && <Badge tone="ember">wrong {m.count}×</Badge>}
         <span className="ml-auto">{dueLabel}</span>
       </div>
-      <div className="mt-2 text-ink-100">{q ? q.text : m.prompt}</div>
+      <div className="mt-2 whitespace-pre-line text-ink-100">{q ? q.text : m.prompt}</div>
       <div className="mt-1 text-sm">
         {q ? (
           <>
