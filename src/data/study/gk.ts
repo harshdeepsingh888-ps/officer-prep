@@ -1,7 +1,9 @@
 import type { ExamId } from '../exams'
-import { AFCAT_MOCK, NCERT, PIB, PYQ, guide, k, type ReadItem } from './types'
+import { GK_QUESTIONS } from './gk-questions'
+import { REASONING_QUESTIONS } from './reasoning-questions'
+import { AFCAT_MOCK, NCERT, PIB, PYQ, guide, guideQuestions, k, type QSpec, type ReadItem } from './types'
 
-// Reading lists for GK and Reasoning. Notes and question sets for these arrive in batch 2 / 3.
+// GK and Reasoning: reading lists here, practice questions in gk-questions.ts and reasoning-questions.ts.
 
 const GK: ExamId[] = ['cds', 'afcat', 'icg', 'capf', 'cse']
 const NC = (detail: string): ReadItem => ({ ...NCERT, detail: `${detail} — free at ncert.nic.in. New editions are being introduced, so check which book covers this.` })
@@ -10,7 +12,7 @@ const ATLAS: ReadItem = { title: 'Oxford School Atlas (or any good school atlas)
 const NEWS: ReadItem = { title: 'One national newspaper daily (The Hindu / Indian Express)', detail: 'National, international, economy and defence pages; 30–40 minutes', free: true }
 const RSA_REASON: ReadItem = { title: 'R. S. Aggarwal — A Modern Approach to Verbal & Non-Verbal Reasoning', detail: 'Standard practice book for every reasoning question type' }
 
-export const GK_GUIDES = [
+const RAW = [
   guide({
     id: 'gk-polity', track: 'GK', subject: 'General Knowledge', topic: 'Polity', exams: GK,
     syllabus: [k('cds', 'General Knowledge', 'Polity & Constitution'), k('afcat', 'General Awareness', 'Polity'), k('icg', 'General Knowledge', 'Polity'), k('capf', 'Paper I', 'Indian polity'), k('cse', 'Prelims GS', 'Polity & governance')],
@@ -126,3 +128,22 @@ export const GK_GUIDES = [
     read: [{ ...RSA_REASON, detail: 'Non-verbal section: mirror and water images, embedded figures, dot situation, pattern completion' }, AFCAT_MOCK],
   }),
 ]
+
+/**
+ * Moves the right answer to a position picked from the question text, so answers spread evenly over A–D
+ * instead of clustering where they were written. Options with numbers (years, articles, ages) keep
+ * their order, since one value out of sequence would give the answer away; so do sets like
+ * "Only I follows … Neither follows", where the order carries meaning.
+ */
+function spread([text, options, answer, ...rest]: QSpec): QSpec {
+  const fixed = options.every(o => /\d/.test(o)) || options.some(o => /^(none|all|both|neither|only)\b/i.test(o))
+  if (fixed) return [text, options, answer, ...rest]
+  let h = 0
+  for (const ch of text) h = (h * 31 + ch.charCodeAt(0)) >>> 0
+  const to = h % options.length
+  const others = options.filter((_, i) => i !== answer)
+  return [text, [...others.slice(0, to), options[answer], ...others.slice(to)], to, ...rest]
+}
+
+const SETS: Record<string, QSpec[]> = { ...GK_QUESTIONS, ...REASONING_QUESTIONS }
+export const GK_GUIDES = RAW.map(g => (SETS[g.id] ? { ...g, questions: guideQuestions(g, SETS[g.id].map(spread)) } : g))

@@ -90,27 +90,42 @@ function StudyPath() {
       <div className="grid gap-x-16 gap-y-16 lg:grid-cols-2">
         {tracks.map(t => (
           <Card key={t.track} title={`${t.track} · ${t.guides.length} topics`}>
-            <ol className="divide-y divide-fg/[0.06]">
-              {t.guides.map((gd, i) => {
-                const s = statusOf(gd)
-                const target = targetFor(t.guides, gd)
+            <div className="space-y-10">
+              {t.sections.map(sec => {
+                const sum = sec.guides.reduce((n, gd) => n + statusOf(gd), 0)
+                const revised = sec.guides.filter(gd => statusOf(gd) >= 2).length
                 return (
-                  <li key={gd.id} className="flex items-center gap-3 py-3">
-                    <span className="w-5 shrink-0 text-right text-xs tabular-nums text-ink-600">{i + 1}</span>
-                    <a href={`#/study/${gd.id}`} className="min-w-0 flex-1">
-                      <span className={`block truncate ${s >= 2 ? 'text-ink-400' : 'text-ink-100 hover:text-fg'}`}>{gd.topic}</span>
-                      <span className="flex flex-wrap items-center gap-x-2 text-xs font-light text-ink-500">
-                        {gd.notes.length ? <span>notes</span> : <span>reading list</span>}
-                        {gd.questions.length > 0 && <span>· {gd.questions.length} questions</span>}
-                        {target && <span>· by {fmtDate(target).replace(/ \d{4}$/, '')}</span>}
-                      </span>
-                    </a>
-                    <button onClick={() => db.topics.bulkPut(guideRows(gd, (s + 1) % 4))} title="Change status"
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] pointer-coarse:px-3 pointer-coarse:py-2 pointer-coarse:text-xs ${STATUS[s].cls}`}>{STATUS[s].label}</button>
-                  </li>
+                  <section key={sec.name}>
+                    <div className="mb-2 flex items-baseline justify-between gap-3">
+                      <h3 className="text-[15px] text-fg">{sec.name}</h3>
+                      <span className="shrink-0 text-xs tabular-nums text-ink-500">{revised} of {sec.guides.length} revised</span>
+                    </div>
+                    <Progress value={(sum / (sec.guides.length * 3)) * 100} className="mb-1" />
+                    <ol className="divide-y divide-fg/[0.06]">
+                      {sec.guides.map(gd => {
+                        const s = statusOf(gd)
+                        const target = targetFor(t.guides, gd)
+                        return (
+                          <li key={gd.id} className="flex items-center gap-3 py-3">
+                            <span className="w-5 shrink-0 text-right text-xs tabular-nums text-ink-600">{t.guides.indexOf(gd) + 1}</span>
+                            <a href={`#/study/${gd.id}`} className="min-w-0 flex-1">
+                              <span className={`block truncate ${s >= 2 ? 'text-ink-400' : 'text-ink-100 hover:text-fg'}`}>{gd.topic}</span>
+                              <span className="flex flex-wrap items-center gap-x-2 text-xs font-light text-ink-500">
+                                {gd.notes.length ? <span>notes</span> : <span>reading list</span>}
+                                {gd.questions.length > 0 && <span>· {gd.questions.length} questions</span>}
+                                {target && <span>· by {fmtDate(target).replace(/ \d{4}$/, '')}</span>}
+                              </span>
+                            </a>
+                            <button onClick={() => db.topics.bulkPut(guideRows(gd, (s + 1) % 4))} title="Change status"
+                              className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] pointer-coarse:px-3 pointer-coarse:py-2 pointer-coarse:text-xs ${STATUS[s].cls}`}>{STATUS[s].label}</button>
+                          </li>
+                        )
+                      })}
+                    </ol>
+                  </section>
                 )
               })}
-            </ol>
+            </div>
           </Card>
         ))}
       </div>

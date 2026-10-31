@@ -13,11 +13,47 @@ export const guideById = (id: string) => GUIDES.find(g => g.id === id)
 
 const TRACK_ORDER: Track[] = ['Maths', 'English', 'GK', 'Reasoning']
 
-/** The study path for an exam: one ordered list per track. */
-export function tracksFor(exam: ExamId): { track: Track; guides: Guide[] }[] {
-  return TRACK_ORDER
-    .map(track => ({ track, guides: GUIDES.filter(g => g.track === track && g.exams.includes(exam)) }))
-    .filter(t => t.guides.length > 0)
+/** Sections inside each track, in study order. Every guide belongs to one section. */
+export const SECTIONS: Record<Track, { name: string; ids: string[] }[]> = {
+  Maths: [
+    { name: 'Arithmetic', ids: ['math-number', 'math-hcf', 'math-percent', 'math-ratio', 'math-average', 'math-profit', 'math-interest', 'math-work', 'math-tsd'] },
+    { name: 'Algebra', ids: ['math-algebra', 'math-log'] },
+    { name: 'Trigonometry', ids: ['math-trig', 'math-heights'] },
+    { name: 'Geometry & mensuration', ids: ['math-geometry', 'math-mensuration'] },
+    { name: 'Statistics', ids: ['math-stats'] },
+  ],
+  English: [
+    { name: 'Grammar', ids: ['eng-errors', 'eng-improve', 'eng-blanks'] },
+    { name: 'Vocabulary', ids: ['eng-vocab', 'eng-idioms'] },
+    { name: 'Comprehension', ids: ['eng-rc', 'eng-cloze'] },
+    { name: 'Sentence arrangement', ids: ['eng-ordering'] },
+  ],
+  GK: [
+    { name: 'History & culture', ids: ['gk-ancient', 'gk-modern', 'gk-art'] },
+    { name: 'Geography & environment', ids: ['gk-physical-geo', 'gk-indian-geo', 'gk-world-geo', 'gk-environment'] },
+    { name: 'Polity & economy', ids: ['gk-polity', 'gk-economy'] },
+    { name: 'Science', ids: ['gk-physics', 'gk-chemistry', 'gk-biology'] },
+    { name: 'Defence, sports & current affairs', ids: ['gk-defence', 'gk-sports', 'gk-current'] },
+  ],
+  Reasoning: [
+    { name: 'Verbal reasoning', ids: ['rsn-verbal', 'rsn-series'] },
+    { name: 'Non-verbal & military aptitude', ids: ['rsn-spatial'] },
+  ],
+}
+
+export type Section = { name: string; guides: Guide[] }
+
+/** The study path for an exam: one list per track, grouped into sections, in study order. */
+export function tracksFor(exam: ExamId): { track: Track; sections: Section[]; guides: Guide[] }[] {
+  return TRACK_ORDER.map(track => {
+    const mine = GUIDES.filter(g => g.track === track && g.exams.includes(exam))
+    const placed = new Set(SECTIONS[track].flatMap(s => s.ids))
+    const sections = [
+      ...SECTIONS[track].map(s => ({ name: s.name, guides: s.ids.flatMap(id => mine.filter(g => g.id === id)) })),
+      { name: 'Other topics', guides: mine.filter(g => !placed.has(g.id)) },
+    ].filter(s => s.guides.length > 0)
+    return { track, sections, guides: sections.flatMap(s => s.guides) }
+  }).filter(t => t.guides.length > 0)
 }
 
 export const guideKey = (g: Guide) => `study|${g.id}`

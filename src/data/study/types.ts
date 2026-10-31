@@ -29,16 +29,16 @@ export type Guide = {
 /** [text, options, answerIndex, explanation?, difficulty?, passage?] */
 export type QSpec = [string, string[], number, string?, Difficulty?, string?]
 
+/** Turns compact question specs into bank questions that belong to the guide (its exams, subject and topic). */
+export function guideQuestions(g: Pick<Guide, 'id' | 'exams' | 'subject' | 'topic'>, specs: QSpec[]): Question[] {
+  return specs.map(([text, options, answer, explanation, difficulty, passage], i) => ({
+    id: `${g.id}-${i + 1}`, exams: g.exams, subject: g.subject, topic: g.topic,
+    text, options, answer, explanation, difficulty: difficulty ?? 2, passage, source: 'Officer Prep',
+  }))
+}
+
 export function guide(g: Omit<Guide, 'notes' | 'traps' | 'questions'> & { notes?: NoteBlock[]; traps?: string[]; questions?: QSpec[] }): Guide {
-  return {
-    ...g,
-    notes: g.notes ?? [],
-    traps: g.traps ?? [],
-    questions: (g.questions ?? []).map(([text, options, answer, explanation, difficulty, passage], i) => ({
-      id: `${g.id}-${i + 1}`, exams: g.exams, subject: g.subject, topic: g.topic,
-      text, options, answer, explanation, difficulty: difficulty ?? 2, passage, source: 'Officer Prep',
-    })),
-  }
+  return { ...g, notes: g.notes ?? [], traps: g.traps ?? [], questions: guideQuestions(g, g.questions ?? []) }
 }
 
 export const k = (exam: ExamId, subject: string, topic: string): SyllabusKey => ({ exam, subject, topic })

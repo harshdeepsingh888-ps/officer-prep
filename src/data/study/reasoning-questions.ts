@@ -1,0 +1,58 @@
+import type { QSpec } from './types'
+
+// Original reasoning practice questions, by study guide. Figure questions that need a drawing are left
+// to the official AFCAT mock and books; the spatial set here works in words (mirror clocks, painted cubes, dice).
+
+export const REASONING_QUESTIONS: Record<string, QSpec[]> = {
+  'rsn-verbal': [
+    ['In a code, CAT is written as DBU. How is DOG written in that code?', ['EPH', 'CNF', 'EOH', 'DPH'], 0, 'Each letter moves one place forward: D→E, O→P, G→H.', 1],
+    ['If ARMY is coded as BSNZ, how is NAVY coded?', ['MZUX', 'OBWZ', 'OBXZ', 'NBWZ'], 1, 'Each letter moves one place forward: N→O, A→B, V→W, Y→Z.', 1],
+    ['In a code each letter is replaced by its opposite letter (A↔Z, B↔Y, C↔X …), so BOMB becomes YLNY. How is TANK written?', ['GZMP', 'GAMP', 'HZMP', 'GZNP'], 0, 'Opposite letters add up to 27 in position: T(20)↔G(7), A↔Z, N(14)↔M(13), K(11)↔P(16).', 2],
+    ['If A = 1, B = 2, C = 3 and so on, what is the sum of the letters of ARMY?', ['54', '57', '59', '62'], 1, 'A 1 + R 18 + M 13 + Y 25 = 57.', 1],
+    ['Pointing to a man, Riya says, “He is the son of my grandfather’s only son.” How is the man related to Riya?', ['Cousin', 'Uncle', 'Brother', 'Father'], 2, 'Her grandfather’s only son is her father, and her father’s son is her brother.', 1],
+    ['A is B’s sister. C is B’s mother. D is C’s father. How is A related to D?', ['Daughter', 'Granddaughter', 'Niece', 'Sister'], 1, 'A is C’s daughter, and C is D’s daughter, so A is D’s granddaughter.', 2],
+    ['A man walks 5 km north, turns right and walks 3 km, then turns right again and walks 5 km. Where is he now from his starting point?', ['3 km east', '3 km west', '5 km north', '8 km east'], 0, 'North 5, east 3, south 5: the north–south moves cancel, leaving him 3 km east.', 1],
+    ['A soldier faces north, turns 90° clockwise, then 180° anticlockwise. Which way does he face now?', ['North', 'South', 'East', 'West'], 3, 'Clockwise 90° from north is east; 180° from east is west.', 1],
+    ['In a row of 40 cadets, Ravi is 12th from the left. What is his position from the right?', ['28th', '29th', '30th', '27th'], 1, 'From the right = total − from the left + 1 = 40 − 12 + 1 = 29.', 1],
+    ['Mohan is 7th from the top and 26th from the bottom in his class. How many students are in the class?', ['31', '32', '33', '34'], 1, 'Total = 7 + 26 − 1 = 32 (Mohan is counted in both).', 1],
+    ['Statements: All soldiers are brave. Some brave people are athletes. Conclusions: I. Some soldiers are athletes. II. All athletes are brave.', ['Only I follows', 'Only II follows', 'Both follow', 'Neither follows'], 3, 'The athletes who are brave need not include any soldier, and only some athletes are known to be brave.', 2],
+    ['Statements: All officers are graduates. All graduates are literate. Conclusions: I. All officers are literate. II. All literate people are officers.', ['Only I follows', 'Only II follows', 'Both follow', 'Neither follows'], 0, 'Officers ⊂ graduates ⊂ literate, so I follows. The reverse (II) does not.', 2],
+    ['1 January 2026 is a Thursday. What day of the week is 1 January 2027?', ['Thursday', 'Friday', 'Saturday', 'Wednesday'], 1, '2026 is not a leap year: 365 days = 52 weeks + 1 day, so the day moves forward by one.', 2],
+    ['What is the angle between the hour and minute hands of a clock at 3:30?', ['60°', '75°', '90°', '105°'], 1, 'Angle = |30H − 5.5M| = |90 − 165| = 75°.', 2],
+    ['P is taller than Q. R is shorter than Q. S is taller than P. Who is the shortest?', ['P', 'Q', 'R', 'S'], 2, 'Order from tallest: S > P > Q > R.', 1],
+  ],
+  'rsn-series': [
+    ['What comes next: 2, 6, 12, 20, 30, ?', ['40', '42', '44', '36'], 1, 'Differences grow by 2 (4, 6, 8, 10, 12); the terms are n(n + 1).', 1],
+    ['What comes next: 3, 9, 27, 81, ?', ['162', '243', '324', '216'], 1, 'Each term is multiplied by 3.', 1],
+    ['What comes next: 5, 11, 23, 47, ?', ['94', '95', '96', '93'], 1, 'Each term is doubled and 1 is added: 47 × 2 + 1 = 95.', 2],
+    ['What comes next: 7, 10, 8, 11, 9, 12, ?', ['10', '13', '11', '14'], 0, 'The pattern alternates +3 and −2: 12 − 2 = 10.', 2],
+    ['What comes next: 1, 4, 9, 16, 25, ?', ['30', '36', '49', '35'], 1, 'Perfect squares: 6² = 36.', 1],
+    ['What comes next: 2, 3, 5, 7, 11, ?', ['12', '13', '15', '17'], 1, 'Consecutive prime numbers.', 1],
+    ['What comes next: A, C, F, J, ?', ['N', 'O', 'P', 'M'], 1, 'Gaps of +2, +3, +4, +5: J (10) + 5 = O (15).', 2],
+    ['What comes next: AZ, BY, CX, ?', ['DW', 'DV', 'EW', 'CW'], 0, 'The first letter moves forward and the second moves back by one.', 1],
+    ['What comes next: B2, D4, F6, ?', ['G7', 'H8', 'H7', 'G8'], 1, 'Every second letter, with its position in the alphabet.', 1],
+    ['Doctor : Hospital :: Teacher : ?', ['Student', 'School', 'Book', 'Class test'], 1, 'Where each one works.', 1],
+    ['Bird : Flock :: Ship : ?', ['Fleet', 'Crew', 'Harbour', 'Anchor'], 0, 'A group of birds is a flock; a group of ships is a fleet.', 1],
+    ['3 : 27 :: 4 : ?', ['16', '48', '64', '81'], 2, 'Each number pairs with its cube: 4³ = 64.', 1],
+    ['Which is the odd one out?', ['Tank', 'Rifle', 'Missile', 'Helmet'], 3, 'The others are weapons; a helmet is protective equipment.', 1],
+    ['Which is the odd one out?', ['Mercury', 'Venus', 'Moon', 'Mars'], 2, 'The Moon is a satellite; the others are planets.', 1],
+    ['Which number is the odd one out?', ['2', '3', '5', '9'], 3, '9 is not a prime number (9 = 3 × 3).', 1],
+    ['Which is the odd one out?', ['Square', 'Rectangle', 'Triangle', 'Rhombus'], 2, 'The others have four sides.', 1],
+  ],
+  'rsn-spatial': [
+    ['In a mirror, a clock appears to show 3:15. What is the actual time?', ['8:45', '9:45', '8:15', '9:15'], 0, 'Actual time = 11:60 − mirror time = 11:60 − 3:15 = 8:45.', 2],
+    ['The actual time is 9:30. What time does the clock appear to show in a mirror?', ['3:30', '2:30', '2:00', '3:00'], 1, 'Mirror time = 11:60 − 9:30 = 2:30.', 2],
+    ['A cube painted on all faces is cut into 27 equal small cubes. How many small cubes have exactly two faces painted?', ['6', '8', '12', '24'], 2, 'They sit on the edges, excluding corners: 12 edges × (3 − 2) = 12.', 2],
+    ['A cube painted on all faces is cut into 27 equal small cubes. How many have no face painted?', ['0', '1', '6', '8'], 1, 'Only the centre cube: (3 − 2)³ = 1.', 1],
+    ['A cube painted on all faces is cut into 27 equal small cubes. How many have three faces painted?', ['4', '6', '8', '12'], 2, 'The corner cubes: a cube always has 8 corners.', 1],
+    ['A cube painted on all faces is cut into 27 equal small cubes. How many have exactly one face painted?', ['6', '8', '12', '24'], 0, 'The centre of each face: 6 faces × (3 − 2)² = 6.', 2],
+    ['A cube painted on all faces is cut into 64 equal small cubes. How many have no face painted?', ['4', '8', '16', '27'], 1, 'The inner block of (4 − 2)³ = 8 cubes.', 2],
+    ['Which letter looks the same when reflected in a mirror placed to its side (left and right swapped)?', ['N', 'S', 'A', 'R'], 2, 'A is symmetric about a vertical line; N, S and R are not.', 1],
+    ['Which letter looks the same in its water image (top and bottom swapped)?', ['E', 'F', 'G', 'L'], 0, 'E is symmetric about a horizontal line.', 1],
+    ['Opposite faces of a standard die add up to 7. If 2 is on top, what number is at the bottom?', ['4', '5', '6', '3'], 1, '7 − 2 = 5.', 1],
+    ['A square sheet of paper is folded in half twice, and one hole is punched through all the layers. How many holes are there when it is unfolded?', ['2', '4', '6', '8'], 1, 'Two folds make 4 layers, so one punch makes 4 holes.', 1],
+    ['How many triangles are formed when both diagonals of a square are drawn?', ['4', '6', '8', '10'], 2, '4 small triangles meet at the centre, plus 4 larger ones, each made of two small triangles (one on each side of a diagonal).', 3],
+    ['Through how many degrees does a clock’s minute hand turn in 20 minutes?', ['60°', '90°', '120°', '180°'], 2, 'It turns 6° a minute: 20 × 6° = 120°.', 1],
+    ['Through how many degrees does a clock’s hour hand turn in one hour?', ['15°', '30°', '45°', '60°'], 1, '360° in 12 hours is 30° an hour.', 1],
+  ],
+}
