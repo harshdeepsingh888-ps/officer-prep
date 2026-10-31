@@ -93,7 +93,7 @@ const RAW = [
     id: 'gk-current', track: 'GK', subject: 'General Knowledge', topic: 'Current affairs', exams: GK,
     syllabus: [k('cds', 'General Knowledge', 'Current affairs'), k('afcat', 'General Awareness', 'Current affairs'), k('icg', 'General Knowledge', 'Current affairs'), k('capf', 'Paper I', 'Current events'), k('cse', 'Prelims GS', 'Current events')],
     summary: 'National and international events of the last 6–12 months: government schemes, summits, appointments, reports and defence news.',
-    read: [NEWS, PIB, { title: 'Your own quiz bank', detail: 'Paste quiz posts from channels you follow (Practice → My questions → Paste) and revise them like everything else', url: '#/practice/mine', free: true }],
+    read: [{ title: 'Current affairs page', detail: 'Exam-relevant headlines twice a day by category, your notes and a weekly recap', url: '#/news', free: true }, NEWS, PIB, { title: 'Your own quiz bank', detail: 'Paste quiz posts from channels you follow (Practice → My questions → Paste) and revise them like everything else', url: '#/practice/mine', free: true }],
   }),
   guide({
     id: 'gk-sports', track: 'GK', subject: 'General Knowledge', topic: 'Sports, awards & books', exams: ['cds', 'afcat'],

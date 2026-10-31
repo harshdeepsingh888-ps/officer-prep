@@ -2,11 +2,18 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { execSync } from 'node:child_process'
+
+// The app's version is the last commit's time, not the build time: rebuilding the same code (the twice-daily
+// headline refresh) then produces identical files, so installed apps aren't told about a "new version".
+const VERSION = (() => {
+  try { return execSync('git log -1 --format=%cI').toString().trim() } catch { return new Date().toISOString() }
+})()
 
 // Production builds (and `vite preview` of them) are served from GitHub Pages at /officer-prep/; dev runs at the root.
 export default defineConfig(({ command, isPreview }) => ({
   base: command === 'build' || isPreview ? '/officer-prep/' : '/',
-  define: { __BUILD_TIME__: JSON.stringify(new Date().toISOString()) }, // shown in Library → This device
+  define: { __BUILD_TIME__: JSON.stringify(VERSION) }, // shown in Library → This device
   plugins: [
     react(),
     tailwindcss(),
@@ -34,6 +41,12 @@ export default defineConfig(({ command, isPreview }) => ({
         // App shell + fonts work offline; Google APIs and UPSC links always go to the network.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
         cleanupOutdatedCaches: true,
+        // Headlines: always try for the latest, fall back to the last copy when offline.
+        runtimeCaching: [{
+          urlPattern: ({ url }) => url.pathname.endsWith('/news/latest.json'),
+          handler: 'NetworkFirst',
+          options: { cacheName: 'news', networkTimeoutSeconds: 8, expiration: { maxEntries: 2 } },
+        }],
       },
     }),
   ],

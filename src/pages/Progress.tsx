@@ -101,7 +101,7 @@ export default function Progress() {
 
       <Card title="Activity">
         <ActivityCalendar counts={d.activity} weeks={wide ? 26 : 15} />
-        <p className="mt-4 text-sm font-light text-ink-500">Counts tests, revision cards, finished tasks, study sessions, SSB sets and essays. Hover a square for the day.</p>
+        <p className="mt-4 text-sm font-light text-ink-500">Counts tests, revision cards, finished tasks, study sessions, SSB sets, essays and current-affairs notes. Hover a square for the day.</p>
       </Card>
 
       <Card title="This week against last">

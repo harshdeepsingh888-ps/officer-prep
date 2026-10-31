@@ -93,6 +93,8 @@ export type Writing = { id?: number; kind: string; topic: string; text: string; 
 export type SSBImage = { id?: number; blob: Blob; name: string; at: number }
 export type CustomLink = { id?: number; title: string; url: string; group: string }
 export type CustomExam = { id?: number; name: string; date: string }
+/** A current-affairs note: a headline you read, your key points, and where it came from. */
+export type NewsNote = { id?: number; date: string; category: string; title: string; text: string; link?: string; source?: string; carded?: boolean; at: number }
 
 class PrepDB extends Dexie {
   settings!: EntityTable<Setting, 'key'>
@@ -109,6 +111,7 @@ class PrepDB extends Dexie {
   mistakes!: EntityTable<Mistake, 'id'>
   cards!: EntityTable<Card, 'id'>
   reviews!: EntityTable<Review, 'id'>
+  notes!: EntityTable<NewsNote, 'id'>
 
   constructor() {
     super('officer-prep')
@@ -131,6 +134,10 @@ class PrepDB extends Dexie {
       cards: 'id, due, deck, status',
       reviews: '++id, at, cardId',
     })
+    // v3: current-affairs notes.
+    this.version(3).stores({
+      notes: '++id, date, category',
+    })
   }
 }
 
@@ -150,7 +157,7 @@ export function updateSetting<T>(key: string, fallback: T, fn: (v: T) => T) {
   })
 }
 
-/** How much was done on each day (local ISO date → tasks, sessions, tests, reviews, SSB sets and essays). */
+/** How much was done on each day (local ISO date → tasks, sessions, tests, reviews, SSB sets, essays and news notes). */
 export async function activityByDay(): Promise<Map<string, number>> {
   const days = new Map<string, number>()
   const add = (day: string) => days.set(day, (days.get(day) ?? 0) + 1)
@@ -161,6 +168,7 @@ export async function activityByDay(): Promise<Map<string, number>> {
   ;(await db.ssb.toArray()).forEach(r => add(toDay(r.at)))
   ;(await db.writings.toArray()).forEach(w => add(toDay(w.at)))
   ;(await db.reviews.toArray()).forEach(r => add(toDay(r.at)))
+  ;(await db.notes.toArray()).forEach(n => add(toDay(n.at)))
   return days
 }
 
@@ -193,7 +201,7 @@ export const markBackedUp = () => db.settings.put({ key: LAST_BACKUP_KEY, value:
 
 /** True once there is progress worth protecting. */
 export async function hasProgress() {
-  const counts = await Promise.all([db.attempts.count(), db.tasks.count(), db.cards.count(), db.ssb.count(), db.writings.count(), db.topics.count(), db.questions.count()])
+  const counts = await Promise.all([db.attempts.count(), db.tasks.count(), db.cards.count(), db.ssb.count(), db.writings.count(), db.topics.count(), db.questions.count(), db.notes.count()])
   return counts.some(n => n > 0)
 }
 
@@ -205,7 +213,7 @@ export async function storageStatus() {
 }
 export const protectStorage = () => navigator.storage?.persist?.() ?? Promise.resolve(false)
 
-const TABLES = ['settings', 'topics', 'tasks', 'sessions', 'questions', 'attempts', 'ssb', 'writings', 'links', 'customExams', 'mistakes', 'cards', 'reviews'] as const
+const TABLES = ['settings', 'topics', 'tasks', 'sessions', 'questions', 'attempts', 'ssb', 'writings', 'links', 'customExams', 'mistakes', 'cards', 'reviews', 'notes'] as const
 
 export async function exportAll() {
   const out: Record<string, unknown[]> = {}

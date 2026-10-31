@@ -12,6 +12,7 @@ import Planner from './pages/Planner'
 import Practice from './pages/Practice'
 import Revise from './pages/Revise'
 import Progress from './pages/Progress'
+import News from './pages/News'
 import SSB from './pages/SSB'
 import Writing from './pages/Writing'
 import Library from './pages/Library'
@@ -24,6 +25,7 @@ const NAV = [
   { id: 'practice', label: 'Practice' },
   { id: 'revise', label: 'Revise' },
   { id: 'progress', label: 'Progress' },
+  { id: 'news', label: 'News' },
   { id: 'ssb', label: 'SSB' },
   { id: 'writing', label: 'Writing' },
   { id: 'documents', label: 'Documents' },
@@ -54,6 +56,7 @@ export default function App() {
       case 'practice': return <Practice sub={route[1]} />
       case 'revise': return <Revise sub={route[1]} />
       case 'progress': return <Progress />
+      case 'news': return <News sub={route[1]} />
       case 'ssb': return <SSB sub={route[1]} />
       case 'writing': return <Writing />
       case 'documents': return <Documents />

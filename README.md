@@ -12,7 +12,7 @@ The app is a PWA. After the first visit it works offline.
 
 **On a phone** the main pages sit in a tab bar at the bottom (Today, Study, Practice, Revise; the rest under **More**). On touch screens, buttons are at least 36px tall, text fields use 16px text so iPhone doesn't zoom in, and the revision grade buttons stay pinned above the tab bar. The dashboard animation (a brain that morphs into a tank, fighter jet, naval ship, rifle, helicopter and missile; pick one below it and drag to turn it to any side) uses fewer particles on small screens, runs at 30 fps on touch devices and stops drawing when scrolled out of view.
 
-**Updates:** when a new version is deployed, a toast says *"A new version of Officer Prep is ready"*. Press **Update now**, or **Later** to finish what you're doing first. The app checks for updates hourly while open. **Library → This device** shows the build time of the version you're running.
+**Updates:** when a new version is deployed, a toast says *"A new version of Officer Prep is ready"*. Press **Update now**, or **Later** to finish what you're doing first. The app checks for updates hourly while open. **Library → This device** shows the date of the version you're running.
 
 ## Keeping your data safe
 - **Storage protection:** an installed app asks the browser to keep its data permanently. You can also press **Protect my data** in Library → This device.
@@ -31,6 +31,8 @@ npm run preview    # http://localhost:4173/officer-prep/
 ## Deploy
 Every push to `main` builds and publishes to GitHub Pages through `.github/workflows/deploy.yml`. Nothing else is needed.
 
+The same workflow also runs at 07:00 and 19:00 IST to refresh the current-affairs headlines (`scripts/fetch-news.mjs`, or `npm run news` locally). Rebuilding unchanged code gives identical files, so these runs don't trigger the update toast. GitHub pauses scheduled workflows in a repository with no activity for 60 days; if the headlines stop updating, re-enable the workflow under **Actions** or push any change.
+
 To change the app icons, edit `scripts/make_icons.py` and run `python scripts/make_icons.py`. It needs Pillow.
 
 ## What's inside
@@ -43,6 +45,7 @@ To change the app icons, edit `scripts/make_icons.py` and run `python scripts/ma
 | Planner | Day planner, Pomodoro (25/50/90), manual time log, 7-day chart |
 | Practice | **Test types:** Quick 10, **weekly quiz** (this week's topics + your mistakes), **sectional tests** and **full mocks** in each paper's pattern (sections, time and per-question marking; a short mock at exam pace when the bank is too small), and **topic tests** by subject, topic, difficulty or "my mistakes" · mark for review, time per question, resume after a reload · **PYQ papers: official UPSC past papers on an OMR sheet** with answer-key scoring (resumable; wrong questions go to the notebook) · your own question bank (form, CSV/JSON, or **paste from Telegram/PDF/notes**) · **analytics**: score trend, accuracy by subject, weakest topics, mistake reasons, review activity |
 | Progress | **Progress report:** current and best streak, an activity calendar of the last 26 weeks, this week against last (study time, tests, accuracy, revision, topics, tasks, SSB, writing), syllabus covered per subject, accuracy by subject, recent tests, and a one-tap weekly report to copy and share |
+| News | **Current affairs:** exam-relevant headlines refreshed twice a day from The Hindu and Indian Express RSS feeds, sorted into National, International, Defence, Economy, Science & tech, Environment, Sports and Appointments (India-related stories and explainers first; local crime and gossip filtered out), each linking to the full story · links to official sources (PIB, MoD, MEA, ISRO) · **notes** in your own words, with an optional revision card in a "Current affairs" deck · **weekly recap** of your notes by category, to copy and share |
 | Revise | **Spaced repetition** (SM-2 style): today's review, with mistakes first and new flashcards capped per day · **mistake notebook** (every wrong quiz answer is saved automatically; past-paper and manual mistakes too; reasons and notes; mastered after a 3-week interval) · **flashcards**: starter decks (ranks and commands, exercises, missiles, polity, vocabulary, maths formulas) and your own, added one by one or pasted in bulk |
 | SSB & Interview | WAT, SRT, TAT, PPDT, SD, Lecturette on real timings · OLQ self-assessment · interview questions generated from your PIQ/DAF · your own TAT/PPDT pictures |
 | Writing | Timed essay / précis / report with word count (CAPF Paper II, CSE Mains) |

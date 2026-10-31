@@ -47,7 +47,7 @@ export function DeviceCard() {
       action: status && !status.persisted && status.supported ? <Button variant="subtle" size="sm" onClick={protect}>Protect my data</Button> : null,
     },
     { label: 'Space used', value: status ? fmtBytes(status.usage) : '…' },
-    { label: 'App version', value: <span className="text-ink-300">built {fmtDateTime(Date.parse(__BUILD_TIME__))}</span> },
+    { label: 'App version', value: <span className="text-ink-300">from {fmtDateTime(Date.parse(__BUILD_TIME__))}</span> },
     { label: 'Works offline', value: offline ? <Badge tone="verdant">yes</Badge> : <span className="text-ink-400">after the first full load</span> },
     { label: 'Installed as an app', value: isInstalled() ? <Badge tone="verdant">yes</Badge> : <span className="text-ink-400">no — use the Install button, or Share → Add to Home Screen on iPhone</span> },
     {
