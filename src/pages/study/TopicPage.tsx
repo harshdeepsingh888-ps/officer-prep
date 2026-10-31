@@ -107,7 +107,7 @@ export default function TopicPage({ guide: g }: { guide: Guide }) {
               </>
             ) : (
               <>
-                <p className="mb-4 text-sm text-ink-400">Topic questions arrive with the notes. Meanwhile, practise the whole subject.</p>
+                <p className="mb-4 text-sm text-ink-400">No fixed question set for this topic: it changes too often. Practise the whole subject, and quiz yourself from your <a href="#/news/notes" className="text-saffron-400 hover:underline">current-affairs notes</a>.</p>
                 <Button variant="subtle" onClick={() => openQuiz({ subject: g.subject, exam })}>Practise {g.subject}</Button>
               </>
             )}

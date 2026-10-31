@@ -1,9 +1,10 @@
 import type { ExamId } from '../exams'
+import { GK_NOTES } from './gk-notes'
 import { GK_QUESTIONS } from './gk-questions'
 import { REASONING_QUESTIONS } from './reasoning-questions'
 import { AFCAT_MOCK, NCERT, PIB, PYQ, guide, guideQuestions, k, type QSpec, type ReadItem } from './types'
 
-// GK and Reasoning: reading lists here, practice questions in gk-questions.ts and reasoning-questions.ts.
+// GK and Reasoning: reading lists here; notes in gk-notes.ts; practice questions in gk-questions.ts and reasoning-questions.ts.
 
 const GK: ExamId[] = ['cds', 'afcat', 'icg', 'capf', 'cse']
 const NC = (detail: string): ReadItem => ({ ...NCERT, detail: `${detail} — free at ncert.nic.in. New editions are being introduced, so check which book covers this.` })
@@ -146,4 +147,8 @@ function spread([text, options, answer, ...rest]: QSpec): QSpec {
 }
 
 const SETS: Record<string, QSpec[]> = { ...GK_QUESTIONS, ...REASONING_QUESTIONS }
-export const GK_GUIDES = RAW.map(g => (SETS[g.id] ? { ...g, questions: guideQuestions(g, SETS[g.id].map(spread)) } : g))
+export const GK_GUIDES = RAW.map(g => ({
+  ...g,
+  ...GK_NOTES[g.id],
+  questions: SETS[g.id] ? guideQuestions(g, SETS[g.id].map(spread)) : g.questions,
+}))
