@@ -7,7 +7,7 @@ import { db, useSetting, type AttemptItem, type MistakeReason } from '../../lib/
 import { useCountdown } from '../../lib/hooks'
 import { REASONS, recordQuizMistakes, type QuizPreset } from '../../lib/learning'
 import { fmtClock, round2 } from '../../lib/util'
-import { Badge, Button, Card, Empty, Stat, TimerBar, inputBase, inputCls, labelCls } from '../../components/ui'
+import { Badge, Button, Card, Empty, Passage, Stat, TimerBar, inputBase, inputCls, labelCls } from '../../components/ui'
 
 const SUBJECTS = ['All', 'English', 'General Knowledge', 'Mathematics', 'Reasoning']
 const RUN_KEY = 'quizRun'
@@ -52,6 +52,7 @@ export default function Quiz() {
     db.settings.get('quizPreset').then(row => {
       if (!row) return
       const p = row.value as QuizPreset
+      if (p.exam) setExamSel(p.exam)
       if (p.source) setSource(p.source)
       setSubject(p.subject ?? 'All')
       setTopic(p.topic ?? '')
@@ -248,6 +249,7 @@ export default function Quiz() {
           <span>{answered} answered{markedCount ? ` · ${markedCount} marked` : ''}</span>
         </div>
         {r.deadline && <TimerBar remaining={timer.remaining} total={r.qs.length * 60} />}
+        {q.passage && <Passage text={q.passage} />}
         <div className="mt-6 text-[clamp(1.5rem,2.6vw,2rem)] font-normal leading-snug tracking-tight text-fg">{q.text}</div>
         <div className="mt-8 grid gap-2.5">
           {q.options.map((o, j) => (
@@ -364,6 +366,7 @@ function ResultView({ result, onAgain, onSettings }: { result: Result; onAgain: 
                   {item.marked && <Badge tone="saffron">marked</Badge>}
                   {item.changes ? <span>· changed answer {item.changes}×</span> : null}
                 </div>
+                {q.passage && <Passage text={q.passage} collapsible />}
                 <div className="mb-2 text-[15px] text-ink-100">{q.text}</div>
                 <ul className="grid gap-1.5 sm:grid-cols-2">
                   {q.options.map((o, j) => {

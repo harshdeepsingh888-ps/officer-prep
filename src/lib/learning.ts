@@ -119,7 +119,7 @@ export async function reviewQueue(newLimit: number, now = Date.now()): Promise<C
 }
 
 // ── Jumping into a pre-filtered quiz ──────────────────────────────
-export type QuizPreset = { subject?: string; topic?: string; source?: 'all' | 'mistakes' | 'mine'; difficulty?: number }
+export type QuizPreset = { subject?: string; topic?: string; source?: 'all' | 'mistakes' | 'mine'; difficulty?: number; exam?: string }
 
 /** Opens Practice with the quiz set up for this topic / source. */
 export async function openQuiz(preset: QuizPreset) {

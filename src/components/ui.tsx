@@ -108,6 +108,19 @@ export function TimerBar({ remaining, total, label }: { remaining: number; total
   )
 }
 
+/** Reading-comprehension / cloze passage shown above a question. */
+export function Passage({ text, collapsible = false }: { text: string; collapsible?: boolean }) {
+  if (collapsible) {
+    return (
+      <details className="mb-3 rounded-3xl bg-fg/[0.04] px-5 py-3 text-sm">
+        <summary className="label cursor-pointer text-[11px] text-ink-400">Passage</summary>
+        <div className="mt-3 whitespace-pre-wrap leading-relaxed text-ink-200">{text}</div>
+      </details>
+    )
+  }
+  return <div className="mt-6 max-h-80 overflow-auto whitespace-pre-wrap rounded-3xl bg-fg/[0.04] px-6 py-5 text-[15px] leading-relaxed text-ink-200">{text}</div>
+}
+
 /** Field look without size — combine with your own width, padding and text size. */
 export const inputBase = 'rounded-3xl bg-fg/[0.06] text-fg placeholder:text-ink-600 outline-none ring-1 ring-transparent transition focus:ring-iris-500'
 export const inputCls = `${inputBase} w-full px-4 py-2.5 text-sm`

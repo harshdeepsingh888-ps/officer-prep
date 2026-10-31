@@ -1,7 +1,8 @@
 import type { ExamId } from './exams'
+import { GUIDE_QUESTIONS } from './study'
 
-// Starter question bank — original questions written for this app.
-// Add your own on the Practice page (form or JSON/CSV import).
+// Built-in question bank — original questions written for this app: a mixed starter set,
+// plus the practice questions in each study guide (src/data/study). Add your own on Practice → My questions.
 
 export type Difficulty = 1 | 2 | 3 // easy, medium, hard
 export type Question = {
@@ -15,6 +16,7 @@ export type Question = {
   explanation?: string
   difficulty?: Difficulty // missing = medium
   source?: string // e.g. "Telegram — Defence Daily", "My notes"
+  passage?: string // reading comprehension / cloze passage shown above the question
 }
 
 export const DIFFICULTY_LABEL: Record<Difficulty, string> = { 1: 'Easy', 2: 'Medium', 3: 'Hard' }
@@ -29,18 +31,18 @@ let n = 0
 const q = (exams: ExamId[], subject: Question['subject'], topic: string, text: string, options: string[], answer: number, explanation?: string): Question =>
   ({ id: `b${++n}`, exams, subject, topic, text, options, answer, explanation })
 
-export const BUILTIN_QUESTIONS: Question[] = [
+const STARTER: Question[] = [
   // English
-  q(ENG, 'English', 'Synonyms', 'Choose the word closest in meaning to EPHEMERAL.', ['Lasting', 'Short-lived', 'Ancient', 'Enormous'], 1),
-  q(ENG, 'English', 'Antonyms', 'Choose the word opposite in meaning to CANDID.', ['Frank', 'Secretive', 'Honest', 'Blunt'], 1),
+  q(ENG, 'English', 'Synonyms & antonyms', 'Choose the word closest in meaning to EPHEMERAL.', ['Lasting', 'Short-lived', 'Ancient', 'Enormous'], 1),
+  q(ENG, 'English', 'Synonyms & antonyms', 'Choose the word opposite in meaning to CANDID.', ['Frank', 'Secretive', 'Honest', 'Blunt'], 1),
   q(ENG, 'English', 'Fill in the blanks', 'Neither the officer nor his men ___ aware of the change in plan.', ['was', 'were', 'is', 'has been'], 1, 'With "neither…nor", the verb agrees with the nearer subject — "men" (plural).'),
   q(ENG, 'English', 'Spotting errors', 'Find the part with an error: "He is senior than me / in service / by two years."', ['He is senior than me', 'in service', 'by two years', 'No error'], 0, '"Senior" takes "to", not "than": senior to me.'),
   q(ENG, 'English', 'Idioms & phrases', 'To "bite the bullet" means to —', ['eat in a hurry', 'face a painful situation bravely', 'start a quarrel', 'get injured'], 1),
-  q(ENG, 'English', 'Vocabulary', 'One word for "a person who is present everywhere":', ['Omnipotent', 'Omniscient', 'Omnipresent', 'Omnivorous'], 2),
+  q(ENG, 'English', 'Idioms & phrases', 'One word for "a person who is present everywhere":', ['Omnipotent', 'Omniscient', 'Omnipresent', 'Omnivorous'], 2),
   q(ENG, 'English', 'Sentence improvement', 'Improve: "If I would have known, I would have helped."', ['If I had known', 'If I knew', 'Had I would know', 'No improvement'], 0, 'Third conditional: if + past perfect, would have + past participle.'),
-  q(ENG, 'English', 'Synonyms', 'Choose the word closest in meaning to TENACIOUS.', ['Weak', 'Persistent', 'Careless', 'Timid'], 1),
-  q(ENG, 'English', 'Antonyms', 'Choose the word opposite in meaning to LETHARGIC.', ['Sluggish', 'Energetic', 'Idle', 'Dull'], 1),
-  q(ENG, 'English', 'Spelling', 'Choose the correctly spelt word.', ['Accomodation', 'Acommodation', 'Accommodation', 'Acomodation'], 2),
+  q(ENG, 'English', 'Synonyms & antonyms', 'Choose the word closest in meaning to TENACIOUS.', ['Weak', 'Persistent', 'Careless', 'Timid'], 1),
+  q(ENG, 'English', 'Synonyms & antonyms', 'Choose the word opposite in meaning to LETHARGIC.', ['Sluggish', 'Energetic', 'Idle', 'Dull'], 1),
+  q(ENG, 'English', 'Synonyms & antonyms', 'Choose the correctly spelt word.', ['Accomodation', 'Acommodation', 'Accommodation', 'Acomodation'], 2),
 
   // General Knowledge
   q(ALL, 'General Knowledge', 'Polity', 'Fundamental Duties are listed in which Article of the Constitution?', ['Article 21A', 'Article 51A', 'Article 32', 'Article 368'], 1),
@@ -87,7 +89,10 @@ export const BUILTIN_QUESTIONS: Question[] = [
 // Difficulty tags for the starter bank (everything else is medium).
 const EASY = new Set(['b2', 'b5', 'b6', 'b9', 'b14', 'b15', 'b16', 'b18', 'b19', 'b22', 'b23', 'b24', 'b25', 'b26', 'b28', 'b30', 'b33', 'b34', 'b36', 'b38', 'b39', 'b41', 'b44', 'b45'])
 const HARD = new Set(['b7', 'b13', 'b17', 'b20', 'b43'])
-for (const x of BUILTIN_QUESTIONS) x.difficulty = EASY.has(x.id) ? 1 : HARD.has(x.id) ? 3 : 2
+for (const x of STARTER) x.difficulty = EASY.has(x.id) ? 1 : HARD.has(x.id) ? 3 : 2
+
+/** Everything built in: the starter set plus every study guide's practice questions. */
+export const BUILTIN_QUESTIONS: Question[] = [...STARTER, ...GUIDE_QUESTIONS]
 
 /** "easy" / "hard" / 1–3 → Difficulty; anything else is medium. */
 export function parseDifficulty(v: unknown): Difficulty {

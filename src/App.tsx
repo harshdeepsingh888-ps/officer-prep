@@ -5,7 +5,7 @@ import { ThemeToggle } from './components/ThemeToggle'
 import Dashboard from './pages/Dashboard'
 import Documents from './pages/Documents'
 import Exams from './pages/Exams'
-import Syllabus from './pages/Syllabus'
+import Study from './pages/Study'
 import Planner from './pages/Planner'
 import Practice from './pages/Practice'
 import Revise from './pages/Revise'
@@ -15,8 +15,8 @@ import Library from './pages/Library'
 
 const NAV = [
   { id: '', label: 'Today' },
+  { id: 'study', label: 'Study' },
   { id: 'exams', label: 'Exams' },
-  { id: 'syllabus', label: 'Syllabus' },
   { id: 'planner', label: 'Planner' },
   { id: 'practice', label: 'Practice' },
   { id: 'revise', label: 'Revise' },
@@ -33,7 +33,8 @@ export default function App() {
   const view = (() => {
     switch (page) {
       case 'exams': return <Exams />
-      case 'syllabus': return <Syllabus />
+      case 'study': return <Study sub={route[1]} />
+      case 'syllabus': return <Study /> // old links
       case 'planner': return <Planner />
       case 'practice': return <Practice sub={route[1]} />
       case 'revise': return <Revise sub={route[1]} />

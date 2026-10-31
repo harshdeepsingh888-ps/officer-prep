@@ -1,5 +1,6 @@
 import { useLiveQuery } from 'dexie-react-hooks'
 import type { Exam } from '../data/exams'
+import { guideStatus, tracksFor } from '../data/study'
 import { db } from '../lib/db'
 import { topicStats, weakestTopics } from '../lib/insights'
 import { openQuiz, reviewQueue } from '../lib/learning'
@@ -64,13 +65,20 @@ export function DailyMission({ exams }: { exams: Exam[] }) {
     items.push({ id: 'test', label: 'Take a 20-question test', detail: 'Mixed subjects, timed', done: d.todays.length > 0, href: '#/practice' })
   }
 
-  // 3. One new syllabus topic.
+  // 3. Today's study topic — the next one on the study path; tracks (Maths, English, GK…) take turns by day.
   const exam = exams[0]
   if (exam) {
-    const status = new Map(d.rows.map(r => [r.id, r.status]))
-    const next = exam.syllabus.flatMap(s => s.topics.map(t => ({ subject: s.subject, topic: t }))).find(x => !status.get(`${exam.id}|${x.subject}|${x.topic}`))
-    const touched = d.rows.some(r => r.updatedAt >= startOfDay(Date.now()))
-    if (next) items.push({ id: 'syllabus', label: 'Start a new topic', detail: `${exam.short} · ${next.subject}: ${next.topic}`, done: touched, href: '#/syllabus' })
+    const rows = new Map(d.rows.map(r => [r.id, r]))
+    const tracks = tracksFor(exam.id)
+    const start = new Date().getDate()
+    for (let i = 0; i < tracks.length; i++) {
+      const t = tracks[(start + i) % tracks.length]
+      const next = t.guides.find(g => guideStatus(g, exam.id, rows) < 2)
+      if (!next) continue
+      const touched = (rows.get(`study|${next.id}`)?.updatedAt ?? 0) >= startOfDay(Date.now())
+      items.push({ id: 'study', label: `Study: ${next.topic}`, detail: `${exam.short} · ${t.track} · ${next.notes.length ? 'notes and practice' : 'reading list'}`, done: touched, href: `#/study/${next.id}` })
+      break
+    }
   }
 
   // 4. SSB test of the day — or an essay for interview-only exams.

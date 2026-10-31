@@ -117,7 +117,7 @@ export default function Dashboard() {
 
         <DailyMission exams={targetExams} />
 
-        <Card title="Syllabus coverage" action={<a href="#/syllabus" className="label text-[11px] text-ink-400 hover:text-fg">Syllabus →</a>}>
+        <Card title="Syllabus coverage" action={<a href="#/study" className="label text-[11px] text-ink-400 hover:text-fg">Study path →</a>}>
           {targetExams.length === 0 ? <Empty>Choose target exams to track coverage.</Empty> : (
             <div className="space-y-6">
               {targetExams.map(e => {

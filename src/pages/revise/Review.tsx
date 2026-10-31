@@ -4,7 +4,7 @@ import { db, useSetting, type Card, type Grade } from '../../lib/db'
 import { REASONS, reviewCard, reviewQueue } from '../../lib/learning'
 import { isNew, preview, startOfDay } from '../../lib/srs'
 import { fmtDateTime } from '../../lib/util'
-import { Badge, Button, Card as Section, Empty, Progress, Stat, inputBase } from '../../components/ui'
+import { Badge, Button, Card as Section, Empty, Passage, Progress, Stat, inputBase } from '../../components/ui'
 
 const GRADES: { g: Grade; label: string; key: string }[] = [
   { g: 0, label: 'Again', key: '1' },
@@ -145,6 +145,7 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
       <Section>
         {mcq ? (
           <>
+            {mcq.passage && <div className="mb-6"><Passage text={mcq.passage} /></div>}
             <div className="text-[clamp(1.5rem,2.6vw,2rem)] font-normal leading-snug tracking-tight text-fg">{mcq.text}</div>
             <div className="mt-8 grid gap-2.5">
               {mcq.options.map((o, j) => {
