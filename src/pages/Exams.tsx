@@ -4,6 +4,7 @@ import { EXAMS } from '../data/exams'
 import { db, updateSetting, useSetting } from '../lib/db'
 import { daysUntil, fmtDate } from '../lib/util'
 import { Badge, Button, Card, PageHeader, inputCls, labelCls } from '../components/ui'
+import { ServiceTags } from '../components/Services'
 
 export default function Exams() {
   const [targets] = useSetting<string[]>('targets', [])
@@ -37,6 +38,7 @@ export default function Exams() {
                     <Badge tone="verdant">{e.personality === 'ssb' ? 'SSB / board' : 'Interview'}</Badge>
                   </div>
                   <div className="text-sm text-ink-400">{e.name}</div>
+                  <div className="mt-2"><ServiceTags exam={e.id} /></div>
                 </div>
                 <Button variant={isTarget ? 'primary' : 'subtle'} onClick={() => toggle(e.id)}>{isTarget ? '✓ Target' : 'Add as target'}</Button>
               </div>

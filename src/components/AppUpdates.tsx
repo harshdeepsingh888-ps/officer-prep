@@ -32,7 +32,7 @@ export function UpdateToast() {
   }
 
   return (
-    <div role="status" className="fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 mx-auto md:bottom-4 flex max-w-md items-center gap-3 rounded-3xl bg-ink-900 px-5 py-4 text-sm text-ink-100 ring-1 ring-fg/15 sm:left-auto sm:right-6 sm:mx-0">
+    <div role="status" className="fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 mx-auto md:bottom-4 flex max-w-md items-center gap-3 rounded-3xl bg-ink-900 px-5 py-4 text-sm text-ink-100 ring-1 ring-fg/15 sm:left-auto sm:right-6 sm:mx-0">
       <span className="flex-1">
         {needRefresh ? 'A new version of Officer Prep is ready.' : 'Officer Prep is ready to work offline.'}
       </span>

@@ -185,7 +185,7 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
 
       {revealed && (
         // Phones: the grades stay pinned just above the tab bar, so a long answer never pushes them off screen.
-        <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 -mx-2 grid grid-cols-4 gap-1.5 rounded-3xl bg-canvas/85 p-2 backdrop-blur-md sm:static sm:mx-0 sm:flex sm:flex-wrap sm:items-center sm:gap-2 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 -mx-2 grid grid-cols-4 gap-1.5 rounded-3xl bg-canvas/85 p-2 backdrop-blur-md sm:static sm:mx-0 sm:flex sm:flex-wrap sm:items-center sm:gap-2 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
           {GRADES.map(({ g, label }) => (
             <Button key={g} variant={g === suggested ? 'primary' : g === 0 ? 'danger' : 'subtle'} onClick={() => grade(g)}
               className="max-sm:flex-col max-sm:gap-0 max-sm:px-1">

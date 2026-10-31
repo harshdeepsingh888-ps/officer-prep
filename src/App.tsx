@@ -4,6 +4,7 @@ import { DriveProvider } from './lib/DriveProvider'
 import { AmbientField, Logo } from './components/Particles'
 import { ThemeToggle } from './components/ThemeToggle'
 import { InstallButton, UpdateToast } from './components/AppUpdates'
+import { Icon } from './components/icons'
 import Dashboard from './pages/Dashboard'
 import Documents from './pages/Documents'
 import Exams from './pages/Exams'
@@ -113,13 +114,13 @@ function BottomBar({ page }: { page: string }) {
 
   const more = NAV.filter(n => !TABS.includes(n.id))
   const inMore = more.some(n => n.id === page)
-  const tab = (active: boolean, label: string) => (
+  const tab = (active: boolean, label: string, icon: string) => (
     <>
-      <span className={`size-1.5 rounded-full ${active ? 'bg-iris-500' : 'bg-transparent'}`} />
+      <Icon name={icon} className={`size-[22px] transition-colors ${active ? 'text-iris-500' : 'text-ink-400'}`} />
       <span className={active ? 'text-fg' : 'text-ink-400'}>{label}</span>
     </>
   )
-  const tabCls = 'label flex h-14 flex-col items-center justify-center gap-1.5 text-[11px]'
+  const tabCls = 'label flex h-16 flex-col items-center justify-center gap-1 text-[10.5px]'
 
   return (
     <div className="md:hidden">
@@ -130,7 +131,7 @@ function BottomBar({ page }: { page: string }) {
             {more.map(n => (
               <a key={n.id} href={`#/${n.id}`} onClick={() => setOpen(false)} aria-current={page === n.id ? 'page' : undefined}
                 className={`label flex items-center gap-2.5 rounded-3xl px-4 py-3.5 ${page === n.id ? 'bg-fg/[0.08] text-fg' : 'bg-fg/[0.04] text-ink-300'}`}>
-                <span className={`size-1.5 rounded-full ${page === n.id ? 'bg-iris-500' : 'bg-transparent'}`} />
+                <Icon name={n.id} className={`size-5 ${page === n.id ? 'text-iris-500' : 'text-ink-400'}`} />
                 {n.label}
               </a>
             ))}
@@ -138,10 +139,10 @@ function BottomBar({ page }: { page: string }) {
         )}
         <div className="grid grid-cols-5">
           {NAV.filter(n => TABS.includes(n.id)).map(n => (
-            <a key={n.id} href={`#/${n.id}`} aria-current={page === n.id ? 'page' : undefined} className={tabCls}>{tab(page === n.id, n.label)}</a>
+            <a key={n.id} href={`#/${n.id}`} aria-current={page === n.id ? 'page' : undefined} className={tabCls}>{tab(page === n.id, n.label, n.id || 'today')}</a>
           ))}
           <button className={tabCls} aria-expanded={open} aria-controls="more-pages" onClick={() => setOpen(o => !o)}>
-            {tab(open || inMore, inMore && !open ? NAV.find(n => n.id === page)!.label : 'More')}
+            {tab(open || inMore, inMore && !open ? NAV.find(n => n.id === page)!.label : 'More', inMore && !open ? page : 'more')}
           </button>
         </div>
       </nav>

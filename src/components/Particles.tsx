@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { isLight } from '../lib/theme'
 import { FORMS, ambient, type Form, type V3 } from './shapes'
+import { SERVICES } from './Services'
 
 // Procedural "constellation" visuals: tiny outlined triangles in vivid colours.
 // Particles keep a palette index, so they recolour instantly when the theme changes.
@@ -251,6 +252,10 @@ export function Constellation({ className = '', count = 1300 }: { className?: st
           ))}
         </div>
       </div>
+      <p className="mt-1 flex min-h-5 items-center justify-center gap-2 px-5 text-center text-xs font-light text-ink-500" aria-live="polite">
+        {FORMS[shown].caption.service && <span className={`size-2 shrink-0 rounded-full ${SERVICES[FORMS[shown].caption.service].dot}`} aria-hidden />}
+        {FORMS[shown].caption.text}
+      </p>
     </div>
   )
 }

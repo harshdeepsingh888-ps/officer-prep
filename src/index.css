@@ -49,6 +49,12 @@
   --ember-800: #6b1a1a;
   --ember-900: #4a1212;
   --ember-950: #2a0909;
+
+  /* Service colours (Army olive, Navy blue, Air Force sky, CAPF khaki): identity marks, not text. */
+  --army: #9aab62;
+  --navy: #6b93ec;
+  --airforce: #59c3f5;
+  --khaki: #cdb17d;
 }
 
 /* Light: the same scale names, re-tuned for white paper so every pairing keeps ≥ 4.5:1 text contrast. */
@@ -95,6 +101,11 @@
   --ember-800: #f5c2c2;
   --ember-900: #fbdada;
   --ember-950: #fdecec;
+
+  --army: #4f6228;
+  --navy: #1d4e9e;
+  --airforce: #0a74ad;
+  --khaki: #7d6233;
 }
 
 @theme inline {
@@ -141,6 +152,11 @@
   --color-ember-800: var(--ember-800);
   --color-ember-900: var(--ember-900);
   --color-ember-950: var(--ember-950);
+
+  --color-army: var(--army);
+  --color-navy: var(--navy);
+  --color-airforce: var(--airforce);
+  --color-khaki: var(--khaki);
 
   /* Type scale */
   --text-caption: 12px;

@@ -264,16 +264,20 @@ export function ambient(n: number): V3[] {
 
 /** How each form is shown: tilt looks down from above, yaw turns it, sway rocks it back and forth;
  *  dot scales the triangles (machines need finer points than the brain to keep thin parts crisp). */
-export type Form = { name: string; tilt: number; yaw: number; sway: number; dot: number; make: (n: number) => V3[] }
+export type Form = {
+  name: string; tilt: number; yaw: number; sway: number; dot: number; make: (n: number) => V3[]
+  /** Shown under the picker: who flies, sails or fields it, and their motto. */
+  caption: { text: string; service?: 'army' | 'navy' | 'airforce' }
+}
 
 const byX = (pts: V3[]) => pts.sort((a, b) => a[0] - b[0]) // neighbours morph into neighbours
 
 export const FORMS: Form[] = [
-  { name: 'Brain', tilt: 0.28, yaw: 0, sway: 0.9, dot: 1, make: n => byX(brain(n)) },
-  { name: 'Tank', tilt: 0.3, yaw: 0.4, sway: 0.45, dot: 0.75, make: n => byX(build(tank(), n)) },
-  { name: 'Fighter jet', tilt: 0.85, yaw: 0.5, sway: 0.4, dot: 0.75, make: n => byX(build(jet(), n)) },
-  { name: 'Naval ship', tilt: 0.22, yaw: 0.3, sway: 0.3, dot: 0.75, make: n => byX(build(ship(), n)) },
-  { name: 'Rifle', tilt: 0.08, yaw: 0.15, sway: 0.35, dot: 0.75, make: n => byX(build(rifle(), n)) },
-  { name: 'Helicopter', tilt: 0.42, yaw: 0.5, sway: 0.45, dot: 0.75, make: n => byX(build(helicopter(), n)) },
-  { name: 'Missile', tilt: 0.3, yaw: 0.4, sway: 0.4, dot: 0.75, make: n => byX(build(missile(), n, -0.3)) },
+  { name: 'Brain', caption: { text: 'Officer-like qualities start in the mind' }, tilt: 0.28, yaw: 0, sway: 0.9, dot: 1, make: n => byX(brain(n)) },
+  { name: 'Tank', caption: { service: 'army', text: 'Indian Army · “Service Before Self”' }, tilt: 0.3, yaw: 0.4, sway: 0.45, dot: 0.75, make: n => byX(build(tank(), n)) },
+  { name: 'Fighter jet', caption: { service: 'airforce', text: 'Indian Air Force · “Touch the sky with glory”' }, tilt: 0.85, yaw: 0.5, sway: 0.4, dot: 0.75, make: n => byX(build(jet(), n)) },
+  { name: 'Naval ship', caption: { service: 'navy', text: 'Indian Navy · “Sham No Varunah”: may the Lord of the Waters be auspicious unto us' }, tilt: 0.22, yaw: 0.3, sway: 0.3, dot: 0.75, make: n => byX(build(ship(), n)) },
+  { name: 'Rifle', caption: { service: 'army', text: 'Indian Army · the infantry' }, tilt: 0.08, yaw: 0.15, sway: 0.35, dot: 0.75, make: n => byX(build(rifle(), n)) },
+  { name: 'Helicopter', caption: { text: 'Flown by the Army, the Navy and the Air Force' }, tilt: 0.42, yaw: 0.5, sway: 0.45, dot: 0.75, make: n => byX(build(helicopter(), n)) },
+  { name: 'Missile', caption: { text: 'DRDO · “Balasya Mulam Vigyanam”: science is the root of strength' }, tilt: 0.3, yaw: 0.4, sway: 0.4, dot: 0.75, make: n => byX(build(missile(), n, -0.3)) },
 ]
