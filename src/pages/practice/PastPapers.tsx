@@ -33,7 +33,7 @@ export default function PastPapers() {
     <div className="space-y-14">
       {saved && savedPaper && (
         <div className="flex flex-wrap items-center gap-4 rounded-3xl bg-saffron-400/[0.08] px-5 py-4">
-          <div className="min-w-0 flex-1">
+          <div className="min-w-[15rem] flex-1">
             <div className="text-ink-100">Unfinished OMR · {savedPaper.sitting} — {savedPaper.paper}</div>
             <div className="text-sm font-light text-ink-400">
               {saved.resp.filter(r => r !== null).length}/{saved.n} marked · {fmtClock(Math.max(0, Math.round((saved.deadline - Date.now()) / 1000)))} left (the clock kept running)
@@ -65,8 +65,8 @@ export default function PastPapers() {
           {list.map(p => {
             const copy = copyOf(p)
             return (
-              <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
-                <div className="min-w-0 flex-1">
+              <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:gap-y-1 sm:py-2.5">
+                <div className="w-full sm:w-auto sm:min-w-0 sm:flex-1">
                   <div className="text-sm font-medium text-ink-100">{p.sitting} — {p.paper}</div>
                   <div className="text-xs text-ink-500">{p.questions} Qs · {p.marks} marks · {p.minutes} min · PDF {p.size}</div>
                 </div>
@@ -214,13 +214,13 @@ function OMRSheet({ paper, resume, openUrl, onExit }: { paper: OfficialPaper; re
           </div>
         </div>
         <Card>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))] gap-x-4 gap-y-1.5">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))] gap-x-4 gap-y-1.5 pointer-coarse:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] pointer-coarse:gap-y-2.5">
             {resp.map((r, i) => (
-              <div key={i} className="flex items-center gap-1.5">
+              <div key={i} className="flex items-center gap-1.5 pointer-coarse:gap-2">
                 <span className="w-8 text-right font-mono text-xs tabular-nums text-ink-500">{i + 1}</span>
                 {[0, 1, 2, 3].map(o => (
                   <button key={o} onClick={() => setResp(prev => prev.map((x, j) => (j === i ? (x === o ? null : o) : x)))}
-                    className={`size-7 rounded-full border text-[11px] font-semibold ${r === o ? 'border-iris-400 bg-iris-500 text-white' : 'border-ink-600 text-ink-400 hover:border-ink-400'}`}>
+                    className={`size-7 rounded-full border text-[11px] font-semibold pointer-coarse:size-9 pointer-coarse:text-xs ${r === o ? 'border-iris-400 bg-iris-500 text-white' : 'border-ink-600 text-ink-400 hover:border-ink-400'}`}>
                     {'ABCD'[o]}
                   </button>
                 ))}

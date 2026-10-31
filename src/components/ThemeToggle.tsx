@@ -17,7 +17,7 @@ export function ThemeToggle() {
     <div role="radiogroup" aria-label="Theme" className="flex shrink-0 items-center gap-0.5 rounded-full bg-fg/[0.06] p-1">
       {OPTIONS.map(o => (
         <button key={o.id} role="radio" aria-checked={pref === o.id} aria-label={o.label} title={o.label} onClick={() => setPref(o.id)}
-          className={`flex size-7 items-center justify-center rounded-full transition-colors ${pref === o.id ? 'bg-fg/[0.12] text-fg' : 'text-ink-500 hover:text-fg'}`}>
+          className={`flex size-7 items-center justify-center rounded-full pointer-coarse:size-9 transition-colors ${pref === o.id ? 'bg-fg/[0.12] text-fg' : 'text-ink-500 hover:text-fg'}`}>
           {o.svg}
         </button>
       ))}

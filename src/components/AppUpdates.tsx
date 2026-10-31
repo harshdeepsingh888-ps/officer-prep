@@ -32,7 +32,7 @@ export function UpdateToast() {
   }
 
   return (
-    <div role="status" className="fixed inset-x-4 bottom-4 z-50 mx-auto flex max-w-md items-center gap-3 rounded-3xl bg-ink-900 px-5 py-4 text-sm text-ink-100 ring-1 ring-fg/15 sm:left-auto sm:right-6 sm:mx-0">
+    <div role="status" className="fixed inset-x-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-50 mx-auto md:bottom-4 flex max-w-md items-center gap-3 rounded-3xl bg-ink-900 px-5 py-4 text-sm text-ink-100 ring-1 ring-fg/15 sm:left-auto sm:right-6 sm:mx-0">
       <span className="flex-1">
         {needRefresh ? 'A new version of Officer Prep is ready.' : 'Officer Prep is ready to work offline.'}
       </span>
@@ -47,7 +47,7 @@ export function InstallButton() {
   const { canInstall, install } = useInstall()
   if (!canInstall) return null
   return (
-    <button onClick={install} className="label shrink-0 rounded-full bg-fg/[0.06] px-3 py-1.5 text-[11px] text-ink-200 transition-colors hover:text-fg">
+    <button onClick={install} className="label shrink-0 rounded-full bg-fg/[0.06] px-3 py-1.5 text-[11px] pointer-coarse:py-2.5 text-ink-200 transition-colors hover:text-fg">
       ↓ Install app
     </button>
   )

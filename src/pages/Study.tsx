@@ -106,7 +106,7 @@ function StudyPath() {
                       </span>
                     </a>
                     <button onClick={() => db.topics.bulkPut(guideRows(gd, (s + 1) % 4))} title="Change status"
-                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${STATUS[s].cls}`}>{STATUS[s].label}</button>
+                      className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] pointer-coarse:px-3 pointer-coarse:py-2 pointer-coarse:text-xs ${STATUS[s].cls}`}>{STATUS[s].label}</button>
                   </li>
                 )
               })}
@@ -125,7 +125,7 @@ function StudyPath() {
               return (
                 <li key={id} className="flex items-center justify-between gap-3 border-b border-fg/[0.06] py-2.5 text-sm">
                   <span className="min-w-0 truncate text-ink-200">{x.topic} <span className="text-xs text-ink-500">· {x.subject}</span></span>
-                  <button onClick={() => cycle({ id, ...x }, s)} className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] ${STATUS[s].cls}`}>{STATUS[s].label}</button>
+                  <button onClick={() => cycle({ id, ...x }, s)} className={`shrink-0 rounded-full px-2 py-0.5 text-[11px] pointer-coarse:px-3 pointer-coarse:py-2 pointer-coarse:text-xs ${STATUS[s].cls}`}>{STATUS[s].label}</button>
                 </li>
               )
             })}

@@ -51,19 +51,19 @@ export default function Flashcards() {
               return (
                 <li key={d} className="py-4">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
-                    <button className="min-w-0 flex-1 text-left text-ink-100 hover:text-fg" onClick={() => setBrowse(browse === d ? null : d)}>{d}</button>
-                    <span className="text-xs text-ink-500">{s.total} cards · {s.due} due · {s.fresh} new · {s.mastered} mastered</span>
+                    <button className="w-full text-left text-ink-100 hover:text-fg sm:w-auto sm:min-w-0 sm:flex-1" onClick={() => setBrowse(browse === d ? null : d)}>{d}</button>
+                    <span className="mr-auto text-xs text-ink-500 sm:mr-0">{s.total} cards · {s.due} due · {s.fresh} new · {s.mastered} mastered</span>
                     <Button variant="ghost" size="sm" onClick={() => setBrowse(browse === d ? null : d)}>{browse === d ? 'Hide' : 'Browse'}</Button>
                     <Button variant="danger" size="sm" onClick={() => { if (confirm(`Delete the deck "${d}" and its ${s.total} cards?`)) deleteDeck(d) }}>Delete</Button>
                   </div>
                   {browse === d && (
                     <ul className="mt-3 space-y-1.5 text-sm">
                       {cards.filter(c => c.deck === d).sort((a, b) => a.createdAt - b.createdAt).map(c => (
-                        <li key={c.id} className="flex items-baseline gap-3 rounded-3xl bg-fg/[0.03] px-4 py-2">
-                          <span className="min-w-0 flex-1 text-ink-100">{c.front}</span>
+                        <li key={c.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-3xl bg-fg/[0.03] px-4 py-2 sm:flex-nowrap">
+                          <span className="min-w-0 basis-full text-ink-100 sm:basis-0 sm:flex-1">{c.front}</span>
                           <span className="min-w-0 flex-1 text-ink-400">{c.back}</span>
                           <span className="shrink-0 text-xs text-ink-600">{isNew(c) ? 'new' : fmtDateTime(c.due)}</span>
-                          <button className="shrink-0 text-xs text-ember-300 hover:text-ember-200" onClick={() => db.cards.delete(c.id)} aria-label="Delete card">✕</button>
+                          <button className="shrink-0 text-xs text-ember-300 hover:text-ember-200 pointer-coarse:-my-2 pointer-coarse:px-2 pointer-coarse:py-2" onClick={() => db.cards.delete(c.id)} aria-label="Delete card">✕</button>
                         </li>
                       ))}
                     </ul>

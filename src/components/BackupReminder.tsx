@@ -23,7 +23,7 @@ export function BackupReminder() {
   const days = d.last ? Math.floor((Date.now() - d.last) / 86_400_000) : null
   return (
     <div className="flex flex-wrap items-center gap-4 rounded-3xl bg-saffron-400/[0.08] px-5 py-4">
-      <div className="min-w-0 flex-1 text-sm">
+      <div className="min-w-[15rem] flex-1 text-sm">
         <span className="text-ink-100">{days === null ? 'Your progress has never been backed up.' : `Last backup was ${days} days ago.`}</span>
         <span className="ml-1 font-light text-ink-400">It lives only in this browser. Clearing browser data or losing the device would erase it.</span>
       </div>

@@ -7,7 +7,7 @@ export function Card({ children, className = '', title, action }: { children: Re
   return (
     <section className={`py-2 ${className}`}>
       {(title || action) && (
-        <div className="mb-5 flex items-center justify-between gap-3">
+        <div className="mb-5 flex items-center justify-between gap-3 pointer-coarse:[&>a]:-my-3 pointer-coarse:[&>a]:py-3">
           {title && <h2 className="label text-saffron-400">{title}</h2>}
           {action}
         </div>
@@ -27,7 +27,8 @@ export function Button({ variant = 'primary', size = 'md', className = '', ...re
     ghost: 'text-ink-400 hover:text-fg disabled:opacity-40',
     danger: 'text-ember-300 hover:text-ember-200 disabled:opacity-40',
   }[variant]
-  const s = { sm: 'px-3 py-1.5 text-[11px]', md: 'px-4 py-2.5', lg: 'px-6 py-3.5' }[size]
+  // On touch screens every button is at least 40px tall, so it can be hit with a thumb.
+  const s = { sm: 'px-3 py-1.5 text-[11px] pointer-coarse:min-h-10 pointer-coarse:px-4', md: 'px-4 py-2.5 pointer-coarse:min-h-11', lg: 'px-6 py-3.5' }[size]
   return <button className={`label inline-flex items-center justify-center gap-1.5 rounded-full transition-colors disabled:cursor-not-allowed ${v} ${s} ${className}`} {...rest} />
 }
 
@@ -52,10 +53,10 @@ export function Progress({ value, className = '' }: { value: number; className?:
 
 export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: T; label: string }[]; value: T; onChange: (t: T) => void }) {
   return (
-    <div className="-mx-5 mb-10 flex gap-7 overflow-x-auto px-5 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-5 mb-8 flex gap-7 overflow-x-auto px-5 sm:mb-10 [scrollbar-width:none] sm:mx-0 sm:px-0 [&::-webkit-scrollbar]:hidden">
       {tabs.map(t => (
         <button key={t.id} onClick={() => onChange(t.id)}
-          className={`label flex shrink-0 items-center gap-2 py-1 transition-colors ${value === t.id ? 'text-fg' : 'text-ink-500 hover:text-ink-200'}`}>
+          className={`label flex shrink-0 items-center gap-2 py-1 transition-colors pointer-coarse:py-3 ${value === t.id ? 'text-fg' : 'text-ink-500 hover:text-ink-200'}`}>
           <span className={`size-1.5 rounded-full ${value === t.id ? 'bg-iris-500' : 'bg-transparent'}`} />
           {t.label}
         </button>
@@ -67,7 +68,7 @@ export function Tabs<T extends string>({ tabs, value, onChange }: { tabs: { id: 
 /** Oversized headline on the left, light lead copy on the right. */
 export function PageHeader({ title, subtitle, action, eyebrow }: { title: string; subtitle?: ReactNode; action?: ReactNode; eyebrow?: string }) {
   return (
-    <header className="mb-14 grid gap-6 pt-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end lg:gap-14">
+    <header className="mb-10 grid gap-5 pt-2 sm:mb-14 sm:gap-6 sm:pt-4 lg:grid-cols-[minmax(0,1.1fr)_minmax(0,1fr)] lg:items-end lg:gap-14">
       <h1 className="text-[clamp(2.75rem,6vw,4.875rem)] font-normal leading-none tracking-display text-fg">{title}</h1>
       {(subtitle || action || eyebrow) && (
         <div className="lg:pb-2">

@@ -159,7 +159,7 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
                 )
               })}
             </div>
-            {!revealed && <p className="mt-3 text-xs text-ink-600">Press A–D to answer.</p>}
+            {!revealed && <p className="mt-3 text-xs text-ink-600 pointer-coarse:hidden">Press A–D to answer.</p>}
           </>
         ) : (
           <>
@@ -167,7 +167,7 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
             {mistake?.paperUrl && <a href={mistake.paperUrl} target="_blank" rel="noreferrer" className="label mt-4 inline-block text-[11px] text-saffron-400 hover:underline">Open paper ↗</a>}
             {revealed
               ? <div className="mt-8 whitespace-pre-wrap text-xl font-light text-ink-200">{card!.back}</div>
-              : <Button className="mt-8" variant="subtle" onClick={() => setRevealed(true)}>Show answer (space)</Button>}
+              : <Button className="mt-8" variant="subtle" onClick={() => setRevealed(true)}>Show answer<span className="pointer-coarse:hidden"> (space)</span></Button>}
           </>
         )}
 
@@ -184,13 +184,15 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
       </Section>
 
       {revealed && (
-        <div className="flex flex-wrap items-center gap-2">
+        // Phones: the grades stay pinned just above the tab bar, so a long answer never pushes them off screen.
+        <div className="sticky bottom-[calc(4rem+env(safe-area-inset-bottom))] z-10 -mx-2 grid grid-cols-4 gap-1.5 rounded-3xl bg-canvas/85 p-2 backdrop-blur-md sm:static sm:mx-0 sm:flex sm:flex-wrap sm:items-center sm:gap-2 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
           {GRADES.map(({ g, label }) => (
-            <Button key={g} variant={g === suggested ? 'primary' : g === 0 ? 'danger' : 'subtle'} onClick={() => grade(g)}>
+            <Button key={g} variant={g === suggested ? 'primary' : g === 0 ? 'danger' : 'subtle'} onClick={() => grade(g)}
+              className="max-sm:flex-col max-sm:gap-0 max-sm:px-1">
               {label} <span className="font-normal normal-case opacity-70">{preview(card!, g)}</span>
             </Button>
           ))}
-          <span className="ml-2 text-xs text-ink-600">Keys 1–4, or space for the highlighted choice</span>
+          <span className="ml-2 text-xs text-ink-600 pointer-coarse:hidden">Keys 1–4, or space for the highlighted choice</span>
         </div>
       )}
     </div>

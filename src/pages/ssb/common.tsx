@@ -63,7 +63,7 @@ export function SaveSet({ test, items, onAgain, onExit, summary }: {
             <div key={f.factor}>
               <div className="mb-1 text-xs font-medium uppercase tracking-wide text-ink-500">{f.factor}</div>
               {f.olqs.map(o => (
-                <label key={o} className="flex items-center gap-2 py-0.5 text-sm">
+                <label key={o} className="flex items-center gap-2 py-0.5 text-sm pointer-coarse:py-2">
                   <input type="checkbox" className="accent-iris-500" checked={olqs.includes(o)} onChange={e => setOlqs(e.target.checked ? [...olqs, o] : olqs.filter(x => x !== o))} />{o}
                 </label>
               ))}

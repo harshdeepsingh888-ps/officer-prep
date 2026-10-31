@@ -164,7 +164,7 @@ export default function Quiz() {
       <div className="space-y-12">
         {savedRun && (
           <div className="flex flex-wrap items-center gap-4 rounded-3xl bg-saffron-400/[0.08] px-5 py-4">
-            <div className="min-w-0 flex-1">
+            <div className="min-w-[15rem] flex-1">
               <div className="text-ink-100">Unfinished test · {savedRun.title}</div>
               <div className="text-sm font-light text-ink-400">
                 {savedRun.answers.filter(a => a !== null).length}/{savedRun.qs.length} answered
@@ -268,7 +268,7 @@ export default function Quiz() {
             if (confirm(`Submit now?${left ? ` ${left} unanswered.` : ''}${markedCount ? ` ${markedCount} marked for review.` : ''}`)) finish(r)
           }}>Submit</Button>
         </div>
-        <p className="mt-3 text-xs text-ink-600">Keys: A–D or 1–4 answer · M mark for review · ← → move. Tap a chosen option again to clear it. Your progress is saved; you can close the tab and resume.</p>
+        <p className="mt-3 text-xs text-ink-600"><span className="pointer-coarse:hidden">Keys: A–D or 1–4 answer · M mark for review · ← → move. </span>Tap a chosen option again to clear it. Your progress is saved; you can close the tab and resume.</p>
       </Card>
       <Card title="Palette">
         <div className="flex flex-wrap gap-2">

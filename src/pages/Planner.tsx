@@ -63,9 +63,11 @@ export default function Planner() {
             <ul className="divide-y divide-fg/[0.06]">
               {tasks.map(t => (
                 <li key={t.id} className="flex items-center gap-3 py-2">
-                  <input type="checkbox" className="size-4 accent-iris-500" checked={t.done}
-                    onChange={e => db.tasks.update(t.id!, { done: e.target.checked, doneAt: e.target.checked ? Date.now() : undefined })} />
-                  <span className={`flex-1 ${t.done ? 'text-ink-500 line-through' : ''}`}>{t.title}</span>
+                  <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 pointer-coarse:py-1">
+                    <input type="checkbox" className="size-4 shrink-0 accent-iris-500 pointer-coarse:size-5" checked={t.done}
+                      onChange={e => db.tasks.update(t.id!, { done: e.target.checked, doneAt: e.target.checked ? Date.now() : undefined })} />
+                    <span className={`flex-1 ${t.done ? 'text-ink-500 line-through' : ''}`}>{t.title}</span>
+                  </label>
                   {t.exam && <Badge tone="iris">{EXAMS.find(e => e.id === t.exam)?.short}</Badge>}
                   {t.minutes && <span className="text-xs tabular-nums text-ink-500">{t.minutes}m</span>}
                   <Button variant="danger" size="sm" onClick={() => db.tasks.delete(t.id!)}>✕</Button>

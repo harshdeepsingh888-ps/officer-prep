@@ -69,7 +69,7 @@ export function DeviceCard() {
       <dl className="divide-y divide-fg/[0.06]">
         {rows.map(r => (
           <div key={r.label} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3 text-sm">
-            <dt className="w-44 shrink-0 text-ink-400">{r.label}</dt>
+            <dt className="w-full shrink-0 text-ink-400 sm:w-44">{r.label}</dt>
             <dd className="min-w-0 flex-1 text-ink-200">{r.value}</dd>
             {r.action}
           </div>

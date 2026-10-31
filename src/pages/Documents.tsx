@@ -62,7 +62,7 @@ function SetupCard({ onDone, canCancel }: { onDone: () => void; canCancel: boole
         <li>
           Create an OAuth client ID (Web application) and add this authorized JavaScript origin:{' '}
           <code className="rounded-full bg-ink-950 px-1.5 py-0.5 text-xs text-iris-300">{origin}</code>{' '}
-          <button className="text-xs text-saffron-400 hover:underline" onClick={() => { navigator.clipboard.writeText(origin); setCopied(true) }}>{copied ? 'copied ✓' : 'copy'}</button>
+          <button className="px-1 text-xs text-saffron-400 hover:underline pointer-coarse:px-2" onClick={() => { navigator.clipboard.writeText(origin); setCopied(true) }}>{copied ? 'copied ✓' : 'copy'}</button>
         </li>
         <li>Create an API key restricted to the Picker API, and copy the project number.</li>
       </ol>

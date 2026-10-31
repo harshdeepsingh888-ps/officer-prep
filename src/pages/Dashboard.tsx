@@ -41,7 +41,7 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-24">
+    <div className="space-y-16 sm:space-y-24">
       <BackupReminder />
       <section className="grid items-center gap-6 lg:grid-cols-2 lg:gap-10">
         <div className="relative z-10">
@@ -53,14 +53,14 @@ export default function Dashboard() {
               : 'Pick your target exams to start the countdown. '}
             {tasks.length ? `${doneCount} of ${tasks.length} tasks done today.` : 'Plan the day, then work through the drill.'}
           </p>
-          <div className="mt-10 flex flex-wrap items-center gap-7">
+          <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-2 sm:mt-10">
             {countdowns.length === 0
               ? <a href="#/exams"><Button size="lg">Choose your exams</Button></a>
               : <a href="#/revise"><Button size="lg">Start today's revision</Button></a>}
-            <a href="#/planner" className="label text-ink-400 transition-colors hover:text-fg">Open planner →</a>
+            <a href="#/planner" className="label py-3 text-ink-400 transition-colors hover:text-fg">Open planner →</a>
           </div>
         </div>
-        <div className="-mx-5 h-[300px] sm:mx-0 sm:h-[420px] lg:h-[540px]">
+        <div className="-mx-5 -mt-6 h-[280px] sm:mx-0 sm:mt-0 sm:h-[420px] lg:h-[540px]">
           <Constellation />
         </div>
       </section>
@@ -101,16 +101,18 @@ export default function Dashboard() {
       <section className="grid gap-x-20 gap-y-16 lg:grid-cols-2">
         <Card title="Today's tasks" action={<a href="#/planner" className="label text-[11px] text-ink-400 hover:text-fg">Planner →</a>}>
           <div className="mb-4 flex gap-2">
-            <input className={inputCls} placeholder="Add a task and press Enter" value={newTask} onChange={e => setNewTask(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTask()} />
+            <input className={inputCls} enterKeyHint="done" placeholder="Add a task and press Enter" value={newTask} onChange={e => setNewTask(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTask()} />
             <Button variant="subtle" onClick={addTask}>Add</Button>
           </div>
           {tasks.length === 0 ? <Empty>No tasks for today yet.</Empty> : (
             <ul className="divide-y divide-fg/[0.06]">
               {tasks.map(t => (
-                <li key={t.id} className="flex items-center gap-3 py-3">
-                  <input type="checkbox" className="size-4 accent-iris-500" checked={t.done}
-                    onChange={e => db.tasks.update(t.id!, { done: e.target.checked, doneAt: e.target.checked ? Date.now() : undefined })} />
-                  <span className={t.done ? 'text-ink-500 line-through' : 'text-ink-100'}>{t.title}</span>
+                <li key={t.id}>
+                  <label className="flex cursor-pointer items-center gap-3 py-3">
+                    <input type="checkbox" className="size-4 shrink-0 accent-iris-500 pointer-coarse:size-5" checked={t.done}
+                      onChange={e => db.tasks.update(t.id!, { done: e.target.checked, doneAt: e.target.checked ? Date.now() : undefined })} />
+                    <span className={t.done ? 'text-ink-500 line-through' : 'text-ink-100'}>{t.title}</span>
+                  </label>
                 </li>
               ))}
             </ul>

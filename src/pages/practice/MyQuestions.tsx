@@ -45,7 +45,7 @@ function ExamChecks({ exams, setExams }: { exams: ExamId[]; setExams: (e: ExamId
   return (
     <div className="flex flex-wrap gap-4 text-sm">
       {EXAMS.map(e => (
-        <label key={e.id} className="flex items-center gap-1.5">
+        <label key={e.id} className="flex items-center gap-1.5 pointer-coarse:py-2">
           <input type="checkbox" className="accent-iris-500" checked={exams.includes(e.id)} onChange={ev => setExams(ev.target.checked ? [...exams, e.id] : exams.filter(x => x !== e.id))} />{e.short}
         </label>
       ))}

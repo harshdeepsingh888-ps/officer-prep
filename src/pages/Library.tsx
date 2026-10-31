@@ -22,10 +22,10 @@ export default function Library() {
       <div className="grid gap-x-16 gap-y-12 md:grid-cols-2">
         {groups.map(g => (
           <Card key={g} title={g}>
-            <ul className="space-y-2 text-sm">
+            <ul className="space-y-2 text-sm pointer-coarse:space-y-4">
               {OFFICIAL_LINKS.filter(l => l.group === g).map(l => (
                 <li key={l.url}>
-                  <a href={l.url} target="_blank" rel="noreferrer" className="text-saffron-400 hover:underline">{l.title} ↗</a>
+                  <a href={l.url} target="_blank" rel="noreferrer" className="text-saffron-400 hover:underline pointer-coarse:py-2">{l.title} ↗</a>
                   {l.note && <div className="text-xs text-ink-500">{l.note}</div>}
                 </li>
               ))}
@@ -40,16 +40,16 @@ export default function Library() {
           {paperExams.map(e => (
             <div key={e.id}>
               <div className="mb-1 text-sm font-semibold text-ink-300">{e.short}</div>
-              <ul className="grid gap-x-4 gap-y-1 text-sm sm:grid-cols-2">
+              <ul className="grid grid-cols-1 gap-x-4 gap-y-1 text-sm sm:grid-cols-2 pointer-coarse:gap-y-3">
                 {OFFICIAL_PAPERS.filter(p => p.exam === e.id).map(p => (
                   <li key={p.id} className="flex justify-between gap-2">
-                    <a href={p.url} target="_blank" rel="noreferrer" className="truncate hover:text-fg">{p.sitting} — {p.paper}</a>
+                    <a href={p.url} target="_blank" rel="noreferrer" className="min-w-0 truncate hover:text-fg">{p.sitting} — {p.paper}</a>
                     <span className="shrink-0 text-xs text-ink-500">{p.size}</span>
                   </li>
                 ))}
                 {e.id === 'capf' && DESCRIPTIVE_PAPERS.map(p => (
                   <li key={p.url} className="flex justify-between gap-2">
-                    <a href={p.url} target="_blank" rel="noreferrer" className="truncate hover:text-fg">{p.sitting} — {p.paper}</a>
+                    <a href={p.url} target="_blank" rel="noreferrer" className="min-w-0 truncate hover:text-fg">{p.sitting} — {p.paper}</a>
                     <span className="shrink-0 text-xs text-ink-500">{p.size}</span>
                   </li>
                 ))}

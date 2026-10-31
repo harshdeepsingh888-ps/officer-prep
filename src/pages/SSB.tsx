@@ -237,7 +237,7 @@ function Pictures() {
           {images.map(img => (
             <div key={img.id} className="group relative overflow-hidden rounded-3xl">
               <BlobImage blob={img.blob} className="aspect-[4/3] w-full object-cover" />
-              <button onClick={() => db.images.delete(img.id!)} className="absolute right-1 top-1 rounded-full bg-ink-950/80 px-2 py-0.5 text-xs text-ember-300 opacity-0 group-hover:opacity-100">Remove</button>
+              <button onClick={() => db.images.delete(img.id!)} className="absolute right-1 top-1 rounded-full bg-ink-950/80 px-2 py-0.5 text-xs text-ember-300 opacity-0 group-hover:opacity-100 focus:opacity-100 pointer-coarse:px-3 pointer-coarse:py-1.5 [@media(hover:none)]:opacity-100">Remove</button>
             </div>
           ))}
         </div>

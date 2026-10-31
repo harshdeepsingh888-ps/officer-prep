@@ -10,6 +10,8 @@ The app is a PWA. After the first visit it works offline.
 - **Android / laptop (Chrome, Edge):** use the **↓ Install app** button at the top right, or the browser's own install option.
 - **iPhone (Safari):** tap Share and choose **Add to Home Screen**.
 
+**On a phone** the main pages sit in a tab bar at the bottom (Today, Study, Practice, Revise; the rest under **More**). On touch screens, buttons are at least 36px tall, text fields use 16px text so iPhone doesn't zoom in, and the revision grade buttons stay pinned above the tab bar. The animated brain uses fewer particles on small screens, runs at 30 fps on touch devices and stops drawing when scrolled out of view.
+
 **Updates:** when a new version is deployed, a toast says *"A new version of Officer Prep is ready"*. Press **Update now**, or **Later** to finish what you're doing first. The app checks for updates hourly while open. **Library → This device** shows the build time of the version you're running.
 
 ## Keeping your data safe

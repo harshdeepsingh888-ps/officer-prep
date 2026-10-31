@@ -51,12 +51,23 @@ function useCanvasLoop(draw: (ctx: CanvasRenderingContext2D, w: number, h: numbe
     const mo = new MutationObserver(() => { if (still) draw(ctx, w, h, 0) })
     mo.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] })
     const start = performance.now()
+    // Phones and tablets: 30 frames a second is plenty for a slow drift and saves battery.
+    const gap = window.matchMedia('(pointer: coarse)').matches ? 1000 / 30 - 4 : 0
+    let last = 0, onScreen = true
     const loop = (now: number) => {
-      draw(ctx, w, h, (now - start) / 1000)
+      if (!onScreen) return // restarted by the observer below
+      if (now - last >= gap) { last = now; draw(ctx, w, h, (now - start) / 1000) }
       raf = requestAnimationFrame(loop)
     }
+    // Stop drawing while the canvas is scrolled out of view.
+    const io = new IntersectionObserver(([e]) => {
+      onScreen = e.isIntersecting
+      cancelAnimationFrame(raf)
+      if (onScreen && !still) raf = requestAnimationFrame(loop)
+    })
+    io.observe(canvas)
     if (!still) raf = requestAnimationFrame(loop)
-    return () => { cancelAnimationFrame(raf); ro.disconnect(); mo.disconnect() }
+    return () => { cancelAnimationFrame(raf); ro.disconnect(); mo.disconnect(); io.disconnect() }
   }, []) // draw/init read refs, so the loop is set up once
   return ref
 }
@@ -105,12 +116,13 @@ export function Constellation({ className = '', count = 1300 }: { className?: st
       }
       ctx.globalAlpha = 1
     },
-    () => {
+    w => {
       if (pts.current.length) return
+      const n = w < 640 ? Math.round(count * 0.6) : count // a phone-sized brain needs fewer points to look dense
       const out: P3[] = []
-      while (out.length < count) {
+      while (out.length < n) {
         const x = (Math.random() * 2 - 1) * 1.1, y = (Math.random() * 2 - 1) * 0.9, z = (Math.random() * 2 - 1) * 0.8
-        const ambient = out.length > count * 0.9
+        const ambient = out.length > n * 0.9
         const d = lobeDist(x, y, z)
         if (!ambient) {
           if (d > 1) continue
