@@ -73,10 +73,8 @@ Edit `src/data/exams.ts` when a new notification changes a date or pattern, and 
 
 ## Roadmap
 
-- PWA install + offline + reminders
-- Flashcards with spaced repetition (GK, defence facts, vocab)
+- Study reminders (notifications)
 - Current-affairs journal with monthly quiz
 - Fitness log (run times, push-ups, PET targets)
 - AI feedback on TAT/WAT/SRT and mock interviews (Claude API via a small server function)
-- Automatic Drive backup (now manual: Documents → Back up now)
 - One-click "save UPSC paper to Drive" through a small server function (UPSC doesn't allow cross-site browser downloads)

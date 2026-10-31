@@ -42,9 +42,13 @@ You create a small Google Cloud project of your own, so the app talks to **your*
 On the console dashboard, the **Project info** card shows the **Project number** (digits only). It's also under **IAM & Admin → Settings**.
 
 ## 7. Give the values to the app
-Use either method:
-- **In the app:** go to **Documents → Set up Google Drive**, paste the three values and save.
-- **In a file:** copy `.env.example` to `.env.local`, fill in the values and restart `npm run dev`.
+**This copy is already set up.** The client ID and project number of the Officer Prep project are in [`.env`](../.env), so every build (and every device) can connect without pasting anything. They identify the app and are visible in the page anyway, so they are safe to commit. To use your own project instead, replace them there.
+
+The **API key** is only needed for **Pick from Drive** and is not committed. Add it either way:
+- **In the app (per device):** **Documents → Edit setup**, paste the key (the other two fields are already filled) and save.
+- **In the build (every device):** on GitHub, open the repository's **Settings → Secrets and variables → Actions → Variables**, add `VITE_GOOGLE_API_KEY` with the key, then re-run the deploy (or push any change).
+
+For local overrides, copy `.env.example` to `.env.local`, fill in the values and restart `npm run dev`.
 
 Now click **Connect Google Drive**. Google will warn that it *hasn't verified this app*. That's expected for your own project in testing mode, so click **Continue** and tick **both** permission boxes.
 
