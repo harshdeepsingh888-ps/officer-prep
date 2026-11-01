@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 
 // Line icons drawn for the app (24 × 24, 1.6 stroke, round ends), with military motifs where they fit:
-// a compass for Today, a target for Practice, rank chevrons for Progress, a radio mast for News, a star for SSB.
+// a compass for Today, a target for Practice, chevrons for Progress, a radio mast for News, a star for SSB.
 
 const PATHS: Record<string, ReactNode> = {
   today: <><circle cx="12" cy="12" r="9" /><path d="M15.5 8.5 13.4 13.4 8.5 15.5 10.6 10.6Z" /></>,

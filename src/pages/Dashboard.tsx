@@ -9,7 +9,7 @@ import { DailyMission } from '../components/DailyMission'
 import { ReadinessPanel } from '../components/ReadinessPanel'
 import { BackupReminder } from '../components/BackupReminder'
 import { ServiceStripe } from '../components/Services'
-import { rankFor } from '../lib/rank'
+import { levelFor } from '../lib/level'
 
 export default function Dashboard() {
   const today = todayISO()
@@ -23,7 +23,7 @@ export default function Dashboard() {
   const weekSSB = useLiveQuery(() => db.ssb.where('at').above(weekAgo).count(), []) ?? 0
   const active = useLiveQuery(() => activeDays(), [])
   const streak = active ? streakFrom(active) : 0
-  const rank = rankFor(active?.size ?? 0)
+  const lvl = levelFor(active?.size ?? 0)
   const topics = useLiveQuery(() => db.topics.toArray(), []) ?? []
   const recent = useLiveQuery(() => db.attempts.orderBy('at').reverse().limit(4).toArray(), []) ?? []
   const [newTask, setNewTask] = useState('')
@@ -102,7 +102,7 @@ export default function Dashboard() {
           <a href="#/progress" className="label py-3 text-[11px] text-ink-400 hover:text-fg">Progress report →</a>
         </div>
         <div className="grid grid-cols-2 gap-x-14 gap-y-12 lg:grid-cols-4">
-          <Stat label="Streak" value={streak} hint={`days in a row · rank: ${rank.rank.name}`} />
+          <Stat label="Streak" value={streak} hint={`days in a row · level: ${lvl.current.name}`} />
           <Stat label="Study this week" value={`${studyHours}h`} hint="from Pomodoro sessions" />
           <Stat label="Tests this week" value={weekAttempts} hint="quizzes & past papers" />
           <Stat label="SSB sets this week" value={weekSSB} hint="WAT, SRT, TAT…" />

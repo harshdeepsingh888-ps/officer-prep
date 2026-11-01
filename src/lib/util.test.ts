@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { addDays, daysUntil, fmtBytes, fmtClock, isoOf, round2, todayISO, weekStart, wordCount } from './util'
-import { rankFor, RANKS } from './rank'
+import { levelFor, LEVELS } from './level'
 
 afterEach(() => { vi.useRealTimers() })
 
@@ -46,22 +46,28 @@ describe('formatting', () => {
   })
 })
 
-describe('rankFor', () => {
-  it('starts as Cadet and promotes on the day the threshold is reached', () => {
-    expect(rankFor(0)).toMatchObject({ level: 0, toNext: 7 })
-    expect(rankFor(6).rank.name).toBe('Cadet')
-    expect(rankFor(7).rank.name).toBe('Lieutenant')
-    expect(rankFor(21)).toMatchObject({ rank: { name: 'Captain' }, toNext: 24, progress: 0 })
+describe('levelFor', () => {
+  it('starts as Rookie and moves up on the day the threshold is reached', () => {
+    expect(levelFor(0)).toMatchObject({ level: 0, toNext: 7 })
+    expect(levelFor(6).current.name).toBe('Rookie')
+    expect(levelFor(7).current.name).toBe('Learner')
+    expect(levelFor(21)).toMatchObject({ current: { name: 'Striver' }, toNext: 24, progress: 0 })
   })
 
-  it('tops out at General with full progress', () => {
-    const top = rankFor(10_000)
-    expect(top.rank.name).toBe('General')
+  it('tops out at Legend with full progress', () => {
+    const top = levelFor(10_000)
+    expect(top.current.name).toBe('Legend')
     expect(top.next).toBeUndefined()
     expect(top).toMatchObject({ toNext: 0, progress: 1 })
   })
 
-  it('has strictly increasing thresholds', () => {
-    expect(RANKS.every((r, i) => i === 0 || r.days > RANKS[i - 1].days)).toBe(true)
+  it('has strictly increasing thresholds and unique titles', () => {
+    expect(LEVELS.every((r, i) => i === 0 || r.days > LEVELS[i - 1].days)).toBe(true)
+    expect(new Set(LEVELS.map(l => l.name)).size).toBe(LEVELS.length)
+  })
+
+  it('uses no military rank as a level title', () => {
+    const ranks = /cadet|lieutenant|captain|major|colonel|brigadier|general|admiral|commodore|commander|marshal|officer|sepoy|havildar|subedar/i
+    expect(LEVELS.filter(l => ranks.test(l.name))).toEqual([])
   })
 })

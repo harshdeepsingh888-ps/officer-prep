@@ -5,7 +5,7 @@ import { activityByDay, bestStreak, db, streakFrom, useSetting } from '../lib/db
 import { coverage, periodStats, subjectCoverage, subjectStats, topicStats, type PeriodStats } from '../lib/insights'
 import { MODE_LABEL } from '../lib/tests'
 import { addDays, fmtDate, fmtDateTime, round2, todayISO, weekStart } from '../lib/util'
-import { RANKS, rankFor } from '../lib/rank'
+import { LEVELS, levelFor } from '../lib/level'
 import { ActivityCalendar, BarRows } from '../components/charts'
 import { Icon } from '../components/icons'
 import { Badge, Button, Card, Empty, PageHeader, Progress as Bar, Stat } from '../components/ui'
@@ -46,7 +46,7 @@ export default function Progress() {
   const days = new Set(d.activity.keys())
   const streak = streakFrom(days)
   const best = bestStreak(days)
-  const rank = rankFor(days.size)
+  const lvl = levelFor(days.size)
   const today = todayISO()
   let last30 = 0
   for (let i = 0; i < 30; i++) if (days.has(addDays(today, -i))) last30++
@@ -97,17 +97,17 @@ export default function Progress() {
 
       <section className="grid items-center gap-8 rounded-3xl bg-fg/[0.04] px-6 py-8 sm:px-8 lg:grid-cols-[1fr_auto]">
         <div>
-          <div className="label text-[11px] text-ink-500">Your rank</div>
-          <div className="mt-2 text-[clamp(2.25rem,6vw,3.75rem)] font-normal leading-none tracking-display text-fg">{rank.rank.name}</div>
+          <div className="label text-[11px] text-ink-500">Your level</div>
+          <div className="mt-2 text-[clamp(2.25rem,6vw,3.75rem)] font-normal leading-none tracking-display text-fg">{lvl.current.name}</div>
           <p className="mt-3 text-sm font-light text-ink-400">
-            {rank.next ? `${rank.toNext} more study day${rank.toNext === 1 ? '' : 's'} to ${rank.next.name}.` : 'The highest rank. Keep showing up.'} {days.size} active day{days.size === 1 ? '' : 's'} so far; any day you practise counts, and a missed day never costs you a rank.
+            {lvl.next ? `${lvl.toNext} more study day${lvl.toNext === 1 ? '' : 's'} to ${lvl.next.name}.` : 'The highest level. Keep showing up.'} {days.size} active day{days.size === 1 ? '' : 's'} so far; any day you practise counts, and a missed day never costs you a level.
           </p>
-          {rank.next && <Bar value={rank.progress * 100} className="mt-4 max-w-md" />}
+          {lvl.next && <Bar value={lvl.progress * 100} className="mt-4 max-w-md" />}
         </div>
-        <div className="flex flex-wrap gap-1.5" role="img" aria-label={`Rank ${rank.level + 1} of ${RANKS.length}: ${rank.rank.name}`}>
-          {RANKS.map((r, i) => (
+        <div className="flex flex-wrap gap-1.5" role="img" aria-label={`Level ${lvl.level + 1} of ${LEVELS.length}: ${lvl.current.name}`}>
+          {LEVELS.map((r, i) => (
             <span key={r.name} title={`${r.name}: ${r.days} active days`}>
-              <Icon name="ssb" filled={i <= rank.level} className={`size-6 ${i <= rank.level ? 'text-iris-500' : 'text-ink-700'}`} />
+              <Icon name="ssb" filled={i <= lvl.level} className={`size-6 ${i <= lvl.level ? 'text-iris-500' : 'text-ink-700'}`} />
             </span>
           ))}
         </div>
