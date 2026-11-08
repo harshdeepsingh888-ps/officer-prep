@@ -142,8 +142,9 @@ export async function addStarterDeck(deck: StarterDeck) {
 
 export async function addFlashcards(deck: string, pairs: [string, string][]) {
   const now = Date.now()
-  await db.cards.bulkPut(pairs.map(([front, back], i) => ({
-    id: `f:u:${now}:${i}`, kind: 'flash' as const, deck, front, back, createdAt: now + i, ...freshSchedule(now),
+  // A random id, not the time: two batches added in the same millisecond used to share ids and overwrite each other.
+  await db.cards.bulkAdd(pairs.map(([front, back], i) => ({
+    id: `f:u:${crypto.randomUUID()}`, kind: 'flash' as const, deck, front, back, createdAt: now + i, ...freshSchedule(now),
   })))
   return pairs.length
 }

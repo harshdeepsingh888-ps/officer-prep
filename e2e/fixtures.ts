@@ -27,6 +27,9 @@ export async function open(page: Page, route = '') {
   await expect(page.locator('main')).not.toBeEmpty()
 }
 
-/** True when nothing on the page is wider than the window (no sideways scrolling). */
+/**
+ * True when nothing on the page is wider than the screen (no sideways scrolling). Compared with clientWidth, not
+ * innerWidth: a phone browser widens innerWidth to fit content that overflows, which would hide the problem.
+ */
 export const noSideScroll = (page: Page) =>
-  page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1)
+  page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth + 1)

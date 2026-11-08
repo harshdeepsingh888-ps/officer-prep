@@ -116,7 +116,8 @@ describe('topic tests', () => {
 
 describe('weekly quiz', () => {
   it('has 20 unique questions, starting with your mistakes', () => {
-    const mistakes = bank.filter(q => q.subject === 'English').slice(0, 8)
+    // Copies with their own ids, so the general top-up can't also draw one of them (it may in the app, harmlessly).
+    const mistakes = bank.filter(q => q.subject === 'English').slice(0, 8).map(q => ({ ...q, id: `m-${q.id}` }))
     const run = buildWeekly('cds', bank, { attempts: [], rows: [], mistakes })
     expect(run.qs).toHaveLength(WEEKLY_SIZE)
     expect(unique(run.qs)).toBe(true)

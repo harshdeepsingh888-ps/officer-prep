@@ -105,10 +105,13 @@ describe('flashcard decks', () => {
     expect(await db.cards.where('deck').equals(deck.name).count()).toBe(deck.cards.length)
   })
 
-  it('adds your own cards and deletes a whole deck', async () => {
+  it('adds your own cards and deletes a whole deck, even when two decks go in within the same millisecond', async () => {
+    const now = vi.spyOn(Date, 'now').mockReturnValue(Date.UTC(2026, 10, 8, 9))
     await addFlashcards('Mine', [['a', '1'], ['b', '2']])
     await addFlashcards('Other', [['c', '3']])
+    now.mockRestore()
     expect(await db.cards.where('deck').equals('Mine').count()).toBe(2)
+    expect(await db.cards.where('deck').equals('Other').count()).toBe(1)
     await deleteDeck('Mine')
     expect(await db.cards.count()).toBe(1)
   })
