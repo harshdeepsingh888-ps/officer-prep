@@ -1,9 +1,12 @@
 import { useState, type ReactNode } from 'react'
 import { LECTURETTE_TOPICS, SRT_SITUATIONS, WAT_WORDS, shuffle } from '../../data/ssb'
 import { useCountdown } from '../../lib/hooks'
-import { beep } from '../../lib/util'
+import { TAT_WORDS, boxFlags, narrationOrder, setFlags, storyFlags, watFlags, watSetFlags, type BoxChar } from '../../lib/psych'
+import { db } from '../../lib/db'
+import { beep, wordCount } from '../../lib/util'
 import { Button, Card, TimerBar, inputBase, inputCls, labelCls } from '../../components/ui'
-import { PicView, Recorder, SaveSet, pickPictures, type Pic } from './common'
+import { FlagList, PicView, Recorder, SaveSet, pickPictures, type Pic } from './common'
+import { BlankSlideIdeas, CharacterBox, SetPatterns, TatStoryReview } from './Review'
 
 type RunnerProps = { onExit: () => void }
 
@@ -36,9 +39,15 @@ export function WAT({ onExit }: RunnerProps) {
   const [i, setI] = useState(-1)
   const [resp, setResp] = useState<string[]>([])
   const [cur, setCur] = useState('')
+  // What you wrote for each word in earlier sets, read before this one starts, so a sentence repeated word for word shows up.
+  const [before, setBefore] = useState<Map<string, string[]>>(new Map())
   const timer = useCountdown(() => next())
 
-  const start = () => {
+  const start = async () => {
+    const past = new Map<string, string[]>()
+    for (const set of await db.ssb.where('test').equals('WAT').toArray())
+      for (const it of set.items) if (it.response.trim()) past.set(it.prompt, [...(past.get(it.prompt) ?? []), it.response])
+    setBefore(past)
     setWords(shuffle(WAT_WORDS).slice(0, count))
     setResp([])
     setCur('')
@@ -54,17 +63,26 @@ export function WAT({ onExit }: RunnerProps) {
   if (i < 0) return (
     <Setup title="Word Association Test" onStart={start} onExit={onExit}>
       <p>A word appears for 15 seconds. Write the first meaningful sentence it brings to mind. The next word comes up automatically.</p>
-      <p className="text-ink-500">Aim for short, positive, action-oriented sentences. Avoid preaching ("one should…") and repeating ideas.</p>
+      <p className="text-ink-500">
+        A complete sentence of your own: what you think, or what people do. Not advice ("one should…"), not a saying or a fact. Don't prepare
+        sentences in advance: a learnt sentence reads as learnt, and fails on words you haven't seen.
+      </p>
       <CountPicker value={count} options={[20, 40, 60]} onChange={setCount} unit="words" />
     </Setup>
   )
-  if (i >= words.length) return <SaveSet test="WAT" items={words.map((w, k) => ({ prompt: w, response: resp[k] ?? '' }))} onAgain={() => setI(-1)} onExit={onExit} />
+  if (i >= words.length) {
+    const flags = words.map((w, k) => watFlags(w, resp[k] ?? '', before.get(w)))
+    return <SaveSet test="WAT" onAgain={() => setI(-1)} onExit={onExit}
+      items={words.map((w, k) => ({ prompt: w, response: resp[k] ?? '', flags: flags[k].map(f => f.text) }))}
+      itemNotes={k => <FlagList flags={flags[k]} className="mt-1" />}
+      extra={<SetPatterns flags={watSetFlags(words.map((_, k) => resp[k] ?? ''))} />} />
+  }
 
   return (
     <Card>
       <div className="mb-2 text-sm text-ink-400">Word {i + 1} of {words.length}</div>
       <TimerBar remaining={timer.remaining} total={15} label={`${timer.remaining}s`} />
-      <div className="my-16 text-center text-[clamp(3rem,8vw,6rem)] font-normal leading-none tracking-display text-fg">{words[i]}</div>
+      <div aria-live="polite" className="my-16 text-center text-[clamp(3rem,8vw,6rem)] font-normal leading-none tracking-display text-fg">{words[i]}</div>
       <input key={i} autoFocus className={`${inputBase} w-full px-5 py-3 text-lg`} value={cur} onChange={e => setCur(e.target.value)} placeholder="Your sentence…" />
     </Card>
   )
@@ -125,12 +143,14 @@ export function TAT({ onExit }: RunnerProps) {
   const [idx, setIdx] = useState(-1)
   const [stage, setStage] = useState<'view' | 'write'>('view')
   const [stories, setStories] = useState<string[]>([])
+  const [reviews, setReviews] = useState<Record<string, string>[]>([])
   const timer = useCountdown(() => advance())
 
   const start = async () => {
     const p = await pickPictures(count, true)
     setPics(p)
     setStories(p.map(() => ''))
+    setReviews(p.map(() => ({})))
     setIdx(0)
     setStage('view')
     timer.start(30)
@@ -145,23 +165,33 @@ export function TAT({ onExit }: RunnerProps) {
   if (idx < 0) return (
     <Setup title="Thematic Apperception Test" onStart={start} onExit={onExit}>
       <p>Each picture is shown for 30 seconds, then hidden. You get 4 minutes to write a story: what led up to it, what is happening, and how it ends. The last slide is blank.</p>
-      <p className="text-ink-500">Give the story a hero (close to your age and sex), a clear problem, practical actions and a positive outcome.</p>
+      <p className="text-ink-500">
+        Write what you see, not a story you have learnt: assessors recognise those. Use every person in the picture, give the hero your own age and
+        kind of life, and let them think, feel and act with others towards a realistic end. Most people write {TAT_WORDS.min}–{TAT_WORDS.max} words in 4 minutes.
+      </p>
       <CountPicker value={count} options={[4, 8, 12]} onChange={setCount} unit="pictures" />
     </Setup>
   )
   if (idx >= pics.length) return (
     <SaveSet test="TAT" onAgain={() => setIdx(-1)} onExit={onExit}
-      items={pics.map((p, k) => ({ prompt: p.kind === 'text' ? p.text : p.kind === 'blank' ? 'Blank slide' : `Picture ${k + 1}`, response: stories[k] }))} />
+      items={pics.map((p, k) => ({
+        prompt: p.kind === 'text' ? p.text : p.kind === 'blank' ? 'Blank slide' : `Picture ${k + 1}`, response: stories[k],
+        review: reviews[k], flags: storyFlags(stories[k], { blank: p.kind === 'blank' }).map(f => f.text),
+      }))}
+      itemNotes={k => <TatStoryReview story={stories[k]} blank={pics[k].kind === 'blank'} review={reviews[k]} onChange={r => setReviews(rs => rs.map((x, j) => (j === k ? r : x)))} />}
+      extra={<SetPatterns flags={setFlags(stories)} clear={stories.filter(s => s.trim()).length >= 3 ? 'Across the set: no repeated heroes, endings or openings.' : undefined} />} />
   )
 
+  const words = wordCount(stories[idx])
   return (
     <Card>
       <div className="mb-2 flex justify-between text-sm text-ink-400">
         <span>Picture {idx + 1} of {pics.length} · {stage === 'view' ? 'Observe' : 'Write your story'}</span>
-        {stage === 'write' && <span>{stories[idx].trim().split(/\s+/).filter(Boolean).length} words</span>}
+        {stage === 'write' && <span className={words > TAT_WORDS.max + 30 ? 'text-saffron-400' : ''}>{words} words · aim {TAT_WORDS.min}–{TAT_WORDS.max}</span>}
       </div>
       <TimerBar remaining={timer.remaining} total={stage === 'view' ? 30 : 240} />
-      <div className="mt-4">
+      <div className="mt-4 space-y-3">
+        {pics[idx].kind === 'blank' && <BlankSlideIdeas />}
         {stage === 'view' ? <PicView pic={pics[idx]} /> : (
           <textarea autoFocus className={`${inputCls} h-72`} value={stories[idx]} onChange={e => setStories(s => s.map((x, j) => (j === idx ? e.target.value : x)))} placeholder="What led to this, what is happening, how does it end?" />
         )}
@@ -170,13 +200,15 @@ export function TAT({ onExit }: RunnerProps) {
   )
 }
 
-// ── PPDT: 30 s hazy picture → 1 min details → 3 min story → 1 min narration ─
+// ── PPDT: 30 s hazy picture → 1 min character box → 4 min story → 1 min narration ─
 export function PPDT({ onExit }: RunnerProps) {
   const [pic, setPic] = useState<Pic | null>(null)
   const [stage, setStage] = useState<'setup' | 'view' | 'details' | 'story' | 'narrate' | 'done'>('setup')
-  const [details, setDetails] = useState({ characters: '', gender: '', age: '', mood: '', action: '' })
+  const [chars, setChars] = useState<BoxChar[]>([])
+  const [hero, setHero] = useState<number | null>(null)
+  const [action, setAction] = useState('')
   const [story, setStory] = useState('')
-  const TIMES = { view: 30, details: 60, story: 180, narrate: 60 }
+  const TIMES = { view: 30, details: 60, story: 240, narrate: 60 }
   const timer = useCountdown(() => {
     beep(660)
     if (stage === 'view') { setStage('details'); timer.start(TIMES.details) }
@@ -187,7 +219,9 @@ export function PPDT({ onExit }: RunnerProps) {
 
   const start = async () => {
     setPic((await pickPictures(1, false))[0])
-    setDetails({ characters: '', gender: '', age: '', mood: '', action: '' })
+    setChars([])
+    setHero(null)
+    setAction('')
     setStory('')
     setStage('view')
     timer.start(TIMES.view)
@@ -195,19 +229,22 @@ export function PPDT({ onExit }: RunnerProps) {
 
   if (stage === 'setup') return (
     <Setup title="Picture Perception & Description Test" onStart={start} onExit={onExit}>
-      <p>A hazy picture is shown for 30 seconds. In 1 minute, note the characters (number, gender, age, mood) and the main action. Then write a story in 3 minutes. Finally, practise narrating it aloud in 1 minute.</p>
-      <p className="text-ink-500">PPDT is the screening test on Day 1 of SSB and in the Coast Guard PSB.</p>
+      <p>A hazy picture is shown for 30 seconds: use all of it to look, and count every person, faint ones too. In 1 minute, mark each character in the box with a sex, an exact age and a mood, circle your hero and write the action in a line. Then write the story in 4 minutes, and practise narrating it aloud in 1 minute.</p>
+      <p className="text-ink-500">PPDT is the screening test on Day 1 of SSB and in the Coast Guard PSB. In the discussion that follows, the aim is a common story the group agrees on, not your own.</p>
     </Setup>
   )
   if (stage === 'done') {
-    const d = details
+    const flags = [...boxFlags(chars, hero, story), ...storyFlags(story)]
+    const read = narrationOrder(chars, hero, action)
     return <SaveSet test="PPDT" onAgain={() => setStage('setup')} onExit={onExit}
       items={[
         { prompt: 'Picture', response: pic?.kind === 'text' ? pic.text : 'Uploaded picture' },
-        { prompt: 'Characters', response: `${d.characters} · ${d.gender} · age ${d.age} · mood ${d.mood}`.replace(/^ · | · $/g, '') },
-        { prompt: 'Action', response: d.action },
-        { prompt: 'Story', response: story },
-      ]} summary={`${story.trim().split(/\s+/).filter(Boolean).length} words`} />
+        { prompt: 'Characters', response: read.slice(0, hero !== null && chars[hero] ? 5 : 4).join(' · ') },
+        { prompt: 'Action', response: action },
+        { prompt: 'Story', response: story, flags: flags.map(f => f.text) },
+      ]}
+      itemNotes={i => (i === 3 ? <FlagList flags={flags} className="mt-2" /> : null)}
+      summary={`${wordCount(story)} words`} />
   }
 
   const label = { view: 'Observe the picture', details: 'Record the characters', story: 'Write your story', narrate: 'Narrate aloud' }[stage]
@@ -218,19 +255,24 @@ export function PPDT({ onExit }: RunnerProps) {
       <div className="mt-4">
         {stage === 'view' && pic && <PicView pic={pic} blur />}
         {stage === 'details' && (
-          <div className="grid gap-3 sm:grid-cols-2">
-            {(['characters', 'gender', 'age', 'mood'] as const).map(k => (
-              <div key={k}><label className={labelCls}>{k === 'characters' ? 'Number of characters' : k[0].toUpperCase() + k.slice(1)}</label>
-                <input autoFocus={k === 'characters'} className={inputCls} value={details[k]} onChange={e => setDetails({ ...details, [k]: e.target.value })} placeholder={{ characters: '3', gender: 'M, M, F', age: '25, 30, 22', mood: '+, 0, +' }[k]} /></div>
-            ))}
-            <div className="sm:col-span-2"><label className={labelCls}>Main action</label><input className={inputCls} value={details.action} onChange={e => setDetails({ ...details, action: e.target.value })} /></div>
+          <div className="space-y-4">
+            <CharacterBox chars={chars} hero={hero} onChange={setChars} onHero={setHero} />
+            <div><label className={labelCls} htmlFor="ppdt-action">Action, in one line</label><input id="ppdt-action" className={inputCls} value={action} onChange={e => setAction(e.target.value)} placeholder="What is happening?" /></div>
           </div>
         )}
-        {stage === 'story' && <textarea autoFocus className={`${inputCls} h-64`} value={story} onChange={e => setStory(e.target.value)} placeholder="Write your story…" />}
+        {stage === 'story' && (
+          <div className="space-y-1">
+            <textarea autoFocus className={`${inputCls} h-64`} value={story} onChange={e => setStory(e.target.value)} placeholder="Write your story…" />
+            <div className="text-right text-xs text-ink-500">{wordCount(story)} words · aim {TAT_WORDS.min}–{TAT_WORDS.max}</div>
+          </div>
+        )}
         {stage === 'narrate' && (
           <div className="space-y-3">
+            <ol className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-ink-200" aria-label="Narrate in this order">
+              {narrationOrder(chars, hero, action).map((step, i) => <li key={i} className="rounded-full bg-fg/[0.06] px-3 py-1">{i + 1}. {step}</li>)}
+            </ol>
             <div className="whitespace-pre-wrap rounded-3xl bg-fg/[0.04] p-3 text-sm text-ink-300">{story || 'No story written.'}</div>
-            <p className="text-sm text-ink-400">Narrate your story aloud in 1 minute: clear, confident and at a steady pace. Then discuss it as you would in the group.</p>
+            <p className="text-sm text-ink-400">Narrate in that order, in 1 minute: the box first, then the story you wrote, not a new one. Clear, audible and at a steady pace, to the group rather than the assessors.</p>
             <div className="flex flex-wrap gap-2">
               {!timer.running && <Button onClick={() => timer.start(TIMES.narrate)}>Start 1-minute narration</Button>}
               <Button variant="subtle" onClick={() => { timer.stop(); setStage('done') }}>Finish</Button>

@@ -5,14 +5,15 @@ import { db, useSetting, type SSBTest } from '../lib/db'
 import { go } from '../lib/hooks'
 import { fmtDateTime } from '../lib/util'
 import { Badge, Button, Card, Empty, PageHeader, Progress, Tabs, inputCls, labelCls } from '../components/ui'
-import { BlobImage } from './ssb/common'
+import { TAT_CHECKS, TAT_PROBLEM } from '../lib/psych'
+import { BlobImage, FlagList } from './ssb/common'
 import { Lecturette, PPDT, SD, SRT, TAT, WAT } from './ssb/Runners'
 
 const RUNNERS = { wat: WAT, srt: SRT, tat: TAT, ppdt: PPDT, sd: SD, lecturette: Lecturette }
 type Tab = 'tests' | 'responses' | 'olq' | 'interview' | 'pictures'
 
 const TESTS = [
-  { id: 'ppdt', name: 'PPDT', full: 'Picture Perception & Description', format: '30 s view · 1 min details · 3 min story', where: 'SSB Day 1, ICG PSB' },
+  { id: 'ppdt', name: 'PPDT', full: 'Picture Perception & Description', format: '30 s view · 1 min box · 4 min story', where: 'SSB Day 1, ICG PSB' },
   { id: 'tat', name: 'TAT', full: 'Thematic Apperception Test', format: '12 pictures · 30 s + 4 min each', where: 'Psychology' },
   { id: 'wat', name: 'WAT', full: 'Word Association Test', format: '60 words · 15 s each', where: 'Psychology' },
   { id: 'srt', name: 'SRT', full: 'Situation Reaction Test', format: '60 situations · 30 min', where: 'Psychology' },
@@ -108,12 +109,22 @@ function Responses() {
                   </button>
                   {open === r.id && (
                     <div className="mt-3 space-y-2 rounded-3xl bg-fg/[0.04] p-3 text-sm">
-                      {r.items.map((it, k) => (
-                        <div key={k} className="grid gap-1 sm:grid-cols-[minmax(0,14rem)_1fr] sm:gap-3">
-                          <span className="text-ink-400">{it.prompt}</span>
-                          <span className="whitespace-pre-wrap text-ink-100">{it.response || '—'}</span>
-                        </div>
-                      ))}
+                      {r.items.map((it, k) => {
+                        const checked = it.review ? TAT_CHECKS.filter(c => it.review![c.id] === 'yes').length : 0
+                        const problem = TAT_PROBLEM.find(p => p.id === it.review?.problem)
+                        return (
+                          <div key={k} className="grid grid-cols-1 gap-1 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] sm:gap-3">
+                            <span className="text-ink-400">{it.prompt}</span>
+                            <div className="min-w-0">
+                              <span className="whitespace-pre-wrap text-ink-100">{it.response || '—'}</span>
+                              <FlagList flags={(it.flags ?? []).map(text => ({ text }))} className="mt-1" />
+                              {(checked > 0 || problem) && (
+                                <div className="mt-1 text-xs text-ink-500">Your check: {checked}/{TAT_CHECKS.length}{problem ? ` · ${problem.text}` : ''}</div>
+                              )}
+                            </div>
+                          </div>
+                        )
+                      })}
                       {r.olqs.length > 0 && <div className="flex flex-wrap gap-1 pt-2">{r.olqs.map(o => <Badge key={o} tone="iris">{o}</Badge>)}</div>}
                       {r.note && <div className="pt-1 text-ink-400">📝 {r.note}</div>}
                       <Button variant="danger" size="sm" onClick={() => { if (confirm('Delete this set?')) db.ssb.delete(r.id!) }}>Delete</Button>

@@ -88,7 +88,9 @@ export type Card = {
 export type Grade = 0 | 1 | 2 | 3 // again, hard, good, easy
 export type Review = { id?: number; cardId: string; at: number; grade: Grade; interval: number; wasNew: boolean }
 export type SSBTest = 'WAT' | 'SRT' | 'TAT' | 'PPDT' | 'SD' | 'Lecturette'
-export type SSBResponse = { id?: number; test: SSBTest; at: number; items: { prompt: string; response: string }[]; olqs: string[]; note?: string }
+/** One prompt and your answer. review: your self-check (TAT); flags: what the checks in lib/psych.ts noticed. */
+export type SSBItem = { prompt: string; response: string; review?: Record<string, string>; flags?: string[] }
+export type SSBResponse = { id?: number; test: SSBTest; at: number; items: SSBItem[]; olqs: string[]; note?: string }
 export type Writing = { id?: number; kind: string; topic: string; text: string; words: number; minutes: number; at: number }
 export type SSBImage = { id?: number; blob: Blob; name: string; at: number }
 export type CustomLink = { id?: number; title: string; url: string; group: string }

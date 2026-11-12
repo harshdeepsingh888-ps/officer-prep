@@ -1,6 +1,6 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { OLQ_FACTORS, TAT_SCENES, shuffle } from '../../data/ssb'
-import { db, type SSBTest } from '../../lib/db'
+import { db, type SSBItem, type SSBTest } from '../../lib/db'
 import { Button, Card, inputCls } from '../../components/ui'
 
 export type Pic = { kind: 'image'; blob: Blob } | { kind: 'text'; text: string } | { kind: 'blank' }
@@ -36,8 +36,23 @@ export function PicView({ pic, blur = false }: { pic: Pic; blur?: boolean }) {
   )
 }
 
-export function SaveSet({ test, items, onAgain, onExit, summary }: {
-  test: SSBTest; items: { prompt: string; response: string }[]; onAgain: () => void; onExit: () => void; summary?: string
+/** What the checks noticed in an answer: prompts to re-read it, not marks. */
+export function FlagList({ flags, className = '' }: { flags: { text: string }[]; className?: string }) {
+  if (!flags.length) return null
+  return (
+    <ul className={`space-y-1 text-xs text-saffron-400 ${className}`}>
+      {flags.map((f, i) => <li key={i} className="flex gap-1.5"><span aria-hidden>⚑</span><span>{f.text}</span></li>)}
+    </ul>
+  )
+}
+
+/** The end of a test: your answers (with anything the checks noticed), an OLQ self-assessment, and Save. */
+export function SaveSet({ test, items, onAgain, onExit, summary, itemNotes, extra }: {
+  test: SSBTest; items: SSBItem[]; onAgain: () => void; onExit: () => void; summary?: string
+  /** Shown under each answer: checks and self-review for that item. */
+  itemNotes?: (i: number) => ReactNode
+  /** Shown after the answers: patterns across the whole set. */
+  extra?: ReactNode
 }) {
   const [olqs, setOlqs] = useState<string[]>([])
   const [note, setNote] = useState('')
@@ -49,12 +64,16 @@ export function SaveSet({ test, items, onAgain, onExit, summary }: {
       <Card title={`${test} — review`} action={<span className="text-xs text-ink-400">{summary ?? `${filled}/${items.length} completed`}</span>}>
         <ol className="space-y-2 text-sm">
           {items.map((it, i) => (
-            <li key={i} className="grid gap-1 sm:grid-cols-[minmax(0,14rem)_1fr] sm:gap-3">
+            <li key={i} className="grid grid-cols-1 gap-1 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] sm:gap-3">
               <span className="font-medium text-ink-400">{i + 1}. {it.prompt}</span>
-              <span className={it.response.trim() ? 'whitespace-pre-wrap text-ink-100' : 'italic text-ember-400'}>{it.response.trim() || 'not attempted'}</span>
+              <div className="min-w-0">
+                <span className={it.response.trim() ? 'whitespace-pre-wrap text-ink-100' : 'italic text-ember-400'}>{it.response.trim() || 'not attempted'}</span>
+                {itemNotes?.(i)}
+              </div>
             </li>
           ))}
         </ol>
+        {extra}
       </Card>
       <Card title="Self-assessment">
         <p className="mb-3 text-sm text-ink-400">Read your responses again. Which Officer Like Qualities come through? Be strict: tick a quality only if a response shows it in action, not just names it.</p>
