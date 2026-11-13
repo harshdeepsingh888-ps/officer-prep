@@ -8,7 +8,7 @@ import { useCountdown } from '../../lib/hooks'
 import { REASONS, addPaperMistake } from '../../lib/learning'
 import { parseKey, scoreOMR, type ScoreResult } from '../../lib/scoring'
 import { fmtClock, round2 } from '../../lib/util'
-import { Badge, Button, Card, Stat, TimerBar, inputBase, inputCls, labelCls } from '../../components/ui'
+import { Badge, Button, Card, Stat, TimerBar, inputBase, inputCls, labelCls, StatGrid, Chip } from '../../components/ui'
 
 const OMR_KEY = 'omrRun'
 /** An OMR sheet in progress — saved so a reload or closed tab can resume it. */
@@ -30,12 +30,12 @@ export default function PastPapers() {
 
   const list = OFFICIAL_PAPERS.filter(p => active === 'all' || p.exam === active)
   return (
-    <div className="space-y-14">
+    <div className="space-y-4">
       {saved && savedPaper && (
-        <div className="flex flex-wrap items-center gap-4 rounded-3xl bg-saffron-400/[0.08] px-5 py-4">
+        <div className="flex flex-wrap items-center gap-4 rounded-3xl bg-saffron-400/[0.08] px-4 py-4">
           <div className="min-w-[15rem] flex-1">
             <div className="text-ink-100">Unfinished OMR · {savedPaper.sitting} — {savedPaper.paper}</div>
-            <div className="text-sm font-light text-ink-400">
+            <div className="body-6 text-ink-400">
               {saved.resp.filter(r => r !== null).length}/{saved.n} marked · {fmtClock(Math.max(0, Math.round((saved.deadline - Date.now()) / 1000)))} left (the clock kept running)
             </div>
           </div>
@@ -44,11 +44,11 @@ export default function PastPapers() {
         </div>
       )}
       <Card>
-        <p className="text-sm text-ink-300">
+        <p className="body-6 text-ink-300">
           Official UPSC papers, linked straight from upsc.gov.in. Open the paper on one screen (or print it), answer on the timed OMR sheet here,
           then score it with the answer key. AFCAT and CGCAT papers aren't published officially, so use Quick quiz and the official mock test on afcat.cdac.in for those.
         </p>
-        <p className="mt-2 text-xs text-ink-500">
+        <p className="mt-2 caption-5 text-ink-500">
           {drive.status === 'ready'
             ? 'Downloaded a paper? Use "Save my copy" to keep it in your Google Drive, so it opens on any device.'
             : <>Connect <a href="#/documents" className="text-saffron-400 hover:underline">Google Drive</a> to keep your downloaded copies and open them on any device.</>}
@@ -56,19 +56,18 @@ export default function PastPapers() {
       </Card>
       <div className="flex flex-wrap gap-2">
         {[{ id: 'all', short: 'All' }, ...available].map(e => (
-          <button key={e.id} onClick={() => setFilter(e.id)}
-            className={`rounded-full px-3 py-1 text-sm font-medium ${active === e.id ? 'bg-iris-500 text-white' : 'bg-ink-800 text-ink-300 hover:bg-ink-700'}`}>{e.short}</button>
+          <Chip key={e.id} onClick={() => setFilter(e.id)} active={active === e.id}>{e.short}</Chip>
         ))}
       </div>
       <Card>
-        <ul className="divide-y divide-fg/[0.06]">
+        <ul className="divide-y divide-line">
           {list.map(p => {
             const copy = copyOf(p)
             return (
-              <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:gap-y-1 sm:py-2.5">
+              <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:gap-y-1 sm:py-2">
                 <div className="w-full sm:w-auto sm:min-w-0 sm:flex-1">
-                  <div className="text-sm font-medium text-ink-100">{p.sitting} — {p.paper}</div>
-                  <div className="text-xs text-ink-500">{p.questions} Qs · {p.marks} marks · {p.minutes} min · PDF {p.size}</div>
+                  <div className="body-5 text-ink-100">{p.sitting} — {p.paper}</div>
+                  <div className="caption-5 text-ink-500">{p.questions} Qs · {p.marks} marks · {p.minutes} min · PDF {p.size}</div>
                 </div>
                 {copy
                   ? <a href={copy.webViewLink} target="_blank" rel="noreferrer"><Button variant="ghost" size="sm">My Drive copy ↗</Button></a>
@@ -77,7 +76,7 @@ export default function PastPapers() {
                       {drive.status === 'ready' && <SaveCopy paper={p} />}
                     </>}
                 <a href={`#/practice/mine/${encodeURIComponent(p.id)}`} title="Paste this paper's text and key to turn it into practice questions"><Button variant="ghost" size="sm">Make questions</Button></a>
-                <Button size="sm" onClick={() => setPaper(p)}>OMR sheet</Button>
+                <Button size="sm" variant="subtle" onClick={() => setPaper(p)}>OMR sheet</Button>
               </li>
             )
           })}
@@ -174,7 +173,7 @@ function OMRSheet({ paper, resume, openUrl, onExit }: { paper: OfficialPaper; re
   if (phase === 'setup') {
     return (
       <Card title={`${paper.sitting} — ${paper.paper}`}>
-        <ol className="list-inside list-decimal space-y-3 text-sm text-ink-300">
+        <ol className="list-inside list-decimal space-y-3 body-6 text-ink-300">
           <li>
             {openUrl === paper.url
               ? <>Open the official paper ({paper.size}) in another tab, window or printout: </>
@@ -184,9 +183,9 @@ function OMRSheet({ paper, resume, openUrl, onExit }: { paper: OfficialPaper; re
           <li>
             Check the settings (edit if your booklet differs):
             <div className="mt-2 flex flex-wrap gap-3">
-              <div><label className={labelCls}>Questions</label><input className={`${inputBase} w-24 px-4 py-2.5 text-sm`} type="number" min={1} value={n} onChange={e => setN(Math.max(1, Number(e.target.value)))} /></div>
-              <div><label className={labelCls}>Minutes</label><input className={`${inputBase} w-24 px-4 py-2.5 text-sm`} type="number" min={1} value={minutes} onChange={e => setMinutes(Math.max(1, Number(e.target.value)))} /></div>
-              <div className="self-end pb-2 text-xs text-ink-500">+{round2(perQ)} per correct · −{round2(negative)} per wrong</div>
+              <div><label className={labelCls}>Questions</label><input className={`${inputBase} w-24 px-4 py-2 body-6`} type="number" min={1} value={n} onChange={e => setN(Math.max(1, Number(e.target.value)))} /></div>
+              <div><label className={labelCls}>Minutes</label><input className={`${inputBase} w-24 px-4 py-2 body-6`} type="number" min={1} value={minutes} onChange={e => setMinutes(Math.max(1, Number(e.target.value)))} /></div>
+              <div className="self-end pb-2 caption-5 text-ink-500">+{round2(perQ)} per correct · −{round2(negative)} per wrong</div>
             </div>
           </li>
           <li>Start the clock and mark your answers as you would on a real OMR.</li>
@@ -202,9 +201,9 @@ function OMRSheet({ paper, resume, openUrl, onExit }: { paper: OfficialPaper; re
   if (phase === 'run') {
     const answered = resp.filter(r => r !== null).length
     return (
-      <div className="space-y-14">
-        <div className="sticky top-3 z-20 rounded-3xl bg-canvas/85 px-5 py-4 backdrop-blur-md">
-          <div className="mb-2 flex items-center justify-between text-sm">
+      <div className="space-y-4">
+        <div className="sticky top-3 z-20 rounded-3xl bg-canvas/85 px-4 py-4 backdrop-blur-md">
+          <div className="mb-2 flex items-center justify-between body-6">
             <span className="font-medium">{paper.sitting} — {paper.paper}</span>
             <span className="text-ink-400">{answered}/{n} marked</span>
           </div>
@@ -215,13 +214,13 @@ function OMRSheet({ paper, resume, openUrl, onExit }: { paper: OfficialPaper; re
           </div>
         </div>
         <Card>
-          <div className="grid grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))] gap-x-4 gap-y-1.5 pointer-coarse:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] pointer-coarse:gap-y-2.5">
+          <div className="grid grid-cols-[repeat(auto-fill,minmax(10.5rem,1fr))] gap-x-4 gap-y-1 pointer-coarse:grid-cols-[repeat(auto-fill,minmax(13rem,1fr))] pointer-coarse:gap-y-2">
             {resp.map((r, i) => (
-              <div key={i} className="flex items-center gap-1.5 pointer-coarse:gap-2">
-                <span className="w-8 text-right font-mono text-xs tabular-nums text-ink-500">{i + 1}</span>
+              <div key={i} className="flex items-center gap-1 pointer-coarse:gap-2">
+                <span className="w-8 text-right font-mono caption-5 tabular-nums text-ink-500">{i + 1}</span>
                 {[0, 1, 2, 3].map(o => (
                   <button key={o} onClick={() => setResp(prev => prev.map((x, j) => (j === i ? (x === o ? null : o) : x)))}
-                    className={`size-7 rounded-full border text-[11px] font-semibold pointer-coarse:size-9 pointer-coarse:text-xs ${r === o ? 'border-iris-400 bg-iris-500 text-white' : 'border-ink-600 text-ink-400 hover:border-ink-400'}`}>
+                    className={`size-7 rounded-full border caption-3 pointer-coarse:size-9 pointer-coarse:caption-5 ${r === o ? 'border-accent-400 bg-accent-500 text-on-accent' : 'border-ink-600 text-ink-400 hover:border-ink-400'}`}>
                     {'ABCD'[o]}
                   </button>
                 ))}
@@ -236,13 +235,13 @@ function OMRSheet({ paper, resume, openUrl, onExit }: { paper: OfficialPaper; re
   if (phase === 'key') {
     return (
       <Card title="Score your sheet">
-        <p className="mb-3 text-sm text-ink-400">
+        <p className="mb-3 body-6 text-ink-400">
           Answers saved. Type or paste the answer key — letters only, in order (e.g. <span className="font-mono">BADC…</span>). Numbers, spaces and dashes are ignored; use <span className="font-mono">X</span> for a dropped question.
           UPSC publishes official keys after the final result (Library → Answer keys). You can also score later from History.
         </p>
         <textarea className={`${inputCls} h-32 font-mono`} value={keyRaw} onChange={e => setKeyRaw(e.target.value)} placeholder="1-B 2-A 3-D …  or  BADC…" />
         <div className="mt-2 flex items-center gap-2">
-          <Badge tone={key.length === n ? 'iris' : 'saffron'}>{key.length}/{n} answers</Badge>
+          <Badge tone={key.length === n ? 'accent' : 'saffron'}>{key.length}/{n} answers</Badge>
           <Button className="ml-auto" disabled={key.length !== n} onClick={scoreNow}>Score</Button>
           <Button variant="ghost" onClick={onExit}>Score later</Button>
         </div>
@@ -251,7 +250,7 @@ function OMRSheet({ paper, resume, openUrl, onExit }: { paper: OfficialPaper; re
   }
 
   return (
-    <div className="space-y-14">
+    <div className="space-y-4">
       {res && <ScoreCard res={res} keyStr={key} paper={{ paperId: paper.id, title: `${paper.sitting} — ${paper.paper}`, url: openUrl, exam: paper.exam }} />}
       <Button onClick={onExit}>Back to papers</Button>
     </div>
@@ -266,23 +265,23 @@ export function ScoreCard({ res, paper, keyStr }: { res: ScoreResult; paper?: Pa
   const savedIds = useLiveQuery(async () => (paper ? new Set(await db.mistakes.where('id').startsWith(`p:${paper.paperId}:`).primaryKeys()) : new Set<string>()), [paper?.paperId]) ?? new Set<string>()
   const isSaved = (q: number) => savedIds.has(`p:${paper?.paperId}:${q}`)
   return (
-    <div className="space-y-12">
-      <div className="grid grid-cols-2 gap-x-14 gap-y-10 md:grid-cols-4">
+    <div className="space-y-4">
+      <StatGrid className="md:grid-cols-4">
         <Stat label="Score" value={`${res.score} / ${res.maxScore}`} />
         <Stat label="Accuracy" value={`${attempted ? Math.round((res.correct / attempted) * 100) : 0}%`} hint={`${attempted} attempted`} />
         <Stat label="Right · Wrong" value={`${res.correct} · ${res.wrong}`} />
         <Stat label="Skipped · Dropped" value={`${res.skipped} · ${res.dropped}`} />
-      </div>
+      </StatGrid>
       {res.wrongNums.length > 0 && (
         <Card title="Wrong answers — revisit these in the paper">
-          {paper && <p className="mb-4 text-sm text-ink-400">Tap a question to add it to your mistake notebook with its topic and why you missed it. It comes back for revision from tomorrow.</p>}
-          <div className="flex flex-wrap gap-1.5">
+          {paper && <p className="mb-4 body-6 text-ink-400">Tap a question to add it to your mistake notebook with its topic and why you missed it. It comes back for revision from tomorrow.</p>}
+          <div className="flex flex-wrap gap-1">
             {res.wrongNums.map(q => paper ? (
               <button key={q} onClick={() => setAdding(adding === q ? null : q)}
-                className={`rounded-full px-2.5 py-1 text-xs tabular-nums transition-colors ${isSaved(q) ? 'bg-verdant-500/20 text-verdant-300' : adding === q ? 'bg-ember-500 text-white' : 'bg-ember-500/15 text-ember-300 hover:bg-ember-500/25'}`}>
+                className={`rounded-full px-2 py-1 caption-5 tabular-nums transition-colors ${isSaved(q) ? 'bg-verdant-500/20 text-verdant-300' : adding === q ? 'bg-ember-500 text-white' : 'bg-ember-500/15 text-ember-300 hover:bg-ember-500/25'}`}>
                 Q{q}{isSaved(q) ? ' ✓' : ''}
               </button>
-            ) : <span key={q} className="rounded-full bg-ember-500/15 px-2.5 py-1 text-xs tabular-nums text-ember-300">Q{q}</span>)}
+            ) : <span key={q} className="rounded-full bg-ember-500/15 px-2 py-1 caption-5 tabular-nums text-ember-300">Q{q}</span>)}
           </div>
           {paper && adding !== null && <PaperMistakeForm key={adding} paper={paper} qno={adding} correct={keyStr?.[adding - 1]} onDone={() => setAdding(null)} />}
         </Card>
@@ -300,8 +299,8 @@ function PaperMistakeForm({ paper, qno, correct, onDone }: { paper: PaperRef; qn
   const [note, setNote] = useState('')
   const topics = subjects.find(s => s.subject === subject)?.topics ?? []
   return (
-    <div className="mt-5 rounded-3xl bg-fg/[0.04] p-5">
-      <div className="mb-4 text-sm text-ink-200">Q{qno}{correct && correct !== 'X' ? ` · correct answer ${correct}` : ''}</div>
+    <div className="mt-4 rounded-3xl bg-surface-2 p-4">
+      <div className="mb-4 body-6 text-ink-200">Q{qno}{correct && correct !== 'X' ? ` · correct answer ${correct}` : ''}</div>
       <div className="grid gap-3 sm:grid-cols-2">
         <div><label className={labelCls}>Subject</label>
           <select className={inputCls} value={subject} onChange={e => { setSubject(e.target.value); setTopic('') }}>{subjects.map(s => <option key={s.subject}>{s.subject}</option>)}</select></div>

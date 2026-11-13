@@ -1,0 +1,42 @@
+/* Named text styles shared by the landing page and the app (from .claude/skills/landing-page-design).
+   Every text element uses one of these: sizes come from Tailwind's type scale, so nothing sits between steps.
+   Headings balance their lines; running text avoids leaving one word on the last line. */
+
+@utility heading-1 { font-size: 3.75rem; line-height: 1; font-weight: 600; text-wrap: balance; }
+@utility heading-2 { font-size: 3rem; line-height: 1; font-weight: 600; text-wrap: balance; }
+@utility heading-3 { font-size: 2.25rem; line-height: 2.5rem; font-weight: 600; text-wrap: balance; }
+@utility heading-4 { font-size: 1.875rem; line-height: 2.25rem; font-weight: 600; text-wrap: balance; }
+@utility heading-5 { font-size: 1.5rem; line-height: 2rem; font-weight: 600; text-wrap: balance; }
+@utility heading-6 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; text-wrap: balance; }
+@utility title-1 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; text-wrap: balance; }
+@utility title-2 { font-size: 1.125rem; line-height: 1.75rem; font-weight: 500; text-wrap: balance; }
+@utility title-3 { font-size: 1rem; line-height: 1.5rem; font-weight: 500; text-wrap: balance; }
+@utility title-4 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+@utility title-5 { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
+@utility body-1 { font-size: 1rem; line-height: 1.5rem; font-weight: 600; text-wrap: pretty; }
+@utility body-2 { font-size: 1rem; line-height: 1.5rem; font-weight: 500; text-wrap: pretty; }
+@utility body-3 { font-size: 1rem; line-height: 1.5rem; font-weight: 400; text-wrap: pretty; }
+@utility body-4 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; text-wrap: pretty; }
+@utility body-5 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; text-wrap: pretty; }
+@utility body-6 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 400; text-wrap: pretty; }
+@utility button-lg { font-size: 1.125rem; line-height: 1.75rem; font-weight: 600; }
+@utility button-md { font-size: 1rem; line-height: 1.5rem; font-weight: 600; }
+@utility button-sm { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; }
+@utility button-xsm { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
+@utility caption-1 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+@utility caption-2 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 400; }
+@utility caption-3 { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
+@utility caption-4 { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
+@utility caption-5 { font-size: 0.75rem; line-height: 1rem; font-weight: 400; }
+
+/* The hero heading's one permitted gradient, on the text only: white to grey on dark, black to grey on light.
+   A page can set --hero-from and --hero-to for its theme; the landing page uses the dark defaults. */
+@utility hero-text {
+  background-image: linear-gradient(to right, var(--hero-from, #ffffff), var(--hero-to, #9b9b9b));
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Line height 1 would clip the last line's descenders; pad the paint box without moving anything. */
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}

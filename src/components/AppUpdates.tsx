@@ -1,6 +1,7 @@
 import { useRegisterSW } from 'virtual:pwa-register/react'
 import { useInstall } from '../lib/install'
-import { Button } from './ui'
+import { DownloadSimpleIcon } from '@phosphor-icons/react'
+import { Button, focusRing } from './ui'
 
 const HOUR = 60 * 60 * 1000
 const OFFLINE_SEEN = 'officer-prep-offline-ready-seen'
@@ -32,7 +33,7 @@ export function UpdateToast() {
   }
 
   return (
-    <div role="status" className="fixed inset-x-4 bottom-[calc(5rem+env(safe-area-inset-bottom))] z-50 mx-auto md:bottom-4 flex max-w-md items-center gap-3 rounded-3xl bg-ink-900 px-5 py-4 text-sm text-ink-100 ring-1 ring-fg/15 sm:left-auto sm:right-6 sm:mx-0">
+    <div role="status" className="fixed inset-x-4 bottom-[calc(7rem+env(safe-area-inset-bottom))] z-50 mx-auto flex max-w-md items-center gap-3 rounded-3xl border border-line bg-surface-2 px-6 py-4 body-6 text-ink-100 sm:left-auto sm:right-6 sm:mx-0 md:bottom-6">
       <span className="flex-1">
         {needRefresh ? 'A new version of Officer Prep is ready.' : 'Officer Prep is ready to work offline.'}
       </span>
@@ -47,8 +48,8 @@ export function InstallButton() {
   const { canInstall, install } = useInstall()
   if (!canInstall) return null
   return (
-    <button onClick={install} className="label shrink-0 rounded-full bg-fg/[0.06] px-3 py-1.5 text-[11px] pointer-coarse:py-2.5 text-ink-200 transition-colors hover:text-fg">
-      ↓ Install app
+    <button onClick={install} className={`flex shrink-0 items-center gap-2 rounded-full bg-fg/[0.06] px-3 py-2 caption-1 text-ink-200 transition-colors duration-300 ease-soft hover:text-fg ${focusRing}`}>
+      <DownloadSimpleIcon className="size-4" aria-hidden />Install app
     </button>
   )
 }

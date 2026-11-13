@@ -3,13 +3,20 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { EXAMS, nextDate } from '../data/exams'
 import { db, useSetting, activeDays, streakFrom } from '../lib/db'
 import { addDays, daysUntil, fmtDate, fmtDateTime, todayISO, round2 } from '../lib/util'
-import { Badge, Button, Card, Empty, Progress, Stat, inputCls } from '../components/ui'
+import { Badge, Button, Card, Empty, Progress, Stat, TileLink, focusRing, inputCls } from '../components/ui'
 import { Constellation } from '../components/Particles'
 import { DailyMission } from '../components/DailyMission'
 import { ReadinessPanel } from '../components/ReadinessPanel'
 import { BackupReminder } from '../components/BackupReminder'
 import { ServiceStripe } from '../components/Services'
 import { levelFor } from '../lib/level'
+
+// Today: the greeting and the day's one action, then countdowns, readiness, the week in numbers, and the day's work
+// in tiles. Section headings sit on the canvas; everything you read or act on sits in a tile.
+
+const tile = 'min-w-0 rounded-3xl bg-surface p-6 sm:p-8'
+// Stat tiles sit two to a row on phones, so they take 16px padding there.
+const statTile = 'min-w-0 rounded-3xl bg-surface p-4 sm:p-8'
 
 export default function Dashboard() {
   const today = todayISO()
@@ -45,48 +52,52 @@ export default function Dashboard() {
   }
 
   return (
-    <div className="space-y-16 sm:space-y-24">
+    <div className="space-y-12 sm:space-y-16">
       <BackupReminder />
-      <section className="grid grid-cols-1 items-center gap-6 lg:grid-cols-2 lg:gap-10">
-        <div className="relative z-10">
-          <div className="label text-saffron-400">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
-          <h1 className="mt-6 text-[clamp(3.75rem,9.5vw,7.0625rem)] font-normal leading-[0.95] tracking-display text-fg">Jai Hind.</h1>
-          <p className="mt-8 max-w-[480px] text-lead font-extralight leading-relaxed text-ink-200">
+
+      {/* The greeting and the day's one action; the animation sits in its own tile beside it. */}
+      <section className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:gap-12">
+        <div className="min-w-0">
+          <div className="title-4 text-accent-300">{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</div>
+          <h1 className="mt-4 heading-2 hero-text sm:heading-1">Jai Hind.</h1>
+          <p className="mt-6 max-w-[680px] title-2 text-ink-300">
             {nearest?.d?.date
               ? <><span className="text-fg">{daysUntil(nearest.d.date)} days</span> to {nearest.d.label}. </>
               : 'Pick your target exams to start the countdown. '}
             {tasks.length ? `${doneCount} of ${tasks.length} tasks done today.` : 'Plan the day, then work through the drill.'}
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-x-7 gap-y-2 sm:mt-10">
+          <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
             {countdowns.length === 0
-              ? <a href="#/exams"><Button size="lg">Choose your exams</Button></a>
-              : <a href="#/revise"><Button size="lg">Start today's revision</Button></a>}
-            <a href="#/planner" className="label py-3 text-ink-400 transition-colors hover:text-fg">Open planner →</a>
+              ? <a href="#/exams" tabIndex={-1}><Button>Choose your exams</Button></a>
+              : <a href="#/revise" tabIndex={-1}><Button>Start today's revision</Button></a>}
+            <a href="#/planner" className={`rounded-lg py-2 button-md text-ink-300 transition-colors duration-300 ease-soft hover:text-fg ${focusRing}`}>
+              Open planner <span aria-hidden>→</span>
+            </a>
           </div>
         </div>
-        <div className="-mx-5 -mt-6 h-[330px] sm:mx-0 sm:mt-0 sm:h-[470px] lg:h-[580px]">
+        <div className="h-80 overflow-hidden rounded-3xl bg-surface pb-4 sm:h-96">
           <Constellation />
         </div>
       </section>
 
       {countdowns.length > 0 && (
         <section>
-          <h2 className="label text-saffron-400">Countdown</h2>
-          <div className="mt-8 grid gap-x-14 gap-y-12 sm:grid-cols-2 lg:grid-cols-3">
+          <h2 className="heading-5 text-fg">Countdown</h2>
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-[repeat(auto-fit,minmax(20rem,1fr))]">
             {countdowns.map(({ key, title, d }) => {
               const days = d?.date ? daysUntil(d.date) : null
               return (
-                <div key={key}>
-                  <ServiceStripe exam={key} className="mb-3" />
-                  <div className="flex items-center gap-3">
-                    <span className="text-[15px] text-fg">{title}</span>
-                    {d && <Badge tone={d.status === 'official' ? 'iris' : 'saffron'}>{d.status}</Badge>}
+                <div key={key} className={tile}>
+                  <div className="flex items-center justify-between gap-3">
+                    <span className="title-3 text-fg">{title}</span>
+                    {d && <Badge tone={d.status === 'official' ? 'verdant' : 'saffron'}>{d.status}</Badge>}
                   </div>
-                  <div className="mt-4 text-[clamp(4rem,7vw,4.875rem)] font-normal leading-none tracking-display tabular-nums text-fg">
+                  <ServiceStripe exam={key} className="mt-3" />
+                  <div className="mt-8 heading-1 tabular-nums text-fg">
                     {days ?? '—'}
-                    {days !== null && <span className="ml-3 text-lead font-extralight tracking-normal text-ink-400">days</span>}
+                    {days !== null && <span className="ml-2 title-2 text-ink-400">days</span>}
                   </div>
-                  <div className="mt-3 text-sm font-light text-ink-400">{d?.date ? `${d.label} · ${fmtDate(d.date)}` : d?.note ?? 'Date not announced'}</div>
+                  <div className="mt-3 caption-2 text-ink-400">{d?.date ? `${d.label} · ${fmtDate(d.date)}` : d?.note ?? 'Date not announced'}</div>
                 </div>
               )
             })}
@@ -97,32 +108,32 @@ export default function Dashboard() {
       {targetExams.length > 0 && <ReadinessPanel exams={targetExams} />}
 
       <section>
-        <div className="mb-8 flex items-center justify-between gap-3">
-          <h2 className="label text-saffron-400">This week</h2>
-          <a href="#/progress" className="label py-3 text-[11px] text-ink-400 hover:text-fg">Progress report →</a>
+        <div className="flex items-center justify-between gap-3">
+          <h2 className="heading-5 text-fg">This week</h2>
+          <TileLink href="#/progress">Progress report</TileLink>
         </div>
-        <div className="grid grid-cols-2 gap-x-14 gap-y-12 lg:grid-cols-4">
-          <Stat label="Streak" value={streak} hint={`days in a row · level: ${lvl.current.name}`} />
-          <Stat label="Study this week" value={`${studyHours}h`} hint="from Pomodoro sessions" />
-          <Stat label="Tests this week" value={weekAttempts} hint="quizzes & past papers" />
-          <Stat label="SSB sets this week" value={weekSSB} hint="WAT, SRT, TAT…" />
+        <div className="mt-6 grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <div className={statTile}><Stat label="Streak" value={streak} hint={`days in a row · level: ${lvl.current.name}`} /></div>
+          <div className={statTile}><Stat label="Study this week" value={`${studyHours}h`} hint="from Pomodoro sessions" /></div>
+          <div className={statTile}><Stat label="Tests this week" value={weekAttempts} hint="quizzes & past papers" /></div>
+          <div className={statTile}><Stat label="SSB sets this week" value={weekSSB} hint="WAT, SRT, TAT…" /></div>
         </div>
       </section>
 
-      <section className="grid gap-x-20 gap-y-16 lg:grid-cols-2">
-        <Card title="Today's tasks" action={<a href="#/planner" className="label text-[11px] text-ink-400 hover:text-fg">Planner →</a>}>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <Card title="Today's tasks" action={<TileLink href="#/planner">Planner</TileLink>}>
           <div className="mb-4 flex gap-2">
             <input className={inputCls} enterKeyHint="done" placeholder="Add a task and press Enter" value={newTask} onChange={e => setNewTask(e.target.value)} onKeyDown={e => e.key === 'Enter' && addTask()} />
             <Button variant="subtle" onClick={addTask}>Add</Button>
           </div>
-          {tasks.length === 0 ? <Empty>No tasks for today yet.</Empty> : (
-            <ul className="divide-y divide-fg/[0.06]">
+          {tasks.length === 0 ? <Empty>No tasks for today yet. Add one above, or open the planner.</Empty> : (
+            <ul className="divide-y divide-line">
               {tasks.map(t => (
                 <li key={t.id}>
                   <label className="flex cursor-pointer items-center gap-3 py-3">
-                    <input type="checkbox" className="size-4 shrink-0 accent-iris-500 pointer-coarse:size-5" checked={t.done}
+                    <input type="checkbox" className="size-4 shrink-0 accent-accent-500 pointer-coarse:size-5" checked={t.done}
                       onChange={e => db.tasks.update(t.id!, { done: e.target.checked, doneAt: e.target.checked ? Date.now() : undefined })} />
-                    <span className={t.done ? 'text-ink-500 line-through' : 'text-ink-100'}>{t.title}</span>
+                    <span className={`body-5 ${t.done ? 'text-ink-500 line-through' : 'text-ink-100'}`}>{t.title}</span>
                   </label>
                 </li>
               ))}
@@ -132,7 +143,7 @@ export default function Dashboard() {
 
         <DailyMission exams={targetExams} />
 
-        <Card title="Syllabus coverage" action={<a href="#/study" className="label text-[11px] text-ink-400 hover:text-fg">Study path →</a>}>
+        <Card title="Syllabus coverage" action={<TileLink href="#/study">Study path</TileLink>}>
           {targetExams.length === 0 ? <Empty>Choose target exams to track coverage.</Empty> : (
             <div className="space-y-6">
               {targetExams.map(e => {
@@ -141,9 +152,9 @@ export default function Dashboard() {
                 const pct = Math.round((score / (total * 3)) * 100)
                 return (
                   <div key={e.id}>
-                    <div className="mb-2 flex items-baseline justify-between">
-                      <span className="text-ink-100">{e.short}</span>
-                      <span className="text-2xl font-normal tracking-display tabular-nums text-fg">{pct}%</span>
+                    <div className="mb-2 flex items-baseline justify-between gap-3">
+                      <span className="title-4 text-ink-100">{e.short}</span>
+                      <span className="heading-6 tabular-nums text-fg">{pct}%</span>
                     </div>
                     <Progress value={pct} />
                   </div>
@@ -153,22 +164,22 @@ export default function Dashboard() {
           )}
         </Card>
 
-        <Card title="Recent tests" action={<a href="#/practice/analytics" className="label text-[11px] text-ink-400 hover:text-fg">Analytics →</a>}>
+        <Card title="Recent tests" action={<TileLink href="#/practice/analytics">Analytics</TileLink>}>
           {recent.length === 0 ? <Empty>No tests yet. Try a quick quiz or a past paper.</Empty> : (
-            <ul className="divide-y divide-fg/[0.06]">
+            <ul className="divide-y divide-line">
               {recent.map(a => (
                 <li key={a.id} className="flex items-center justify-between gap-3 py-3">
                   <div className="min-w-0">
-                    <div className="truncate text-ink-100">{a.title}</div>
-                    <div className="text-xs font-light text-ink-500">{fmtDateTime(a.at)}</div>
+                    <div className="truncate body-5 text-ink-100">{a.title}</div>
+                    <div className="caption-5 text-ink-500">{fmtDateTime(a.at)}</div>
                   </div>
-                  <span className="shrink-0 tabular-nums text-fg">{a.score === undefined ? <Badge tone="saffron">needs key</Badge> : `${round2(a.score)} / ${a.maxScore}`}</span>
+                  <span className="shrink-0 title-4 tabular-nums text-fg">{a.score === undefined ? <Badge tone="saffron">needs key</Badge> : `${round2(a.score)} / ${a.maxScore}`}</span>
                 </li>
               ))}
             </ul>
           )}
         </Card>
-      </section>
+      </div>
     </div>
   )
 }

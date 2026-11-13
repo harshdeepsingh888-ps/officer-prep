@@ -4,7 +4,7 @@ import { db, type NewsNote } from '../lib/db'
 import { go } from '../lib/hooks'
 import { addFlashcards } from '../lib/learning'
 import { addDays, fmtDate, fmtDateTime, isoOf, todayISO, weekStart } from '../lib/util'
-import { Badge, Button, Card, Empty, PageHeader, Tabs, inputCls, labelCls } from '../components/ui'
+import { Badge, Button, Card, Empty, PageHeader, Tabs, inputCls, labelCls, Chip } from '../components/ui'
 
 // Current affairs: headlines fetched twice a day by the deploy workflow (scripts/fetch-news.mjs),
 // your own notes, and a weekly recap of them.
@@ -57,10 +57,9 @@ export default function News({ sub }: { sub?: string }) {
 
 function Chips({ items, value, onChange }: { items: { id: string; label: string }[]; value: string; onChange: (v: string) => void }) {
   return (
-    <div className="-mx-5 flex gap-2 overflow-x-auto px-5 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
+    <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0 [&::-webkit-scrollbar]:hidden">
       {items.map(i => (
-        <button key={i.id} onClick={() => onChange(i.id)} aria-pressed={value === i.id}
-          className={`shrink-0 rounded-full px-4 py-1.5 text-sm transition-colors ${value === i.id ? 'bg-iris-500 text-white' : 'bg-fg/[0.07] text-ink-300 hover:bg-fg/[0.12]'}`}>{i.label}</button>
+        <Chip key={i.id} onClick={() => onChange(i.id)} aria-pressed={value === i.id} active={value === i.id}>{i.label}</Chip>
       ))}
     </div>
   )
@@ -84,12 +83,12 @@ function Headlines({ onNote }: { onNote: (d: Partial<NewsNote>) => void }) {
   if (feed === null) return <Empty>Loading headlines…</Empty>
   const official = (
     <Card title="Official sources">
-      <p className="mb-4 text-sm font-light text-ink-400">Read these in your browser; they don’t allow apps to collect their releases automatically.</p>
+      <p className="mb-4 body-6 text-ink-400">Read these in your browser; they don’t allow apps to collect their releases automatically.</p>
       <ul className="grid gap-x-10 gap-y-4 sm:grid-cols-2">
         {OFFICIAL.map(o => (
           <li key={o.url}>
             <a href={o.url} target="_blank" rel="noreferrer" className="text-saffron-400 hover:underline">{o.title} ↗</a>
-            <div className="text-xs text-ink-500">{o.detail}</div>
+            <div className="caption-5 text-ink-500">{o.detail}</div>
           </li>
         ))}
       </ul>
@@ -97,7 +96,7 @@ function Headlines({ onNote }: { onNote: (d: Partial<NewsNote>) => void }) {
   )
   if (feed === 'error' || !feed.items.length) {
     return (
-      <div className="space-y-14">
+      <div className="space-y-4">
         <Empty>Headlines aren’t available right now. They’re refreshed twice a day (7 am and 7 pm); open this page once while online to keep a copy for offline use.</Empty>
         {official}
       </div>
@@ -116,24 +115,24 @@ function Headlines({ onNote }: { onNote: (d: Partial<NewsNote>) => void }) {
   const dayList = [...byDay.keys()].sort().reverse()
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-4">
       <div className="space-y-4">
         <Chips items={chips} value={cat} onChange={c => { setCat(c); setDays(2) }} />
-        <p className="text-xs font-light text-ink-500">Updated {fmtDateTime(Date.parse(feed.generatedAt))} · from {feed.sources.join(' and ')} · tap a headline to read it on their site.</p>
+        <p className="caption-5 text-ink-500">Updated {fmtDateTime(Date.parse(feed.generatedAt))} · from {feed.sources.join(' and ')} · tap a headline to read it on their site.</p>
       </div>
       {dayList.slice(0, days).map(day => (
         <section key={day}>
-          <h2 className="label mb-2 text-saffron-400">{dayLabel(day)}</h2>
-          <ul className="divide-y divide-fg/[0.06]">
+          <h2 className="body-5 mb-2 text-saffron-400">{dayLabel(day)}</h2>
+          <ul className="divide-y divide-line">
             {byDay.get(day)!.sort((a, b) => (b.score ?? 0) - (a.score ?? 0) || b.published.localeCompare(a.published)).map(h => (
               <li key={h.link} className="flex flex-wrap items-start gap-x-4 gap-y-2 py-4">
                 <div className="min-w-[15rem] flex-1">
-                  <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-ink-500">
-                    {cat === 'all' && <Badge tone={h.category === 'defence' ? 'iris' : 'ink'}>{labelOf(h.category)}</Badge>}
+                  <div className="mb-1 flex flex-wrap items-center gap-2 caption-5 text-ink-500">
+                    {cat === 'all' && <Badge tone={h.category === 'defence' ? 'accent' : 'ink'}>{labelOf(h.category)}</Badge>}
                     <span>{h.source} · {new Date(h.published).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit' })}</span>
                   </div>
-                  <a href={h.link} target="_blank" rel="noreferrer" className="text-[17px] leading-snug text-ink-100 hover:text-fg">{h.title} <span className="text-ink-500">↗</span></a>
-                  {h.summary && <p className="mt-1 line-clamp-2 text-sm font-light text-ink-400">{h.summary}</p>}
+                  <a href={h.link} target="_blank" rel="noreferrer" className="body-3 text-ink-100 hover:text-fg">{h.title} <span className="text-ink-500">↗</span></a>
+                  {h.summary && <p className="mt-1 line-clamp-2 body-6 text-ink-400">{h.summary}</p>}
                 </div>
                 {noted.has(h.link)
                   ? <Badge tone="verdant">noted</Badge>
@@ -167,8 +166,8 @@ function NoteForm({ draft, onDone }: { draft: Partial<NewsNote>; onDone: () => v
   }
 
   return (
-    <div className="mb-14 rounded-3xl bg-fg/[0.04] px-6 py-6">
-      <h2 className="label mb-5 text-saffron-400">{n.id ? 'Edit note' : draft.link ? 'Note this headline' : 'New note'}</h2>
+    <div className="mb-12 rounded-3xl bg-surface-2 px-6 py-6">
+      <h2 className="body-5 mb-4 text-saffron-400">{n.id ? 'Edit note' : draft.link ? 'Note this headline' : 'New note'}</h2>
       <div className="grid gap-4 sm:grid-cols-[10rem_1fr]">
         <div>
           <label className={labelCls} htmlFor="note-date">Date</label>
@@ -194,8 +193,8 @@ function NoteForm({ draft, onDone }: { draft: Partial<NewsNote>; onDone: () => v
           <input id="note-link" className={inputCls} value={n.link ?? ''} onChange={e => set({ link: e.target.value })} placeholder="https://…" />
         </div>
       </div>
-      <label className="mt-5 flex items-center gap-2 text-sm text-ink-200">
-        <input type="checkbox" className="size-4 accent-iris-500 pointer-coarse:size-5" checked={card.make} onChange={e => setCard(c => ({ ...c, make: e.target.checked }))} />
+      <label className="mt-4 flex items-center gap-2 body-6 text-ink-200">
+        <input type="checkbox" className="size-4 accent-accent-500 pointer-coarse:size-5" checked={card.make} onChange={e => setCard(c => ({ ...c, make: e.target.checked }))} />
         Also make a revision card (it joins your daily review in the “{CARD_DECK}” deck)
       </label>
       {card.make && (
@@ -221,15 +220,15 @@ function NoteForm({ draft, onDone }: { draft: Partial<NewsNote>; onDone: () => v
 function NoteItem({ n, onEdit }: { n: NewsNote; onEdit: () => void }) {
   return (
     <li className="py-4">
-      <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-ink-500">
+      <div className="mb-1 flex flex-wrap items-center gap-2 caption-5 text-ink-500">
         <span>{fmtDate(n.date)}</span>
-        <Badge tone={n.category === 'defence' ? 'iris' : 'ink'}>{labelOf(n.category)}</Badge>
+        <Badge tone={n.category === 'defence' ? 'accent' : 'ink'}>{labelOf(n.category)}</Badge>
         {n.carded && <Badge tone="verdant">card</Badge>}
       </div>
       {n.link
-        ? <a href={n.link} target="_blank" rel="noreferrer" className="text-[17px] leading-snug text-ink-100 hover:text-fg">{n.title} <span className="text-ink-500">↗</span></a>
-        : <div className="text-[17px] leading-snug text-ink-100">{n.title}</div>}
-      {n.text && <p className="mt-1 whitespace-pre-wrap text-sm text-ink-300">{n.text}</p>}
+        ? <a href={n.link} target="_blank" rel="noreferrer" className="body-3 text-ink-100 hover:text-fg">{n.title} <span className="text-ink-500">↗</span></a>
+        : <div className="body-3 text-ink-100">{n.title}</div>}
+      {n.text && <p className="mt-1 whitespace-pre-wrap body-6 text-ink-300">{n.text}</p>}
       <div className="mt-2 flex gap-1">
         <Button variant="ghost" size="sm" onClick={onEdit}>Edit</Button>
         <Button variant="danger" size="sm" onClick={() => { if (confirm(`Delete the note “${n.title}”?`)) db.notes.delete(n.id!) }}>Delete</Button>
@@ -258,8 +257,8 @@ function Notes({ onWrite }: { onWrite: (d: Partial<NewsNote>) => void }) {
         : shown.length === 0 ? <Empty>No notes match.</Empty> : (
           [...byMonth.entries()].map(([month, list]) => (
             <section key={month}>
-              <h2 className="label mb-2 text-saffron-400">{new Date(month + '-01T00:00:00').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })} · {list.length}</h2>
-              <ul className="divide-y divide-fg/[0.06]">{list.map(n => <NoteItem key={n.id} n={n} onEdit={() => onWrite(n)} />)}</ul>
+              <h2 className="body-5 mb-2 text-saffron-400">{new Date(month + '-01T00:00:00').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' })} · {list.length}</h2>
+              <ul className="divide-y divide-line">{list.map(n => <NoteItem key={n.id} n={n} onEdit={() => onWrite(n)} />)}</ul>
             </section>
           ))
         )}
@@ -288,7 +287,7 @@ function Recap() {
   }
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <Chips items={[{ id: 'this', label: 'This week' }, { id: 'last', label: 'Last week' }, { id: 'month', label: 'This month' }]} value={period} onChange={setPeriod} />
         <div className="flex flex-wrap gap-2">
@@ -297,15 +296,15 @@ function Recap() {
         </div>
       </div>
       {groups.length === 0 ? <Empty>No notes for {period === 'month' ? '' : 'the '}{range.label}. Notes you add on the Headlines or My notes tabs collect here, grouped by category.</Empty> : (
-        <div className="grid gap-x-16 gap-y-12 lg:grid-cols-2">
+        <div className="grid gap-4 lg:grid-cols-2">
           {groups.map(g => (
             <Card key={g.id} title={`${g.label} · ${g.notes.length}`}>
               <ul className="space-y-4">
                 {g.notes.map(n => (
                   <li key={n.id}>
                     <div className="text-ink-100">{n.title}</div>
-                    {n.text && <p className="mt-0.5 whitespace-pre-wrap text-sm font-light text-ink-400">{n.text}</p>}
-                    <div className="mt-0.5 text-xs text-ink-600">{fmtDate(n.date)}</div>
+                    {n.text && <p className="mt-0.5 whitespace-pre-wrap body-6 text-ink-400">{n.text}</p>}
+                    <div className="mt-0.5 caption-5 text-ink-600">{fmtDate(n.date)}</div>
                   </li>
                 ))}
               </ul>
@@ -313,7 +312,7 @@ function Recap() {
           ))}
         </div>
       )}
-      <p className="max-w-2xl text-sm font-light text-ink-500">
+      <p className="max-w-2xl body-6 text-ink-500">
         Want an MCQ quiz on the week? Paste current-affairs quiz posts from the channels you follow into <a href="#/practice/mine" className="text-saffron-400 hover:underline">My questions</a> with the topic “Current affairs”, then take a topic test on it.
       </p>
     </div>

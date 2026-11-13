@@ -27,11 +27,11 @@ export function BlobImage({ blob, className = '' }: { blob: Blob; className?: st
 
 export function PicView({ pic, blur = false }: { pic: Pic; blur?: boolean }) {
   if (pic.kind === 'image') return <BlobImage blob={pic.blob} className={`mx-auto max-h-[60vh] rounded-3xl ${blur ? 'blur-[1.5px] grayscale' : ''}`} />
-  if (pic.kind === 'blank') return <div className="mx-auto flex h-64 max-w-lg items-center justify-center rounded-3xl bg-white text-ink-600 ring-1 ring-fg/10">Blank slide — picture your own scene</div>
+  if (pic.kind === 'blank') return <div className="mx-auto flex h-64 max-w-lg items-center justify-center rounded-3xl bg-white text-ink-600 ring-1 ring-line">Blank slide — picture your own scene</div>
   return (
-    <div className="mx-auto max-w-lg rounded-3xl bg-fg/[0.04] p-8 text-center text-lg italic text-ink-200">
+    <div className="mx-auto max-w-lg rounded-3xl bg-surface-2 p-8 text-center title-2 italic text-ink-200">
       “{pic.text}”
-      <div className="mt-3 text-xs not-italic text-ink-500">Written scene — add real pictures under SSB → Pictures</div>
+      <div className="mt-3 caption-5 not-italic text-ink-500">Written scene — add real pictures under SSB → Pictures</div>
     </div>
   )
 }
@@ -40,8 +40,8 @@ export function PicView({ pic, blur = false }: { pic: Pic; blur?: boolean }) {
 export function FlagList({ flags, className = '' }: { flags: { text: string }[]; className?: string }) {
   if (!flags.length) return null
   return (
-    <ul className={`space-y-1 text-xs text-saffron-400 ${className}`}>
-      {flags.map((f, i) => <li key={i} className="flex gap-1.5"><span aria-hidden>⚑</span><span>{f.text}</span></li>)}
+    <ul className={`space-y-1 caption-5 text-saffron-400 ${className}`}>
+      {flags.map((f, i) => <li key={i} className="flex gap-1"><span aria-hidden>⚑</span><span>{f.text}</span></li>)}
     </ul>
   )
 }
@@ -60,9 +60,9 @@ export function SaveSet({ test, items, onAgain, onExit, summary, itemNotes, extr
   const filled = items.filter(i => i.response.trim()).length
 
   return (
-    <div className="space-y-14">
-      <Card title={`${test} — review`} action={<span className="text-xs text-ink-400">{summary ?? `${filled}/${items.length} completed`}</span>}>
-        <ol className="space-y-2 text-sm">
+    <div className="space-y-4">
+      <Card title={`${test} — review`} action={<span className="caption-5 text-ink-400">{summary ?? `${filled}/${items.length} completed`}</span>}>
+        <ol className="space-y-2 body-6">
           {items.map((it, i) => (
             <li key={i} className="grid grid-cols-1 gap-1 sm:grid-cols-[minmax(0,14rem)_minmax(0,1fr)] sm:gap-3">
               <span className="font-medium text-ink-400">{i + 1}. {it.prompt}</span>
@@ -76,14 +76,14 @@ export function SaveSet({ test, items, onAgain, onExit, summary, itemNotes, extr
         {extra}
       </Card>
       <Card title="Self-assessment">
-        <p className="mb-3 text-sm text-ink-400">Read your responses again. Which Officer Like Qualities come through? Be strict: tick a quality only if a response shows it in action, not just names it.</p>
+        <p className="mb-3 body-6 text-ink-400">Read your responses again. Which Officer Like Qualities come through? Be strict: tick a quality only if a response shows it in action, not just names it.</p>
         <div className="grid gap-4 sm:grid-cols-2">
           {OLQ_FACTORS.map(f => (
             <div key={f.factor}>
-              <div className="mb-1 text-xs font-medium uppercase tracking-wide text-ink-500">{f.factor}</div>
+              <div className="mb-1 caption-4 text-ink-500">{f.factor}</div>
               {f.olqs.map(o => (
-                <label key={o} className="flex items-center gap-2 py-0.5 text-sm pointer-coarse:py-2">
-                  <input type="checkbox" className="accent-iris-500" checked={olqs.includes(o)} onChange={e => setOlqs(e.target.checked ? [...olqs, o] : olqs.filter(x => x !== o))} />{o}
+                <label key={o} className="flex items-center gap-2 py-0.5 body-6 pointer-coarse:py-2">
+                  <input type="checkbox" className="accent-accent-500" checked={olqs.includes(o)} onChange={e => setOlqs(e.target.checked ? [...olqs, o] : olqs.filter(x => x !== o))} />{o}
                 </label>
               ))}
             </div>
@@ -91,7 +91,7 @@ export function SaveSet({ test, items, onAgain, onExit, summary, itemNotes, extr
         </div>
         <textarea className={`${inputCls} mt-3 h-16`} placeholder="Notes to yourself — negative responses, repeated ideas, what to improve…" value={note} onChange={e => setNote(e.target.value)} />
         <div className="mt-3 flex gap-2">
-          {saved ? <span className="self-center text-sm text-iris-300">Saved ✓</span> : <Button onClick={async () => { await db.ssb.add({ test, at: Date.now(), items, olqs, note: note.trim() || undefined }); setSaved(true) }}>Save set</Button>}
+          {saved ? <span className="self-center body-6 text-accent-300">Saved ✓</span> : <Button onClick={async () => { await db.ssb.add({ test, at: Date.now(), items, olqs, note: note.trim() || undefined }); setSaved(true) }}>Save set</Button>}
           <Button variant="subtle" onClick={onAgain}>Another set</Button>
           <Button variant="ghost" onClick={onExit}>Back to tests</Button>
         </div>
@@ -130,10 +130,10 @@ export function Recorder() {
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         {rec ? <Button variant="danger" onClick={() => { rec.stop(); setRec(null) }}>■ Stop recording</Button> : <Button variant="subtle" onClick={start}>● Record myself</Button>}
-        {rec && <span className="animate-pulse text-xs text-ember-400">recording…</span>}
+        {rec && <span className="animate-pulse caption-5 text-ember-400">recording…</span>}
       </div>
       {url && <audio controls src={url} className="w-full" />}
-      {err && <p className="text-xs text-saffron-400">{err}</p>}
+      {err && <p className="caption-5 text-saffron-400">{err}</p>}
     </div>
   )
 }

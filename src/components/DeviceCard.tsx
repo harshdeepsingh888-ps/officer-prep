@@ -57,31 +57,31 @@ export function DeviceCard() {
     {
       label: 'Google Drive sync',
       value: drive.status === 'ready' ? <Badge tone="verdant">connected</Badge> : <span className="text-ink-400">{drive.status === 'unconfigured' ? 'not set up' : 'not connected'}</span>,
-      action: <a href="#/documents" className="text-sm text-saffron-400 hover:underline">Documents →</a>,
+      action: <a href="#/documents" className="body-6 text-saffron-400 hover:underline">Documents →</a>,
     },
   ]
 
   return (
     <Card title="This device & backups">
-      <p className="mb-5 text-sm text-ink-400">
+      <p className="mb-4 body-6 text-ink-400">
         Your progress lives in this browser on this device. Protect it, and keep a backup. Drive backs up automatically once connected; otherwise export a file every week or so.
       </p>
-      <dl className="divide-y divide-fg/[0.06]">
+      <dl className="divide-y divide-line">
         {rows.map(r => (
-          <div key={r.label} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3 text-sm">
+          <div key={r.label} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-3 body-6">
             <dt className="w-full shrink-0 text-ink-400 sm:w-44">{r.label}</dt>
             <dd className="min-w-0 flex-1 text-ink-200">{r.value}</dd>
             {r.action}
           </div>
         ))}
       </dl>
-      <div className="mt-5 flex flex-wrap gap-2">
+      <div className="mt-4 flex flex-wrap gap-2">
         <Button onClick={exportFile}>Export backup file</Button>
         <Button variant="subtle" onClick={() => fileRef.current?.click()}>Restore from file…</Button>
         <input ref={fileRef} type="file" accept="application/json" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) restore(f); e.target.value = '' }} />
       </div>
-      {msg && <p className="mt-3 text-sm text-verdant-300">{msg}</p>}
-      <p className="mt-3 text-xs font-light text-ink-500">Backups include everything except practice pictures for TAT/PPDT.</p>
+      {msg && <p className="mt-3 body-6 text-verdant-300">{msg}</p>}
+      <p className="mt-3 caption-5 text-ink-500">Backups include everything except practice pictures for TAT/PPDT.</p>
     </Card>
   )
 }

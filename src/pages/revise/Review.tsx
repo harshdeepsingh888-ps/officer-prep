@@ -4,7 +4,7 @@ import { db, useSetting, type Card, type Grade } from '../../lib/db'
 import { REASONS, reviewCard, reviewQueue } from '../../lib/learning'
 import { isNew, preview, startOfDay } from '../../lib/srs'
 import { fmtDateTime } from '../../lib/util'
-import { Badge, Button, Card as Section, Empty, Passage, Progress, Stat, inputBase } from '../../components/ui'
+import { Badge, Button, Card as Section, Empty, Passage, Progress, Stat, inputBase, StatGrid } from '../../components/ui'
 
 const GRADES: { g: Grade; label: string; key: string }[] = [
   { g: 0, label: 'Again', key: '1' },
@@ -88,8 +88,8 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
   if (queue && !card) {
     return (
       <Section>
-        <div className="text-[42px] font-normal leading-none tracking-display text-fg">Done for now.</div>
-        <p className="mt-4 text-lead font-extralight text-ink-300">
+        <div className="heading-3 text-fg">Done for now.</div>
+        <p className="mt-4 body-3 text-ink-300">
           {tally.reviewed} reviews · {tally.again} sent back. {stats?.nextDue ? `Next card is due ${fmtDateTime(stats.nextDue)}.` : ''}
         </p>
         <Button className="mt-6" variant="subtle" onClick={() => setQueue(null)}>Back</Button>
@@ -101,13 +101,13 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
   if (!queue) {
     const dueTotal = (stats?.dueMistakes ?? 0) + (stats?.dueReviews ?? 0) + Math.min(stats?.newWaiting ?? 0, Math.max(0, newLimit - (stats?.newToday ?? 0)))
     return (
-      <div className="space-y-12">
-        <section className="grid grid-cols-2 gap-x-14 gap-y-10 lg:grid-cols-4">
+      <div className="space-y-4">
+        <StatGrid className="lg:grid-cols-4">
           <Stat label="Due now" value={dueTotal} hint="in today's session" />
           <Stat label="Mistakes due" value={stats?.dueMistakes ?? 0} hint="re-attempt these first" />
           <Stat label="Reviewed today" value={stats?.reviewedToday ?? 0} />
           <Stat label="Cards in rotation" value={stats?.total ?? 0} />
-        </section>
+        </StatGrid>
         {stats?.total === 0 ? (
           <Empty>
             Nothing to revise yet. Wrong answers from quizzes land here automatically. You can also
@@ -118,9 +118,9 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
         ) : (
           <Button size="lg" onClick={start}>Start review · {dueTotal} cards</Button>
         )}
-        <div className="flex items-center gap-3 text-sm text-ink-400">
+        <div className="flex items-center gap-3 body-6 text-ink-400">
           New flashcards per day
-          <input type="number" min={0} max={100} className={`${inputBase} w-20 px-3 py-1.5 text-sm`} value={newLimit} onChange={e => setNewLimit(Math.max(0, Number(e.target.value)))} />
+          <input type="number" min={0} max={100} className={`${inputBase} w-20 px-3 py-1 body-6`} value={newLimit} onChange={e => setNewLimit(Math.max(0, Number(e.target.value)))} />
         </div>
       </div>
     )
@@ -131,13 +131,13 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
   return (
     <div className="space-y-8">
       <div>
-        <div className="mb-2 flex items-center justify-between text-sm text-ink-400">
+        <div className="mb-2 flex items-center justify-between body-6 text-ink-400">
           <span className="flex items-center gap-2">
             Card {i + 1} of {total}
-            <Badge tone={card!.kind === 'mistake' ? 'ember' : isNew(card!) ? 'saffron' : 'iris'}>{card!.kind === 'mistake' ? 'Mistake' : isNew(card!) ? 'New' : card!.deck}</Badge>
-            {mistake && <span className="text-xs text-ink-500">{mistake.subject} · {mistake.topic}</span>}
+            <Badge tone={card!.kind === 'mistake' ? 'ember' : isNew(card!) ? 'saffron' : 'accent'}>{card!.kind === 'mistake' ? 'Mistake' : isNew(card!) ? 'New' : card!.deck}</Badge>
+            {mistake && <span className="caption-5 text-ink-500">{mistake.subject} · {mistake.topic}</span>}
           </span>
-          <button className="label text-[11px] text-ink-500 hover:text-fg" onClick={() => setQueue(queue.slice(0, i))}>End session</button>
+          <button className="caption-4 text-ink-500 hover:text-fg" onClick={() => setQueue(queue.slice(0, i))}>End session</button>
         </div>
         <Progress value={(i / total) * 100} />
       </div>
@@ -146,33 +146,33 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
         {mcq ? (
           <>
             {mcq.passage && <div className="mb-6"><Passage text={mcq.passage} /></div>}
-            <div className="whitespace-pre-line text-[clamp(1.5rem,2.6vw,2rem)] font-normal leading-snug tracking-tight text-fg">{mcq.text}</div>
-            <div className="mt-8 grid gap-2.5">
+            <div className="whitespace-pre-line heading-5 sm:heading-4 text-fg">{mcq.text}</div>
+            <div className="mt-8 grid gap-2">
               {mcq.options.map((o, j) => {
-                const cls = !revealed ? 'bg-fg/[0.04] text-ink-200 hover:bg-fg/[0.08]'
+                const cls = !revealed ? 'bg-surface-2 text-ink-200 hover:bg-fg/[0.08]'
                   : j === mcq.answer ? 'bg-verdant-500/15 text-verdant-300'
                   : j === picked ? 'bg-ember-500/15 text-ember-200' : 'text-ink-500'
                 return (
-                  <button key={j} onClick={() => pick(j)} disabled={revealed} className={`rounded-3xl px-5 py-4 text-left text-[15px] transition-colors ${cls}`}>
+                  <button key={j} onClick={() => pick(j)} disabled={revealed} className={`rounded-3xl px-4 py-4 text-left body-6 transition-colors ${cls}`}>
                     <span className="mr-3 text-ink-500">{'ABCD'[j]}</span>{o}
                   </button>
                 )
               })}
             </div>
-            {!revealed && <p className="mt-3 text-xs text-ink-600 pointer-coarse:hidden">Press A–D to answer.</p>}
+            {!revealed && <p className="mt-3 caption-5 text-ink-600 pointer-coarse:hidden">Press A–D to answer.</p>}
           </>
         ) : (
           <>
-            <div className="whitespace-pre-wrap text-[clamp(1.6rem,3vw,2.4rem)] font-normal leading-tight tracking-tight text-fg">{card!.front}</div>
-            {mistake?.paperUrl && <a href={mistake.paperUrl} target="_blank" rel="noreferrer" className="label mt-4 inline-block text-[11px] text-saffron-400 hover:underline">Open paper ↗</a>}
+            <div className="whitespace-pre-wrap heading-4 sm:heading-3 text-fg">{card!.front}</div>
+            {mistake?.paperUrl && <a href={mistake.paperUrl} target="_blank" rel="noreferrer" className="mt-4 inline-block caption-4 text-saffron-400 hover:underline">Open paper ↗</a>}
             {revealed
-              ? <div className="mt-8 whitespace-pre-wrap text-xl font-light text-ink-200">{card!.back}</div>
+              ? <div className="mt-8 whitespace-pre-wrap title-1 text-ink-200">{card!.back}</div>
               : <Button className="mt-8" variant="subtle" onClick={() => setRevealed(true)}>Show answer<span className="pointer-coarse:hidden"> (space)</span></Button>}
           </>
         )}
 
         {revealed && mistake && (
-          <div className="mt-6 space-y-1 text-sm">
+          <div className="mt-6 space-y-1 body-6">
             {mcq && mistake.yourAnswer !== undefined && mistake.yourAnswer !== null && (
               <div className="text-ink-400">Last time you chose <span className="text-ember-300">{'ABCD'[mistake.yourAnswer]}. {mcq.options[mistake.yourAnswer]}</span> · wrong {mistake.count}×</div>
             )}
@@ -185,14 +185,14 @@ export default function Review({ onOpenDecks }: { onOpenDecks: () => void }) {
 
       {revealed && (
         // Phones: the grades stay pinned just above the tab bar, so a long answer never pushes them off screen.
-        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 -mx-2 grid grid-cols-4 gap-1.5 rounded-3xl bg-canvas/85 p-2 backdrop-blur-md sm:static sm:mx-0 sm:flex sm:flex-wrap sm:items-center sm:gap-2 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
+        <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] z-10 -mx-2 grid grid-cols-4 gap-1 rounded-3xl bg-canvas/85 p-2 backdrop-blur-md sm:static sm:mx-0 sm:flex sm:flex-wrap sm:items-center sm:gap-2 sm:bg-transparent sm:p-0 sm:backdrop-blur-none">
           {GRADES.map(({ g, label }) => (
             <Button key={g} variant={g === suggested ? 'primary' : g === 0 ? 'danger' : 'subtle'} onClick={() => grade(g)}
               className="max-sm:flex-col max-sm:gap-0 max-sm:px-1">
               {label} <span className="font-normal normal-case opacity-70">{preview(card!, g)}</span>
             </Button>
           ))}
-          <span className="ml-2 text-xs text-ink-600 pointer-coarse:hidden">Keys 1–4, or space for the highlighted choice</span>
+          <span className="ml-2 caption-5 text-ink-600 pointer-coarse:hidden">Keys 1–4, or space for the highlighted choice</span>
         </div>
       )}
     </div>

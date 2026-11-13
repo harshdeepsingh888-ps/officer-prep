@@ -7,7 +7,7 @@ import { useCountdown } from '../../lib/hooks'
 import { REASONS, recordQuizMistakes } from '../../lib/learning'
 import { MODE_LABEL, buildMock, buildQuick, buildSectional, buildTopic, buildWeekly, type Pools, type Run, type TestSpec } from '../../lib/tests'
 import { fmtClock, round2 } from '../../lib/util'
-import { Badge, Button, Card, Empty, Passage, Stat, TimerBar, inputBase } from '../../components/ui'
+import { Badge, Button, Card, Empty, Passage, Stat, TimerBar, inputBase, StatGrid, Chip } from '../../components/ui'
 import { TestMenu } from './TestMenu'
 
 const RUN_KEY = 'quizRun'
@@ -125,12 +125,12 @@ export default function Quiz() {
   // ── Setup ──
   if (!run && !result) {
     return (
-      <div className="space-y-12">
+      <div className="space-y-4">
         {savedRun && (
-          <div className="flex flex-wrap items-center gap-4 rounded-3xl bg-saffron-400/[0.08] px-5 py-4">
+          <div className="flex flex-wrap items-center gap-4 rounded-3xl bg-saffron-400/[0.08] px-4 py-4">
             <div className="min-w-[15rem] flex-1">
               <div className="text-ink-100">Unfinished test · {savedRun.title}</div>
-              <div className="text-sm font-light text-ink-400">
+              <div className="body-6 text-ink-400">
                 {savedRun.answers.filter(a => a !== null).length}/{savedRun.qs.length} answered
                 {savedRun.deadline ? ` · ${fmtClock(Math.max(0, Math.round((savedRun.deadline - Date.now()) / 1000)))} left (the clock kept running)` : ''}
               </div>
@@ -155,10 +155,10 @@ export default function Quiz() {
   const answered = r.answers.filter(a => a !== null).length
   const markedCount = r.marked.filter(Boolean).length
   return (
-    <div className="space-y-14">
+    <div className="space-y-4">
       <Card>
-        <div className="label mb-3 text-[11px] text-saffron-400">{r.title}</div>
-        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 text-sm text-ink-400">
+        <div className="mb-3 caption-4 text-saffron-400">{r.title}</div>
+        <div className="mb-3 flex flex-wrap items-center justify-between gap-2 body-6 text-ink-400">
           <span className="flex items-center gap-2">
             Question {r.idx + 1} of {r.qs.length} · {q.subject} · {q.topic}
             <Badge>{DIFFICULTY_LABEL[difficultyOf(q)]}</Badge>
@@ -167,11 +167,11 @@ export default function Quiz() {
         </div>
         {r.deadline && <TimerBar remaining={timer.remaining} total={r.seconds ?? r.qs.length * 60} />}
         {q.passage && <Passage text={q.passage} />}
-        <div className="mt-6 whitespace-pre-line text-[clamp(1.5rem,2.6vw,2rem)] font-normal leading-snug tracking-tight text-fg">{q.text}</div>
-        <div className="mt-8 grid gap-2.5">
+        <div className="mt-6 whitespace-pre-line heading-5 sm:heading-4 text-fg">{q.text}</div>
+        <div className="mt-8 grid gap-2">
           {q.options.map((o, j) => (
             <button key={j} onClick={() => choose(r.answers[r.idx] === j ? null : j)}
-              className={`rounded-3xl px-5 py-4 text-left text-[15px] transition-colors ${r.answers[r.idx] === j ? 'bg-iris-500/20 text-fg ring-1 ring-iris-500' : 'bg-fg/[0.04] text-ink-200 hover:bg-fg/[0.08]'}`}>
+              className={`rounded-3xl px-4 py-4 text-left body-6 transition-colors ${r.answers[r.idx] === j ? 'bg-accent-500/20 text-fg ring-1 ring-accent-500' : 'bg-surface-2 text-ink-200 hover:bg-fg/[0.08]'}`}>
               <span className="mr-3 text-ink-500">{'ABCD'[j]}</span>{o}
             </button>
           ))}
@@ -185,20 +185,20 @@ export default function Quiz() {
             if (confirm(`Submit now?${left ? ` ${left} unanswered.` : ''}${markedCount ? ` ${markedCount} marked for review.` : ''}`)) finish(r)
           }}>Submit</Button>
         </div>
-        <p className="mt-3 text-xs text-ink-600"><span className="pointer-coarse:hidden">Keys: A–D or 1–4 answer · M mark for review · ← → move. </span>Tap a chosen option again to clear it. Your progress is saved; you can close the tab and resume.</p>
+        <p className="mt-3 caption-5 text-ink-600"><span className="pointer-coarse:hidden">Keys: A–D or 1–4 answer · M mark for review · ← → move. </span>Tap a chosen option again to clear it. Your progress is saved; you can close the tab and resume.</p>
       </Card>
       <Card title="Palette">
         <div className="flex flex-wrap gap-2">
           {r.qs.map((_, i) => (
             <button key={i} onClick={() => goTo(i)} aria-label={`Question ${i + 1}`}
-              className={`size-9 rounded-full text-xs font-medium tabular-nums transition-colors
-                ${r.answers[i] !== null ? 'bg-iris-500 text-white' : 'bg-fg/[0.07] text-ink-400 hover:bg-fg/[0.12]'}
+              className={`size-9 rounded-full caption-4 tabular-nums transition-colors
+                ${r.answers[i] !== null ? 'bg-accent-500 text-on-accent' : 'bg-fg/[0.07] text-ink-400 hover:bg-fg/[0.12]'}
                 ${r.marked[i] ? 'ring-2 ring-saffron-400' : ''}
                 ${i === r.idx ? 'outline outline-2 outline-offset-2 outline-fg/40' : ''}`}>{i + 1}</button>
           ))}
         </div>
-        <div className="mt-4 flex flex-wrap gap-5 text-xs text-ink-500">
-          <span className="flex items-center gap-2"><span className="size-3 rounded-full bg-iris-500" />Answered</span>
+        <div className="mt-4 flex flex-wrap gap-4 caption-5 text-ink-500">
+          <span className="flex items-center gap-2"><span className="size-3 rounded-full bg-accent-500" />Answered</span>
           <span className="flex items-center gap-2"><span className="size-3 rounded-full ring-2 ring-saffron-400" />Marked for review</span>
           <span className="flex items-center gap-2"><span className="size-3 rounded-full bg-fg/[0.12]" />Not answered</span>
         </div>
@@ -229,22 +229,22 @@ function ResultView({ result, onAgain, onBack }: { result: Result; onAgain?: () 
     filter === 'all' || (filter === 'wrong' && item.correct === false) || (filter === 'skipped' && item.answer === null) || (filter === 'marked' && item.marked))
 
   return (
-    <div className="space-y-14">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <Badge tone="iris">{MODE_LABEL[run.mode ?? 'topic']}</Badge>
+        <Badge tone="accent">{MODE_LABEL[run.mode ?? 'topic']}</Badge>
         <span className="text-ink-200">{run.title}</span>
       </div>
-      <section className="grid grid-cols-2 gap-x-14 gap-y-10 md:grid-cols-4">
+      <StatGrid className="md:grid-cols-4">
         <Stat label="Score" value={`${result.score} / ${result.maxScore}`} hint={run.marks ? `+${round2(run.marks.correct)} / −${round2(run.marks.wrong)} a question` : exam.marking.label} />
         <Stat label="Accuracy" value={`${attempted ? Math.round((result.correct / attempted) * 100) : 0}%`} hint={`${attempted} attempted`} />
         <Stat label="Right · Wrong · Skipped" value={`${result.correct} · ${result.wrong} · ${result.skipped}`} />
         <Stat label="Time" value={fmtClock(result.durationSec)} hint={`${avgSec}s per question on average`} />
-      </section>
+      </StatGrid>
 
-      {run.note && <p className="max-w-2xl text-sm text-ink-400">{run.note}</p>}
+      {run.note && <p className="max-w-2xl body-6 text-ink-400">{run.note}</p>}
 
       {result.saved > 0 && (
-        <p className="text-lead font-extralight text-ink-300">
+        <p className="body-3 text-ink-300">
           {result.saved} wrong answer{result.saved === 1 ? '' : 's'} saved to your <a href="#/revise/mistakes" className="text-saffron-400 hover:underline">mistake notebook</a>.
           They come back for revision tomorrow. Tag why you got each one wrong below.
         </p>
@@ -257,14 +257,14 @@ function ResultView({ result, onAgain, onBack }: { result: Result; onAgain?: () 
       </div>
 
       <Card title="By topic">
-        <table className="w-full text-sm">
-          <thead className="text-left text-xs text-ink-500">
+        <table className="w-full body-6">
+          <thead className="text-left caption-5 text-ink-500">
             <tr><th className="pb-2 font-medium">Topic</th><th className="pb-2 text-right font-medium">Right</th><th className="pb-2 text-right font-medium">Avg time</th></tr>
           </thead>
-          <tbody className="divide-y divide-fg/[0.06]">
+          <tbody className="divide-y divide-line">
             {topics.map(t => (
               <tr key={t.subject + t.topic}>
-                <td className="py-2 pr-2">{t.topic} <span className="text-xs text-ink-500">· {t.subject}</span></td>
+                <td className="py-2 pr-2">{t.topic} <span className="caption-5 text-ink-500">· {t.subject}</span></td>
                 <td className={`py-2 text-right tabular-nums ${t.right / t.n < 0.5 ? 'text-ember-300' : 'text-ink-200'}`}>{t.right}/{t.n}</td>
                 <td className="py-2 text-right tabular-nums text-ink-400">{Math.round(t.ms / t.n / 1000)}s</td>
               </tr>
@@ -276,30 +276,30 @@ function ResultView({ result, onAgain, onBack }: { result: Result; onAgain?: () 
       <Card title="Review" action={
         <div className="flex gap-1">
           {(['all', 'wrong', 'skipped', 'marked'] as const).map(f => (
-            <button key={f} onClick={() => setFilter(f)} className={`rounded-full px-3 py-1 text-xs capitalize ${filter === f ? 'bg-iris-500 text-white' : 'bg-ink-800 text-ink-300'}`}>{f}</button>
+            <Chip key={f} onClick={() => setFilter(f)} active={filter === f} className="capitalize">{f}</Chip>
           ))}
         </div>
       }>
         {shown.length === 0 ? <Empty>Nothing here.</Empty> : (
           <ol className="space-y-8">
             {shown.map(({ q, i, item }) => (
-              <li key={q.id} className="text-sm">
-                <div className="mb-1 flex flex-wrap items-center gap-2 text-xs text-ink-500">
+              <li key={q.id} className="body-6">
+                <div className="mb-1 flex flex-wrap items-center gap-2 caption-5 text-ink-500">
                   <span>{i + 1}. {q.subject} · {q.topic}</span>
                   <span>· {Math.round(item.ms / 1000)}s</span>
                   {item.marked && <Badge tone="saffron">marked</Badge>}
                   {item.changes ? <span>· changed answer {item.changes}×</span> : null}
                 </div>
                 {q.passage && <Passage text={q.passage} collapsible />}
-                <div className="mb-2 whitespace-pre-line text-[15px] text-ink-100">{q.text}</div>
-                <ul className="grid gap-1.5 sm:grid-cols-2">
+                <div className="mb-2 whitespace-pre-line body-6 text-ink-100">{q.text}</div>
+                <ul className="grid gap-1 sm:grid-cols-2">
                   {q.options.map((o, j) => {
                     const cls = j === q.answer ? 'bg-verdant-500/15 text-verdant-300' : j === item.answer ? 'bg-ember-500/15 text-ember-200' : 'text-ink-400'
-                    return <li key={j} className={`rounded-full px-3 py-1.5 ${cls}`}>{'ABCD'[j]}. {o}</li>
+                    return <li key={j} className={`rounded-full px-3 py-1 ${cls}`}>{'ABCD'[j]}. {o}</li>
                   })}
                 </ul>
-                {item.answer === null && <div className="mt-1 text-xs text-saffron-400">Skipped</div>}
-                {q.explanation && <div className="mt-2 text-xs text-ink-400">💡 {q.explanation}</div>}
+                {item.answer === null && <div className="mt-1 caption-5 text-saffron-400">Skipped</div>}
+                {q.explanation && <div className="mt-2 caption-5 text-ink-400">💡 {q.explanation}</div>}
                 {item.correct === false && <ReasonPicker qid={q.id} />}
               </li>
             ))}
@@ -314,7 +314,7 @@ function ReasonPicker({ qid }: { qid: string }) {
   const m = useLiveQuery(() => db.mistakes.get(`q:${qid}`), [qid])
   if (!m) return null
   return (
-    <select className={`${inputBase} mt-2 w-auto px-3 py-1.5 text-xs`} value={m.reason ?? ''}
+    <select className={`${inputBase} mt-2 w-auto px-3 py-1 caption-5`} value={m.reason ?? ''}
       onChange={e => db.mistakes.update(m.id, { reason: (e.target.value || undefined) as MistakeReason | undefined })}>
       <option value="">Why did I get it wrong?</option>
       {REASONS.map(r => <option key={r.id} value={r.id}>{r.label}</option>)}

@@ -24,9 +24,9 @@ const servicesOf = (exam: string) => FOR_EXAM[exam as ExamId] ?? []
 /** "● Army ● Navy ● Air Force" */
 export function ServiceTags({ exam }: { exam: string }) {
   return (
-    <span className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-400">
+    <span className="flex flex-wrap items-center gap-x-3 gap-y-1 caption-5 text-ink-400">
       {servicesOf(exam).map(s => (
-        <span key={s} className="flex items-center gap-1.5"><span className={`size-2 rounded-full ${SERVICES[s].dot}`} />{SERVICES[s].label}</span>
+        <span key={s} className="flex items-center gap-1"><span className={`size-2 rounded-full ${SERVICES[s].dot}`} />{SERVICES[s].label}</span>
       ))}
     </span>
   )

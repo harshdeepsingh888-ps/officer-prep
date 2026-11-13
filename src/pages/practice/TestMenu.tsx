@@ -9,7 +9,7 @@ import { go } from '../../lib/hooks'
 import type { QuizPreset } from '../../lib/learning'
 import { SECTIONAL_MAX, WEEKLY_SIZE, available, paperTerms, topicPool, type Pools, type TestSpec, type TopicSpec } from '../../lib/tests'
 import { round2, weekStart } from '../../lib/util'
-import { Badge, Button, Card, inputBase, inputCls, labelCls } from '../../components/ui'
+import { Badge, Button, Card, inputBase, inputCls, labelCls, Chip } from '../../components/ui'
 
 const SUBJECTS = ['All', 'English', 'General Knowledge', 'Mathematics', 'Reasoning']
 type Panel = 'mock' | 'sectional' | 'topic' | null
@@ -49,24 +49,24 @@ export function TestMenu({ examId, setExam, pools, onStart }: { examId: ExamId; 
   ]
 
   return (
-    <div className="space-y-12">
+    <div className="space-y-4">
       <div className="flex flex-wrap items-center gap-3">
-        <label htmlFor="test-exam" className="label text-[11px] text-ink-500">Practising for</label>
-        <select id="test-exam" className={`${inputBase} px-4 py-2.5 text-sm`} value={examId} onChange={e => setExam(e.target.value as ExamId)}>
+        <label htmlFor="test-exam" className="caption-4 text-ink-500">Practising for</label>
+        <select id="test-exam" className={`${inputBase} px-4 py-2 body-6`} value={examId} onChange={e => setExam(e.target.value as ExamId)}>
           {EXAMS.map(e => <option key={e.id} value={e.id}>{e.short}</option>)}
         </select>
-        <span className="text-sm font-light text-ink-500">Marking: {exam.marking.label}</span>
+        <span className="body-6 text-ink-500">Marking: {exam.marking.label}</span>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {tiles.map(t => (
           <button key={t.id} onClick={t.act} aria-pressed={panel === t.id}
-            className={`flex flex-col items-start gap-2 rounded-3xl px-6 py-5 text-left transition-colors ${panel === t.id ? 'bg-iris-500/15 ring-1 ring-iris-500' : 'bg-fg/[0.04] hover:bg-fg/[0.08]'}`}>
+            className={`flex flex-col items-start gap-2 rounded-3xl px-6 py-4 text-left transition-colors ${panel === t.id ? 'bg-accent-500/15 ring-1 ring-accent-500' : 'bg-surface-2 hover:bg-fg/[0.08]'}`}>
             <span className="flex w-full items-center justify-between gap-3">
-              <span className="text-[17px] text-fg">{t.title}</span>
+              <span className="body-3 text-fg">{t.title}</span>
               {t.badge ? <Badge tone="verdant">{t.badge}</Badge> : <span className="text-ink-500" aria-hidden>→</span>}
             </span>
-            <span className="text-sm font-light leading-relaxed text-ink-400">{t.text}</span>
+            <span className="body-6 text-ink-400">{t.text}</span>
           </button>
         ))}
       </div>
@@ -82,8 +82,7 @@ function Chips<T extends string | number>({ items, value, onChange }: { items: {
   return (
     <div className="flex flex-wrap gap-2">
       {items.map(i => (
-        <button key={i.id} onClick={() => onChange(i.id)} aria-pressed={value === i.id}
-          className={`rounded-full px-4 py-1.5 text-sm transition-colors ${value === i.id ? 'bg-iris-500 text-white' : 'bg-fg/[0.07] text-ink-300 hover:bg-fg/[0.12]'}`}>{i.label}</button>
+        <Chip key={i.id} onClick={() => onChange(i.id)} aria-pressed={value === i.id} active={value === i.id}>{i.label}</Chip>
       ))}
     </div>
   )
@@ -101,14 +100,14 @@ function MockPanel({ examId, pools, onStart }: { examId: ExamId; pools: Pools; o
   return (
     <Card title="Full mock">
       {mocks.length > 1 && <div className="mb-6"><Chips items={mocks.map(x => ({ id: x.id, label: x.paper }))} value={m.id} onChange={setId} /></div>}
-      <p className="text-lead font-extralight text-ink-200">
+      <p className="body-3 text-ink-200">
         {m.paper}: {t.questions} questions in {t.minutes} minutes, {t.paper.marks} marks. Each question: {fmtMarks(t.marks)}.
       </p>
-      <table className="mt-6 w-full max-w-xl text-sm">
-        <thead className="text-left text-xs text-ink-500">
+      <table className="mt-6 w-full max-w-xl body-6">
+        <thead className="text-left caption-5 text-ink-500">
           <tr><th className="pb-2 font-medium">Section</th><th className="pb-2 text-right font-medium">In the paper</th><th className="pb-2 text-right font-medium">Available</th></tr>
         </thead>
-        <tbody className="divide-y divide-fg/[0.06]">
+        <tbody className="divide-y divide-line">
           {rows.map(({ s, have }) => (
             <tr key={s.name}>
               <td className="py-2 pr-2 text-ink-200">{s.name}</td>
@@ -119,12 +118,12 @@ function MockPanel({ examId, pools, onStart }: { examId: ExamId; pools: Pools; o
         </tbody>
       </table>
       {short && (
-        <p className="mt-4 max-w-xl text-sm text-ink-400">
+        <p className="mt-4 max-w-xl body-6 text-ink-400">
           The bank doesn’t have enough questions for a full paper yet, so this is a <span className="text-ink-100">short mock</span>: {total} questions,
           with the time cut to {minutes} minutes so the pace matches the real exam. Paste more questions under <a href="#/practice/mine" className="text-saffron-400 hover:underline">My questions</a> to fill it out.
         </p>
       )}
-      {examId === 'capf' && <p className="mt-3 text-sm text-ink-400">Paper II is descriptive. Practise it on the <a href="#/writing" className="text-saffron-400 hover:underline">Writing</a> page.</p>}
+      {examId === 'capf' && <p className="mt-3 body-6 text-ink-400">Paper II is descriptive. Practise it on the <a href="#/writing" className="text-saffron-400 hover:underline">Writing</a> page.</p>}
       <Button className="mt-6" size="lg" disabled={!total} onClick={() => onStart({ mode: 'mock', exam: examId, mock: m.id })}>
         Start {short ? 'short ' : ''}mock · {total} questions · {minutes} min
       </Button>
@@ -143,10 +142,10 @@ function SectionalPanel({ examId, pools, onStart }: { examId: ExamId; pools: Poo
   return (
     <Card title="Sectional test">
       <Chips items={items.map(x => ({ id: x.id, label: x.label }))} value={it.id} onChange={setId} />
-      <p className="mt-6 max-w-xl text-lead font-extralight text-ink-200">
+      <p className="mt-6 max-w-xl body-3 text-ink-200">
         {n} questions in {minutes} minutes: the same pace as the real paper ({round2(t.secPerQ / 60)} min a question), marked {fmtMarks(t.marks)}.
       </p>
-      {n < Math.min(it.s.questions, SECTIONAL_MAX) && <p className="mt-2 text-sm text-ink-400">Only {n} questions for this section in your bank so far.</p>}
+      {n < Math.min(it.s.questions, SECTIONAL_MAX) && <p className="mt-2 body-6 text-ink-400">Only {n} questions for this section in your bank so far.</p>}
       <Button className="mt-6" size="lg" disabled={!n} onClick={() => onStart({ mode: 'sectional', exam: examId, mock: it.mock.id, section: it.section })}>
         Start sectional · {n} questions · {minutes} min
       </Button>
@@ -202,11 +201,11 @@ function TopicPanel({ spec, setSpec, pools, onStart }: { spec: TopicSpec; setSpe
             {[10, 20, 30, 50, 100].map(n => <option key={n} value={n}>{n}</option>)}
           </select>
         </div>
-        <label className="flex items-end gap-2 pb-2.5 text-sm">
-          <input type="checkbox" className="size-4 accent-iris-500" checked={spec.timed} onChange={e => set({ timed: e.target.checked })} /> Timed (1 min / question)
+        <label className="flex items-end gap-2 pb-2 body-6">
+          <input type="checkbox" className="size-4 accent-accent-500" checked={spec.timed} onChange={e => set({ timed: e.target.checked })} /> Timed (1 min / question)
         </label>
       </div>
-      <p className="mt-5 text-sm text-ink-400">
+      <p className="mt-4 body-6 text-ink-400">
         {spec.source === 'generated'
           ? gen ? 'Every question is generated fresh, with new numbers each time.' : 'Generated questions cover Maths and Reasoning only.'
           : `${pool.length} questions in the bank match${gen ? ', and at least half the test is freshly generated' : ''}.`}

@@ -5,7 +5,7 @@ import { REASONS, openQuiz } from '../../lib/learning'
 import { isMastered } from '../../lib/srs'
 import { fmtDate, fmtDateTime, isoOf, round2 } from '../../lib/util'
 import { BarRows, ColumnChart } from '../../components/charts'
-import { Button, Card, Empty, Stat } from '../../components/ui'
+import { Button, Card, Empty, Stat, StatGrid } from '../../components/ui'
 import History from './History'
 
 export default function Analytics() {
@@ -37,19 +37,19 @@ export default function Analytics() {
   }
 
   return (
-    <div className="space-y-16">
-      <section className="grid grid-cols-2 gap-x-14 gap-y-10 lg:grid-cols-4">
+    <div className="space-y-4">
+      <StatGrid className="lg:grid-cols-4">
         <Stat label="Tests taken" value={attempts.length} hint="quizzes & past papers" />
         <Stat label="Accuracy" value={answered ? `${Math.round((right / answered) * 100)}%` : '—'} hint={`${answered} answered in scored tests`} />
         <Stat label="Avg time per question" value={avgSec === null ? '—' : `${avgSec}s`} hint="quizzes with timing" />
         <Stat label="Mistakes mastered" value={`${mistakes.filter(m => m.status === 'mastered').length}/${mistakes.length}`} hint="from your mistake notebook" />
-      </section>
+      </StatGrid>
 
       <Card title="Score trend · % of maximum, last 20 tests">
         <ColumnChart data={trend} max={100} empty="Score a quiz or a past paper to start the trend." />
       </Card>
 
-      <div className="grid gap-x-16 gap-y-16 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <Card title="Accuracy by subject">
           <BarRows max={1} empty="Quizzes taken from now on record per-subject detail."
             rows={subjects.map(s => ({ key: s.subject, label: s.subject, value: s.acc, display: `${Math.round(s.acc * 100)}%`, tip: `${s.right} of ${s.n} right` }))} />
@@ -61,8 +61,8 @@ export default function Analytics() {
 
       <Card title="Weakest topics">
         {weak.length === 0 ? <Empty>Answer at least two questions in a topic to see it ranked here.</Empty> : (
-          <table className="w-full text-sm">
-            <thead className="text-left text-xs text-ink-500">
+          <table className="w-full body-6">
+            <thead className="text-left caption-5 text-ink-500">
               <tr>
                 <th className="pb-2 font-medium">Topic</th>
                 <th className="pb-2 text-right font-medium">Right</th>
@@ -71,14 +71,14 @@ export default function Analytics() {
                 <th className="pb-2" />
               </tr>
             </thead>
-            <tbody className="divide-y divide-fg/[0.06]">
+            <tbody className="divide-y divide-line">
               {weak.map(t => (
                 <tr key={t.subject + t.topic}>
-                  <td className="py-2.5 pr-2 text-ink-100">{t.topic} <span className="text-xs text-ink-500">· {t.subject}</span></td>
-                  <td className="py-2.5 text-right tabular-nums text-ink-300">{t.right}/{t.n}</td>
-                  <td className={`py-2.5 text-right tabular-nums ${t.acc < 0.5 ? 'text-ember-300' : 'text-ink-200'}`}>{Math.round(t.acc * 100)}%</td>
-                  <td className="hidden py-2.5 text-right tabular-nums text-ink-400 sm:table-cell">{t.avgSec}s</td>
-                  <td className="py-2.5 text-right"><Button variant="ghost" size="sm" onClick={() => openQuiz({ subject: t.subject, topic: t.topic })}>Practise</Button></td>
+                  <td className="py-2 pr-2 text-ink-100">{t.topic} <span className="caption-5 text-ink-500">· {t.subject}</span></td>
+                  <td className="py-2 text-right tabular-nums text-ink-300">{t.right}/{t.n}</td>
+                  <td className={`py-2 text-right tabular-nums ${t.acc < 0.5 ? 'text-ember-300' : 'text-ink-200'}`}>{Math.round(t.acc * 100)}%</td>
+                  <td className="hidden py-2 text-right tabular-nums text-ink-400 sm:table-cell">{t.avgSec}s</td>
+                  <td className="py-2 text-right"><Button variant="ghost" size="sm" onClick={() => openQuiz({ subject: t.subject, topic: t.topic })}>Practise</Button></td>
                 </tr>
               ))}
             </tbody>
@@ -86,15 +86,15 @@ export default function Analytics() {
         )}
       </Card>
 
-      <div className="grid gap-x-16 gap-y-16 lg:grid-cols-[2fr_1fr]">
+      <div className="grid gap-4 lg:grid-cols-[2fr_1fr]">
         <Card title="Reviews per day · last 14 days">
           <ColumnChart height={120} empty="No reviews yet."
             data={perDay.map(d => ({ key: d.day, value: d.n, label: fmtDate(d.day).replace(/ \d{4}$/, ''), tip: `${fmtDate(d.day)} · ${d.n} reviews` }))} />
         </Card>
-        <div className="grid grid-cols-2 gap-x-10 gap-y-10 self-start lg:grid-cols-1">
+        <StatGrid className="self-start lg:grid-cols-1">
           <Stat label="Cards due now" value={cards.filter(c => c.status === 'active' && c.due <= Date.now()).length} />
           <Stat label="Cards mastered" value={`${cards.filter(isMastered).length}/${cards.length}`} hint="interval of 3 weeks or more" />
-        </div>
+        </StatGrid>
       </div>
 
       <History />

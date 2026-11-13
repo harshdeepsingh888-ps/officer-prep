@@ -4,7 +4,7 @@ import { useCountdown } from '../../lib/hooks'
 import { TAT_WORDS, boxFlags, narrationOrder, setFlags, storyFlags, watFlags, watSetFlags, type BoxChar } from '../../lib/psych'
 import { db } from '../../lib/db'
 import { beep, wordCount } from '../../lib/util'
-import { Button, Card, TimerBar, inputBase, inputCls, labelCls } from '../../components/ui'
+import { Button, Card, TimerBar, inputBase, inputCls, labelCls, Chip } from '../../components/ui'
 import { FlagList, PicView, Recorder, SaveSet, pickPictures, type Pic } from './common'
 import { BlankSlideIdeas, CharacterBox, SetPatterns, TatStoryReview } from './Review'
 
@@ -13,7 +13,7 @@ type RunnerProps = { onExit: () => void }
 function Setup({ title, children, onStart, onExit }: { title: string; children: ReactNode; onStart: () => void; onExit: () => void }) {
   return (
     <Card title={title}>
-      <div className="space-y-3 text-sm text-ink-300">{children}</div>
+      <div className="space-y-3 body-6 text-ink-300">{children}</div>
       <div className="mt-4 flex gap-2">
         <Button size="lg" onClick={onStart}>Start</Button>
         <Button variant="ghost" onClick={onExit}>Back</Button>
@@ -26,7 +26,7 @@ function CountPicker({ value, options, onChange, unit }: { value: number; option
   return (
     <div className="flex gap-1">
       {options.map(n => (
-        <button key={n} onClick={() => onChange(n)} className={`rounded-full px-3 py-1 text-xs ${value === n ? 'bg-iris-900 text-iris-300' : 'bg-ink-800 text-ink-400'}`}>{n} {unit}</button>
+        <Chip key={n} onClick={() => onChange(n)} active={value === n}>{n} {unit}</Chip>
       ))}
     </div>
   )
@@ -80,10 +80,10 @@ export function WAT({ onExit }: RunnerProps) {
 
   return (
     <Card>
-      <div className="mb-2 text-sm text-ink-400">Word {i + 1} of {words.length}</div>
+      <div className="mb-2 body-6 text-ink-400">Word {i + 1} of {words.length}</div>
       <TimerBar remaining={timer.remaining} total={15} label={`${timer.remaining}s`} />
-      <div aria-live="polite" className="my-16 text-center text-[clamp(3rem,8vw,6rem)] font-normal leading-none tracking-display text-fg">{words[i]}</div>
-      <input key={i} autoFocus className={`${inputBase} w-full px-5 py-3 text-lg`} value={cur} onChange={e => setCur(e.target.value)} placeholder="Your sentence…" />
+      <div aria-live="polite" className="my-16 text-center heading-1 text-fg">{words[i]}</div>
+      <input key={i} autoFocus className={`${inputBase} w-full px-4 py-3 title-2`} value={cur} onChange={e => setCur(e.target.value)} placeholder="Your sentence…" />
     </Card>
   )
 }
@@ -115,9 +115,9 @@ export function SRT({ onExit }: RunnerProps) {
 
   return (
     <div className="space-y-3">
-      <div className="sticky top-3 z-20 rounded-3xl bg-canvas/85 px-5 py-4 backdrop-blur-md">
+      <div className="sticky top-3 z-20 rounded-3xl bg-canvas/85 px-4 py-4 backdrop-blur-md">
         <TimerBar remaining={timer.remaining} total={count * 30} />
-        <div className="mt-2 flex justify-between text-xs text-ink-400">
+        <div className="mt-2 flex justify-between caption-5 text-ink-400">
           <span>{resp.filter(r => r.trim()).length}/{sits.length} answered</span>
           <button className="text-saffron-400 hover:underline" onClick={() => { timer.stop(); setPhase('done') }}>Finish early</button>
         </div>
@@ -125,7 +125,7 @@ export function SRT({ onExit }: RunnerProps) {
       <Card>
         <ol className="space-y-3">
           {sits.map((s, k) => (
-            <li key={k} className="text-sm">
+            <li key={k} className="body-6">
               <div className="mb-1 text-ink-200">{k + 1}. {s}</div>
               <textarea rows={2} className={inputCls} value={resp[k]} onChange={e => setResp(r => r.map((x, j) => (j === k ? e.target.value : x)))} />
             </li>
@@ -185,7 +185,7 @@ export function TAT({ onExit }: RunnerProps) {
   const words = wordCount(stories[idx])
   return (
     <Card>
-      <div className="mb-2 flex justify-between text-sm text-ink-400">
+      <div className="mb-2 flex justify-between body-6 text-ink-400">
         <span>Picture {idx + 1} of {pics.length} · {stage === 'view' ? 'Observe' : 'Write your story'}</span>
         {stage === 'write' && <span className={words > TAT_WORDS.max + 30 ? 'text-saffron-400' : ''}>{words} words · aim {TAT_WORDS.min}–{TAT_WORDS.max}</span>}
       </div>
@@ -250,7 +250,7 @@ export function PPDT({ onExit }: RunnerProps) {
   const label = { view: 'Observe the picture', details: 'Record the characters', story: 'Write your story', narrate: 'Narrate aloud' }[stage]
   return (
     <Card>
-      <div className="mb-2 text-sm text-ink-400">{label}</div>
+      <div className="mb-2 body-6 text-ink-400">{label}</div>
       {stage !== 'narrate' || timer.running ? <TimerBar remaining={timer.remaining} total={TIMES[stage]} /> : null}
       <div className="mt-4">
         {stage === 'view' && pic && <PicView pic={pic} blur />}
@@ -263,16 +263,16 @@ export function PPDT({ onExit }: RunnerProps) {
         {stage === 'story' && (
           <div className="space-y-1">
             <textarea autoFocus className={`${inputCls} h-64`} value={story} onChange={e => setStory(e.target.value)} placeholder="Write your story…" />
-            <div className="text-right text-xs text-ink-500">{wordCount(story)} words · aim {TAT_WORDS.min}–{TAT_WORDS.max}</div>
+            <div className="text-right caption-5 text-ink-500">{wordCount(story)} words · aim {TAT_WORDS.min}–{TAT_WORDS.max}</div>
           </div>
         )}
         {stage === 'narrate' && (
           <div className="space-y-3">
-            <ol className="flex flex-wrap gap-x-2 gap-y-1 text-sm text-ink-200" aria-label="Narrate in this order">
+            <ol className="flex flex-wrap gap-x-2 gap-y-1 body-6 text-ink-200" aria-label="Narrate in this order">
               {narrationOrder(chars, hero, action).map((step, i) => <li key={i} className="rounded-full bg-fg/[0.06] px-3 py-1">{i + 1}. {step}</li>)}
             </ol>
-            <div className="whitespace-pre-wrap rounded-3xl bg-fg/[0.04] p-3 text-sm text-ink-300">{story || 'No story written.'}</div>
-            <p className="text-sm text-ink-400">Narrate in that order, in 1 minute: the box first, then the story you wrote, not a new one. Clear, audible and at a steady pace, to the group rather than the assessors.</p>
+            <div className="whitespace-pre-wrap rounded-3xl bg-surface-2 p-3 body-6 text-ink-300">{story || 'No story written.'}</div>
+            <p className="body-6 text-ink-400">Narrate in that order, in 1 minute: the box first, then the story you wrote, not a new one. Clear, audible and at a steady pace, to the group rather than the assessors.</p>
             <div className="flex flex-wrap gap-2">
               {!timer.running && <Button onClick={() => timer.start(TIMES.narrate)}>Start 1-minute narration</Button>}
               <Button variant="subtle" onClick={() => { timer.stop(); setStage('done') }}>Finish</Button>
@@ -307,15 +307,15 @@ export function SD({ onExit }: RunnerProps) {
 
   return (
     <div className="space-y-3">
-      <div className="sticky top-3 z-20 rounded-3xl bg-canvas/85 px-5 py-4 backdrop-blur-md">
+      <div className="sticky top-3 z-20 rounded-3xl bg-canvas/85 px-4 py-4 backdrop-blur-md">
         <TimerBar remaining={timer.remaining} total={900} />
-        <button className="mt-2 text-xs text-saffron-400 hover:underline" onClick={() => { timer.stop(); setPhase('done') }}>Finish early</button>
+        <button className="mt-2 caption-5 text-saffron-400 hover:underline" onClick={() => { timer.stop(); setPhase('done') }}>Finish early</button>
       </div>
       <Card>
         <div className="space-y-6">
           {SD_PARTS.map((p, k) => (
             <div key={p}>
-              <label className="mb-1 block text-sm font-medium text-ink-200">{k + 1}. {p}</label>
+              <label className="mb-1 block body-5 text-ink-200">{k + 1}. {p}</label>
               <textarea rows={4} className={inputCls} value={text[k]} onChange={e => setText(t => t.map((x, j) => (j === k ? e.target.value : x)))} />
             </div>
           ))}
@@ -354,7 +354,7 @@ export function Lecturette({ onExit }: RunnerProps) {
 
   return (
     <Card title={topic}>
-      <div className="mb-3 text-sm text-ink-400">{stage === 'prep' ? 'Prepare your points' : spoken ? 'Time up — play back your recording' : 'Speak now — 3 minutes'}</div>
+      <div className="mb-3 body-6 text-ink-400">{stage === 'prep' ? 'Prepare your points' : spoken ? 'Time up — play back your recording' : 'Speak now — 3 minutes'}</div>
       {timer.running && <TimerBar remaining={timer.remaining} total={180} />}
       <textarea className={`${inputCls} mt-4 h-48`} value={notes} onChange={e => setNotes(e.target.value)} placeholder={'Intro —\n1.\n2.\n3.\nConclusion —'} readOnly={stage === 'speak'} />
       <div className="mt-3 flex flex-wrap items-start gap-3">

@@ -1,15 +1,23 @@
 @import "tailwindcss";
+@import "./styles/text-styles.css";
 
-/* Design system: "constellation floating on black velvet" — with a light counterpart.
-   Dark: pure black void. Light: pure white paper. One violet accent for actions,
-   amber for labels and links, teal as the secondary accent. Hierarchy comes from scale, not weight.
-   The theme is set on <html data-theme="dark|light"> (see index.html and src/lib/theme.ts). */
+/* The app's look follows the landing page (.claude/skills/landing-page-design): Poppins, named text styles,
+   flat surfaces, rounded tiles, and one saffron accent for actions. Green and red mean right and wrong.
+   Dark: black canvas with #181818 tiles. Light: white canvas with warm paper tiles.
+   The theme is set on <html data-theme="dark|light"> (see app/index.html and src/lib/theme.ts). */
 
 :root,
 :root[data-theme="dark"] {
   color-scheme: dark;
   --canvas: #000000;
   --fg: #ffffff;
+  /* Tiles and the fields and rows inside them; only the skill's dark backgrounds. */
+  --surface: #181818;
+  --surface-2: #1f1f1f;
+  --surface-3: #272727;
+  --line: rgb(255 255 255 / 0.1);
+  --hero-from: #ffffff;
+  --hero-to: #9b9b9b;
 
   --ink-50: #ffffff;
   --ink-100: #ffffff;
@@ -23,18 +31,21 @@
   --ink-900: #0d0d0d;
   --ink-950: #000000;
 
-  --iris-100: #ece6ff;
-  --iris-200: #d6caff;
-  --iris-300: #b9a3ff;
-  --iris-400: #9b7bff;
-  --iris-500: #8052ff; /* electric iris */
-  --iris-600: #6b3bf5;
-  --iris-700: #5a2fd6;
-  --iris-900: #1f1147;
+  /* The accent: saffron. 500 is the fill (with near-black text on it), 300 is accent text and icons. */
+  --accent-100: #ffe8d1;
+  --accent-200: #ffd1a3;
+  --accent-300: #ffb870;
+  --accent-400: #ffad5c;
+  --accent-500: #ff9933;
+  --accent-600: #f2871a;
+  --accent-700: #d97314;
+  --accent-900: #2e1a05;
+  --on-accent: #0a0a0a;
 
-  --saffron-300: #ffcb63;
-  --saffron-400: #ffb829; /* saffron spark */
-  --saffron-950: #2b1d00;
+  /* Labels and "estimated" marks: the same saffron family. */
+  --saffron-300: #ffb870;
+  --saffron-400: #ff9933;
+  --saffron-950: #2e1a05;
 
   --verdant-300: #5fd3b6;
   --verdant-400: #2fb592;
@@ -62,6 +73,12 @@
   color-scheme: light;
   --canvas: #ffffff;
   --fg: #0a0a0a;
+  --surface: #f6f4ef;
+  --surface-2: #efece5;
+  --surface-3: #e6e2d8;
+  --line: rgb(0 0 0 / 0.1);
+  --hero-from: #000000;
+  --hero-to: #666666;
 
   --ink-50: #0a0a0a;
   --ink-100: #111111;
@@ -75,18 +92,20 @@
   --ink-900: #f3f3f3;
   --ink-950: #ffffff;
 
-  --iris-100: #2e1675;
-  --iris-200: #3b1d93;
-  --iris-300: #5a2fd6;
-  --iris-400: #6b3bf5;
-  --iris-500: #8052ff;
-  --iris-600: #9b7bff;
-  --iris-700: #b9a3ff;
-  --iris-900: #efeaff;
+  /* Fills stay bright saffron with dark text; accent text and icons use the deep shades (300 is 6.9:1 on white). */
+  --accent-100: #4d2500;
+  --accent-200: #6b3300;
+  --accent-300: #9a4a00;
+  --accent-400: #ffad5c;
+  --accent-500: #ff9933;
+  --accent-600: #f2871a;
+  --accent-700: #ffd1a3;
+  --accent-900: #fff1e0;
+  --on-accent: #0a0a0a;
 
-  --saffron-300: #8a5200;
-  --saffron-400: #a86400;
-  --saffron-950: #fff3dc;
+  --saffron-300: #8a4200;
+  --saffron-400: #9a4a00;
+  --saffron-950: #fff1e0;
 
   --verdant-300: #0f6b59;
   --verdant-400: #127a65;
@@ -109,10 +128,16 @@
 }
 
 @theme inline {
-  --font-sans: "Inter Variable", "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
 
   --color-canvas: var(--canvas);
   --color-fg: var(--fg);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-line: var(--line);
+  --color-on-accent: var(--on-accent);
 
   --color-ink-50: var(--ink-50);
   --color-ink-100: var(--ink-100);
@@ -126,14 +151,14 @@
   --color-ink-900: var(--ink-900);
   --color-ink-950: var(--ink-950);
 
-  --color-iris-100: var(--iris-100);
-  --color-iris-200: var(--iris-200);
-  --color-iris-300: var(--iris-300);
-  --color-iris-400: var(--iris-400);
-  --color-iris-500: var(--iris-500);
-  --color-iris-600: var(--iris-600);
-  --color-iris-700: var(--iris-700);
-  --color-iris-900: var(--iris-900);
+  --color-accent-100: var(--accent-100);
+  --color-accent-200: var(--accent-200);
+  --color-accent-300: var(--accent-300);
+  --color-accent-400: var(--accent-400);
+  --color-accent-500: var(--accent-500);
+  --color-accent-600: var(--accent-600);
+  --color-accent-700: var(--accent-700);
+  --color-accent-900: var(--accent-900);
 
   --color-saffron-300: var(--saffron-300);
   --color-saffron-400: var(--saffron-400);
@@ -168,30 +193,24 @@
 }
 
 body {
-  @apply bg-canvas text-ink-200 antialiased;
-  font-feature-settings: "ss01" on, "cv11" on;
-  transition: background-color 0.25s ease, color 0.25s ease;
+  @apply bg-canvas font-sans text-ink-200 antialiased;
+  transition: background-color 300ms var(--ease-soft), color 300ms var(--ease-soft);
   /* Phones in landscape: keep content clear of the notch (viewport-fit=cover in index.html). */
   padding-left: env(safe-area-inset-left);
   padding-right: env(safe-area-inset-right);
   -webkit-tap-highlight-color: transparent;
 }
-p { font-weight: 300; }
 textarea { resize: vertical; }
-::selection { background: color-mix(in srgb, var(--iris-500) 45%, transparent); color: var(--fg); }
+::selection { background: color-mix(in srgb, var(--accent-500) 40%, transparent); color: var(--fg); }
 
-/* Ultra-light copy needs a touch more weight on white to stay crisp. */
-:root[data-theme="light"] .font-extralight { font-weight: 300; }
-
-@utility tracking-display { letter-spacing: -0.04em; }
+@utility tracking-display { letter-spacing: -0.02em; }
 @utility tracking-label { letter-spacing: 0.025em; }
 
-/* Small uppercase label — section titles, nav, buttons */
+/* Older pages' small labels: now Title 4 in sentence case (was small uppercase). New code uses the named styles. */
 @utility label {
-  font-size: var(--text-nav);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  font-weight: 500;
 }
 
 /* Touch screens: iPhone and iPad zoom into any field whose text is under 16px, so fields stay at 16px.
@@ -206,6 +225,9 @@ textarea { resize: vertical; }
     button { min-height: 36px; }
   }
 }
+
+/* Items that arrive one after another (the phone menu): up 24px while fading in, on the soft curve. */
+@keyframes rise { from { opacity: 0; transform: translateY(24px); } }
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { transition-duration: 0.01ms !important; animation-duration: 0.01ms !important; }

@@ -86,15 +86,15 @@ test.describe('Practice tests', () => {
     await expect(page.getByText(/^2 answered/)).toBeVisible()
     await expect(page.getByText(run.qs[2].text.split('\n')[0].trim()).first()).toBeVisible()
     // The palette fills in answered questions.
-    const answered = /(^|\s)bg-iris-500(\s|$)/
+    const answered = /(^|\s)bg-accent-500(\s|$)/
     await expect(page.getByRole('button', { name: 'Question 1', exact: true })).toHaveClass(answered)
     await expect(page.getByRole('button', { name: 'Question 2', exact: true })).toHaveClass(answered)
     await expect(page.getByRole('button', { name: 'Question 3', exact: true })).not.toHaveClass(answered)
 
     await page.getByRole('button', { name: '← Prev' }).click()
     await expect(page.getByText(/^Question 2 of 20 ·/)).toBeVisible()
-    await expect(option(page, 1, run.qs[1].options[1])).toHaveClass(/ring-iris-500/)
-    await expect(option(page, 0, run.qs[1].options[0])).not.toHaveClass(/ring-iris-500/)
+    await expect(option(page, 1, run.qs[1].options[1])).toHaveClass(/ring-accent-500/)
+    await expect(option(page, 0, run.qs[1].options[0])).not.toHaveClass(/ring-accent-500/)
   })
 
   test('AFCAT full mock: 100 questions, timer, next / previous, mark for review, submit early', async ({ page, allowConsole }) => {

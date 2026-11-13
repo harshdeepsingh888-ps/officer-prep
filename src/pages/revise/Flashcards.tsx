@@ -21,17 +21,17 @@ export default function Flashcards() {
   }
 
   return (
-    <div className="space-y-16">
+    <div className="space-y-4">
       <Card title="Starter decks">
-        <p className="mb-6 text-sm text-ink-400">Facts that come up again and again in defence GK, polity, English and maths. Add a deck and its cards join your daily review a few at a time.</p>
-        <ul className="divide-y divide-fg/[0.06]">
+        <p className="mb-6 body-6 text-ink-400">Facts that come up again and again in defence GK, polity, English and maths. Add a deck and its cards join your daily review a few at a time.</p>
+        <ul className="divide-y divide-line">
           {STARTER_DECKS.map(d => {
             const added = cards.some(c => c.deck === d.name)
             return (
               <li key={d.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 py-4">
                 <div className="min-w-0 flex-1">
-                  <div className="text-ink-100">{d.name} <span className="text-sm text-ink-500">· {d.cards.length} cards</span></div>
-                  <div className="text-sm font-light text-ink-500">{d.description}</div>
+                  <div className="text-ink-100">{d.name} <span className="body-6 text-ink-500">· {d.cards.length} cards</span></div>
+                  <div className="body-6 text-ink-500">{d.description}</div>
                 </div>
                 {added
                   ? <Badge tone="verdant">added</Badge>
@@ -40,30 +40,30 @@ export default function Flashcards() {
             )
           })}
         </ul>
-        {msg && <p className="mt-3 text-sm text-verdant-300">{msg}</p>}
+        {msg && <p className="mt-3 body-6 text-verdant-300">{msg}</p>}
       </Card>
 
       <Card title="My decks">
         {decks.length === 0 ? <Empty>No decks yet: add a starter deck above or create your own below.</Empty> : (
-          <ul className="divide-y divide-fg/[0.06]">
+          <ul className="divide-y divide-line">
             {decks.map(d => {
               const s = statsFor(d)
               return (
                 <li key={d} className="py-4">
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1">
                     <button className="w-full text-left text-ink-100 hover:text-fg sm:w-auto sm:min-w-0 sm:flex-1" onClick={() => setBrowse(browse === d ? null : d)}>{d}</button>
-                    <span className="mr-auto text-xs text-ink-500 sm:mr-0">{s.total} cards · {s.due} due · {s.fresh} new · {s.mastered} mastered</span>
+                    <span className="mr-auto caption-5 text-ink-500 sm:mr-0">{s.total} cards · {s.due} due · {s.fresh} new · {s.mastered} mastered</span>
                     <Button variant="ghost" size="sm" onClick={() => setBrowse(browse === d ? null : d)}>{browse === d ? 'Hide' : 'Browse'}</Button>
                     <Button variant="danger" size="sm" onClick={() => { if (confirm(`Delete the deck "${d}" and its ${s.total} cards?`)) deleteDeck(d) }}>Delete</Button>
                   </div>
                   {browse === d && (
-                    <ul className="mt-3 space-y-1.5 text-sm">
+                    <ul className="mt-3 space-y-1 body-6">
                       {cards.filter(c => c.deck === d).sort((a, b) => a.createdAt - b.createdAt).map(c => (
-                        <li key={c.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-3xl bg-fg/[0.03] px-4 py-2 sm:flex-nowrap">
+                        <li key={c.id} className="flex flex-wrap items-baseline gap-x-3 gap-y-1 rounded-3xl bg-surface-2 px-4 py-2 sm:flex-nowrap">
                           <span className="min-w-0 basis-full text-ink-100 sm:basis-0 sm:flex-1">{c.front}</span>
                           <span className="min-w-0 flex-1 text-ink-400">{c.back}</span>
-                          <span className="shrink-0 text-xs text-ink-600">{isNew(c) ? 'new' : fmtDateTime(c.due)}</span>
-                          <button className="shrink-0 text-xs text-ember-300 hover:text-ember-200 pointer-coarse:-my-2 pointer-coarse:px-2 pointer-coarse:py-2" onClick={() => db.cards.delete(c.id)} aria-label="Delete card">✕</button>
+                          <span className="shrink-0 caption-5 text-ink-600">{isNew(c) ? 'new' : fmtDateTime(c.due)}</span>
+                          <button className="shrink-0 caption-5 text-ember-300 hover:text-ember-200 pointer-coarse:-my-2 pointer-coarse:px-2 pointer-coarse:py-2" onClick={() => db.cards.delete(c.id)} aria-label="Delete card">✕</button>
                         </li>
                       ))}
                     </ul>
@@ -75,7 +75,7 @@ export default function Flashcards() {
         )}
       </Card>
 
-      <div className="grid gap-x-16 gap-y-14 lg:grid-cols-2">
+      <div className="grid gap-4 lg:grid-cols-2">
         <AddCard decks={decks.filter(d => !starterNames.has(d))} />
         <PasteCards decks={decks.filter(d => !starterNames.has(d))} />
       </div>
@@ -113,7 +113,7 @@ function AddCard({ decks }: { decks: string[] }) {
       </div>
       <div className="mt-4 flex items-center gap-3">
         <Button variant="subtle" disabled={!front.trim() || !back.trim()} onClick={add}>Add card</Button>
-        {n > 0 && <span className="text-sm text-verdant-300">{n} added</span>}
+        {n > 0 && <span className="body-6 text-verdant-300">{n} added</span>}
       </div>
     </Card>
   )
@@ -126,20 +126,20 @@ function PasteCards({ decks }: { decks: string[] }) {
   const parsed = parsePastedCards(raw)
   return (
     <Card title="Paste many (Telegram, notes)">
-      <p className="mb-4 text-sm text-ink-400">
+      <p className="mb-4 body-6 text-ink-400">
         One card per line: <span className="text-ink-200">Front - Back</span>, <span className="text-ink-200">Front : Back</span> or <span className="text-ink-200">Front | Back</span>, or Q:/A: pairs on consecutive lines. Emoji and bullets are ignored.
       </p>
       <div className="space-y-3">
         <DeckField value={deck} onChange={setDeck} decks={decks} />
-        <textarea className={`${inputBase} h-36 w-full px-4 py-3 font-mono text-xs`} value={raw} onChange={e => { setRaw(e.target.value); setMsg('') }}
+        <textarea className={`${inputBase} h-36 w-full px-4 py-3 font-mono caption-5`} value={raw} onChange={e => { setRaw(e.target.value); setMsg('') }}
           placeholder={'📌 Exercise Garuda - India & France (Air Force)\nQ: Who is the Chief of the Air Staff?\nA: …'} />
       </div>
       <div className="mt-4 flex flex-wrap items-center gap-3">
         <Button variant="subtle" disabled={!parsed.pairs.length} onClick={async () => { setMsg(`Added ${await addFlashcards(deck.trim() || 'Pasted', parsed.pairs)} cards.`); setRaw('') }}>
           Add {parsed.pairs.length || ''} cards
         </Button>
-        {raw && <span className="text-xs text-ink-500">{parsed.pairs.length} recognised{parsed.skipped ? ` · ${parsed.skipped} lines skipped` : ''}</span>}
-        {msg && <span className="text-sm text-verdant-300">{msg}</span>}
+        {raw && <span className="caption-5 text-ink-500">{parsed.pairs.length} recognised{parsed.skipped ? ` · ${parsed.skipped} lines skipped` : ''}</span>}
+        {msg && <span className="body-6 text-verdant-300">{msg}</span>}
       </div>
     </Card>
   )

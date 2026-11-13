@@ -31,14 +31,14 @@ export default function Planner() {
   return (
     <div>
       <PageHeader title="Planner" subtitle="Plan the day, then focus in Pomodoro blocks. Focus time counts towards your weekly hours." />
-      <div className="grid gap-x-16 gap-y-14 lg:grid-cols-[1fr_20rem]">
+      <div className="grid gap-4 lg:grid-cols-[1fr_20rem]">
         <Card>
           <div className="mb-4 flex flex-wrap items-center gap-2">
             <Button variant="subtle" size="sm" onClick={() => setDate(addDays(date, -1))}>←</Button>
-            <input type="date" className={`${inputBase} w-44 px-4 py-2.5 text-sm`} value={date} onChange={e => e.target.value && setDate(e.target.value)} />
+            <input type="date" className={`${inputBase} w-44 px-4 py-2 body-6`} value={date} onChange={e => e.target.value && setDate(e.target.value)} />
             <Button variant="subtle" size="sm" onClick={() => setDate(addDays(date, 1))}>→</Button>
             {date !== todayISO() && <Button variant="ghost" size="sm" onClick={() => setDate(todayISO())}>Today</Button>}
-            <span className="ml-auto text-sm text-ink-400">{done}/{tasks.length} done · {planned} min planned</span>
+            <span className="ml-auto body-6 text-ink-400">{done}/{tasks.length} done · {planned} min planned</span>
           </div>
 
           <div className="mb-4 grid gap-2 sm:grid-cols-[1fr_6rem_8rem_auto] sm:items-end">
@@ -60,16 +60,16 @@ export default function Planner() {
               <div className="mt-2"><Button variant="subtle" size="sm" onClick={carryOver}>Carry over unfinished from previous day</Button></div>
             </Empty>
           ) : (
-            <ul className="divide-y divide-fg/[0.06]">
+            <ul className="divide-y divide-line">
               {tasks.map(t => (
                 <li key={t.id} className="flex items-center gap-3 py-2">
                   <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-3 pointer-coarse:py-1">
-                    <input type="checkbox" className="size-4 shrink-0 accent-iris-500 pointer-coarse:size-5" checked={t.done}
+                    <input type="checkbox" className="size-4 shrink-0 accent-accent-500 pointer-coarse:size-5" checked={t.done}
                       onChange={e => db.tasks.update(t.id!, { done: e.target.checked, doneAt: e.target.checked ? Date.now() : undefined })} />
                     <span className={`flex-1 ${t.done ? 'text-ink-500 line-through' : ''}`}>{t.title}</span>
                   </label>
-                  {t.exam && <Badge tone="iris">{EXAMS.find(e => e.id === t.exam)?.short}</Badge>}
-                  {t.minutes && <span className="text-xs tabular-nums text-ink-500">{t.minutes}m</span>}
+                  {t.exam && <Badge tone="accent">{EXAMS.find(e => e.id === t.exam)?.short}</Badge>}
+                  {t.minutes && <span className="caption-5 tabular-nums text-ink-500">{t.minutes}m</span>}
                   <Button variant="danger" size="sm" onClick={() => db.tasks.delete(t.id!)}>✕</Button>
                 </li>
               ))}
@@ -77,7 +77,7 @@ export default function Planner() {
           )}
         </Card>
 
-        <div className="space-y-14">
+        <div className="space-y-4">
           <Pomodoro />
           <WeekChart />
         </div>
@@ -109,7 +109,7 @@ function Pomodoro() {
 
   return (
     <Card title={phase === 'focus' ? 'Focus' : 'Break'}>
-      <div className={`mb-5 text-center text-[78px] font-normal leading-none tracking-display tabular-nums ${phase === 'focus' ? 'text-ink-50' : 'text-verdant-300'}`}>
+      <div className={`mb-4 text-center heading-1 tabular-nums ${phase === 'focus' ? 'text-ink-50' : 'text-verdant-300'}`}>
         {Math.floor(remaining / 60)}:{String(remaining % 60).padStart(2, '0')}
       </div>
       <TimerBar remaining={remaining} total={total} label=" " />
@@ -119,7 +119,7 @@ function Pomodoro() {
           <div className="flex gap-1">
             {[25, 50, 90].map(m => (
               <button key={m} onClick={() => { setFocusMin(m); setBreakMin(m >= 50 ? 10 : 5) }}
-                className={`flex-1 rounded-full py-1 text-xs ${focusMin === m ? 'bg-iris-900 text-iris-300' : 'bg-ink-800 text-ink-400'}`}>{m} min</button>
+                className={`flex-1 rounded-full py-1 caption-5 ${focusMin === m ? 'bg-accent-900 text-accent-300' : 'bg-fg/[0.07] text-ink-400'}`}>{m} min</button>
             ))}
           </div>
         </div>
@@ -151,13 +151,13 @@ function WeekChart() {
   const total = mins.reduce((a, b) => a + b, 0)
 
   return (
-    <Card title="Last 7 days" action={<span className="text-xs tabular-nums text-ink-400">{(total / 60).toFixed(1)} h</span>}>
+    <Card title="Last 7 days" action={<span className="caption-5 tabular-nums text-ink-400">{(total / 60).toFixed(1)} h</span>}>
       <div className="flex h-32 items-end gap-2">
         {days.map((d, i) => (
           <div key={d} className="flex h-full flex-1 flex-col items-center justify-end gap-1" title={`${mins[i]} min`}>
-            <span className="text-[10px] tabular-nums text-ink-500">{mins[i] ? Math.round(mins[i] / 6) / 10 : ''}</span>
-            <div className={`w-full rounded-t ${d === today ? 'bg-iris-400' : 'bg-iris-700'}`} style={{ height: `${(mins[i] / max) * 75}%`, minHeight: mins[i] ? 3 : 0 }} />
-            <span className="text-[10px] text-ink-500">{new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'narrow' })}</span>
+            <span className="caption-5 tabular-nums text-ink-500">{mins[i] ? Math.round(mins[i] / 6) / 10 : ''}</span>
+            <div className={`w-full rounded-t ${d === today ? 'bg-accent-400' : 'bg-accent-700'}`} style={{ height: `${(mins[i] / max) * 75}%`, minHeight: mins[i] ? 3 : 0 }} />
+            <span className="caption-5 text-ink-500">{new Date(d + 'T00:00:00').toLocaleDateString('en-IN', { weekday: 'narrow' })}</span>
           </div>
         ))}
       </div>

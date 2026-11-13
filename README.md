@@ -71,17 +71,19 @@ To change the app icons, edit `scripts/make_icons.py` and run `python scripts/ma
 
 ## Design
 
-The look follows a "constellation on black velvet" design system:
-- **Canvas and text:** a pure black canvas, Inter (weight 400 headlines with tight tracking, light body copy), and amber uppercase labels for sections.
-- **Accent:** one violet accent (`iris-500`, `#8052ff`), reserved for primary actions and active states.
-- **Layout:** no cards, borders or shadows. Sections are separated by whitespace.
-- **Visuals:** the dashboard's rotating brain of outlined triangles and the drifting background particles live in `src/components/Particles.tsx`. Both stay still when the system's reduced-motion setting is on.
+The app shares the landing page's look (the `landing-page-design` skill), being rolled out page by page; Today and the shared pieces are done:
+- **Type:** Poppins only, through named text styles (`heading-1` to `caption-5`, in `src/styles/text-styles.css`, shared with the landing page). Page titles use the hero gradient on their text.
+- **Surfaces:** flat. A black canvas with `#181818` tiles in dark mode; white with warm paper tiles in light. Tiles have 24px corners and 24px or 32px padding.
+- **Accent:** one saffron accent (`accent-500`, `#ff9933`) for the main action and active states, with near black text on it (`text-on-accent`). Accent text and icons use `accent-300`. Green and red mean right and wrong; official exam dates are green, estimates saffron.
+- **Navigation:** a floating, translucent bar at the top on larger screens, and a floating tab bar at the bottom on phones. Icons are Phosphor.
+- **Motion:** one curve (`ease-soft`, `cubic-bezier(0.22, 1, 0.36, 1)`), animating only movement and fading.
+- **Visuals:** Today's rotating constellation of outlined triangles, in the tricolour, sits in its own tile (`src/components/Particles.tsx`). It stays still when the system's reduced-motion setting is on.
 
-Tokens are in `src/index.css` (`ink`, `iris`, `saffron`, `verdant`, `ember`, plus `fg` and `canvas`). Shared pieces are in `src/components/ui.tsx`.
+Tokens are in `src/index.css` (`canvas`, `surface`, `line`, `fg`, `ink`, `accent`, `saffron`, `verdant`, `ember`). Shared pieces (`Card`, `Button`, `Badge`, `Tabs`, `PageHeader`, `Stat`, `Empty`, field styles) are in `src/components/ui.tsx`.
 
 **Light and dark mode:** the toggle at the top right offers Match system, Light or Dark. The choice is saved per device, and `app/index.html` applies it before the first paint so the page doesn't flash.
-- Each colour token has a dark value and a light value, set on `<html data-theme>`. Light mode deepens amber, teal and red so text stays readable on white.
-- Use `text-fg` and `bg-fg/[…]` for text and overlays, never `text-white` or `bg-white/…`. The one exception is white text on the violet `bg-iris-500` fill.
+- Each colour token has a dark value and a light value, set on `<html data-theme>`. Light mode deepens saffron, green and red text so it stays readable on white.
+- Use `text-fg` and `bg-fg/[…]` for text and overlays, never `text-white` or `bg-white/…`. On the saffron fill, use `text-on-accent`.
 
 ## Landing page
 

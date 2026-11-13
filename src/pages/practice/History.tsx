@@ -14,14 +14,14 @@ export default function History() {
   return (
     <Card title={`All attempts (${attempts.length})`}>
       {attempts.length === 0 ? <Empty>No attempts yet.</Empty> : (
-        <ul className="divide-y divide-fg/[0.06]">
+        <ul className="divide-y divide-line">
           {attempts.map(a => (
-            <li key={a.id} className="py-2.5">
+            <li key={a.id} className="py-2">
               <button className="flex w-full flex-wrap items-center gap-x-3 gap-y-1 text-left" onClick={() => setOpen(open === a.id ? null : a.id!)}>
                 <Badge tone={a.kind === 'omr' ? 'verdant' : 'ink'}>{a.kind === 'omr' ? 'Past paper' : 'Quiz'}</Badge>
-                <span className="min-w-0 flex-1 truncate text-sm">{a.title}</span>
-                <span className="text-xs text-ink-500">{fmtDateTime(a.at)} · {fmtClock(a.durationSec)}</span>
-                <span className="w-28 text-right text-sm tabular-nums">
+                <span className="min-w-0 flex-1 truncate body-6">{a.title}</span>
+                <span className="caption-5 text-ink-500">{fmtDateTime(a.at)} · {fmtClock(a.durationSec)}</span>
+                <span className="w-28 text-right body-6 tabular-nums">
                   {a.score === undefined ? <Badge tone="saffron">add key</Badge> : `${round2(a.score)} / ${a.maxScore}`}
                 </span>
               </button>
@@ -46,25 +46,25 @@ function Detail({ a }: { a: Attempt }) {
   }
 
   return (
-    <div className="mt-3 space-y-3 rounded-3xl bg-fg/[0.04] p-3">
+    <div className="mt-3 space-y-3 rounded-3xl bg-surface-2 p-3">
       {a.kind === 'omr' && (
         <>
           {result && <ScoreCard res={result} keyStr={a.key} paper={{ paperId: a.paperId ?? `attempt-${a.id}`, title: a.title, url: a.paperUrl, exam: a.exam }} />}
           <div>
-            <div className="mb-1 text-xs text-ink-400">{a.key ? 'Edit answer key' : 'Answer key'} — letters in order, X for dropped</div>
+            <div className="mb-1 caption-5 text-ink-400">{a.key ? 'Edit answer key' : 'Answer key'} — letters in order, X for dropped</div>
             <textarea className={`${inputCls} h-20 font-mono`} value={raw} onChange={e => setRaw(e.target.value)} />
             <div className="mt-2 flex items-center gap-2">
-              <Badge tone={key.length === a.total ? 'iris' : 'saffron'}>{key.length}/{a.total}</Badge>
+              <Badge tone={key.length === a.total ? 'accent' : 'saffron'}>{key.length}/{a.total}</Badge>
               <Button size="sm" disabled={key.length !== a.total} onClick={save}>Score</Button>
-              {a.paperUrl && <a href={a.paperUrl} target="_blank" rel="noreferrer" className="text-xs text-saffron-400 hover:underline">Open paper ↗</a>}
+              {a.paperUrl && <a href={a.paperUrl} target="_blank" rel="noreferrer" className="caption-5 text-saffron-400 hover:underline">Open paper ↗</a>}
             </div>
           </div>
         </>
       )}
       {a.kind === 'quiz' && (
-        <div className="text-sm text-ink-300">
+        <div className="body-6 text-ink-300">
           {a.correct} right · {a.wrong} wrong · {a.skipped} skipped — marking {exam?.marking.label}
-          {a.wrongTopics && a.wrongTopics.length > 0 && <div className="mt-1 text-xs text-ink-400">Missed: {[...new Set(a.wrongTopics)].join(', ')}</div>}
+          {a.wrongTopics && a.wrongTopics.length > 0 && <div className="mt-1 caption-5 text-ink-400">Missed: {[...new Set(a.wrongTopics)].join(', ')}</div>}
         </div>
       )}
       <Button variant="danger" size="sm" onClick={() => { if (confirm('Delete this attempt?')) db.attempts.delete(a.id!) }}>Delete attempt</Button>

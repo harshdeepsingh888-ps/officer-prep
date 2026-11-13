@@ -6,7 +6,8 @@ import { topicStats, weakestTopics } from '../lib/insights'
 import { openQuiz, reviewQueue } from '../lib/learning'
 import { startOfDay } from '../lib/srs'
 import { todayISO } from '../lib/util'
-import { Card, Progress } from './ui'
+import { CheckIcon } from '@phosphor-icons/react'
+import { Card, Progress, focusRing } from './ui'
 
 const SSB_OF_THE_DAY = [
   { id: 'lecturette', test: 'Lecturette', name: 'Lecturette' }, // Sunday
@@ -97,25 +98,27 @@ export function DailyMission({ exams }: { exams: Exam[] }) {
 
   const done = items.filter(i => i.done).length
   return (
-    <Card title="Daily mission" action={<span className="text-xs tabular-nums text-ink-400">{done}/{items.length} done</span>}>
+    <Card title="Daily mission" action={<span className="caption-1 tabular-nums text-ink-400">{done}/{items.length} done</span>}>
       <Progress value={(done / items.length) * 100} className="mb-4" />
-      <ul className="divide-y divide-fg/[0.06]">
+      <ul className="divide-y divide-line">
         {items.map(i => {
           const body = (
             <>
-              <span className={`flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] ${i.done ? 'bg-verdant-500 text-white' : 'ring-1 ring-fg/20'}`}>{i.done ? '✓' : ''}</span>
-              <span className="min-w-0 flex-1">
-                <span className={`block ${i.done ? 'text-ink-500 line-through' : 'text-ink-100 group-hover:text-fg'}`}>{i.label}</span>
-                <span className="block truncate text-xs font-light text-ink-500">{i.detail}</span>
+              <span className={`flex size-6 shrink-0 items-center justify-center rounded-full ${i.done ? 'bg-verdant-500 text-white' : 'ring-1 ring-fg/20'}`}>
+                {i.done && <CheckIcon weight="bold" className="size-3" aria-hidden />}
               </span>
-              <span className="shrink-0 text-ink-500 transition-colors group-hover:text-saffron-400">→</span>
+              <span className="min-w-0 flex-1">
+                <span className={`block body-5 ${i.done ? 'text-ink-500 line-through' : 'text-ink-100 group-hover:text-fg'}`}>{i.label}</span>
+                <span className="block truncate caption-5 text-ink-500">{i.detail}</span>
+              </span>
+              <span aria-hidden className="shrink-0 text-ink-500 transition-[color,transform] duration-300 ease-soft group-hover:translate-x-1 group-hover:text-accent-300">→</span>
             </>
           )
           return (
             <li key={i.id}>
               {i.onClick
-                ? <button className="group flex w-full items-center gap-3 py-3 text-left" onClick={i.onClick}>{body}</button>
-                : <a href={i.href} className="group flex items-center gap-3 py-3">{body}</a>}
+                ? <button className={`group flex w-full items-center gap-3 rounded-lg py-3 text-left ${focusRing}`} onClick={i.onClick}>{body}</button>
+                : <a href={i.href} className={`group flex items-center gap-3 rounded-lg py-3 ${focusRing}`}>{body}</a>}
             </li>
           )
         })}

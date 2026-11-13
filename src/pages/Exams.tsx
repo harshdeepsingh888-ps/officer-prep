@@ -23,21 +23,21 @@ export default function Exams() {
 
   return (
     <div>
-      <PageHeader title="Exams" subtitle={<>Mark your targets. <Badge tone="iris">official</Badge> dates are from the UPSC Annual Calendar 2027; <Badge tone="saffron">tentative</Badge> ones are estimates — confirm with each notification.</>} />
+      <PageHeader title="Exams" subtitle={<>Mark your targets. <Badge tone="verdant">official</Badge> dates are from the UPSC Annual Calendar 2027; <Badge tone="saffron">tentative</Badge> ones are estimates — confirm with each notification.</>} />
 
-      <div className="space-y-14">
+      <div className="space-y-4">
         {EXAMS.map(e => {
           const isTarget = targets.includes(e.id)
           return (
-            <Card key={e.id} className={isTarget ? 'border-iris-700' : ''}>
+            <Card key={e.id} className={isTarget ? 'border-accent-700' : ''}>
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h2 className="text-[42px] font-normal leading-none tracking-display text-fg">{e.short}</h2>
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <h2 className="heading-3 text-fg">{e.short}</h2>
                     <Badge>{e.body}</Badge>
                     <Badge tone="verdant">{e.personality === 'ssb' ? 'SSB / board' : 'Interview'}</Badge>
                   </div>
-                  <div className="text-sm text-ink-400">{e.name}</div>
+                  <div className="body-6 text-ink-400">{e.name}</div>
                   <div className="mt-2"><ServiceTags exam={e.id} /></div>
                 </div>
                 <Button variant={isTarget ? 'primary' : 'subtle'} onClick={() => toggle(e.id)}>{isTarget ? '✓ Target' : 'Add as target'}</Button>
@@ -46,42 +46,42 @@ export default function Exams() {
               <div className="mt-8 grid gap-10 md:grid-cols-2">
                 <div>
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead className="text-left text-xs text-ink-500">
+                    <table className="w-full body-6">
+                      <thead className="text-left caption-5 text-ink-500">
                         <tr><th className="pb-1 font-medium">Paper</th><th className="pb-1 text-right font-medium">Qs</th><th className="pb-1 text-right font-medium">Marks</th><th className="pb-1 text-right font-medium">Time</th></tr>
                       </thead>
-                      <tbody className="divide-y divide-fg/[0.06]">
+                      <tbody className="divide-y divide-line">
                         {e.papers.map(p => (
                           <tr key={p.name}>
-                            <td className="py-1.5 pr-2">{p.name}{p.note && <div className="text-xs text-ink-500">{p.note}</div>}</td>
-                            <td className="py-1.5 text-right tabular-nums">{p.questions ?? '—'}</td>
-                            <td className="py-1.5 text-right tabular-nums">{p.marks}</td>
-                            <td className="py-1.5 text-right tabular-nums">{p.minutes} min</td>
+                            <td className="py-1 pr-2">{p.name}{p.note && <div className="caption-5 text-ink-500">{p.note}</div>}</td>
+                            <td className="py-1 text-right tabular-nums">{p.questions ?? '—'}</td>
+                            <td className="py-1 text-right tabular-nums">{p.marks}</td>
+                            <td className="py-1 text-right tabular-nums">{p.minutes} min</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
                   </div>
-                  <p className="mt-2 text-xs text-ink-400">Negative marking: {e.marking.label}</p>
-                  <div className="mt-3 text-sm">
-                    <div className="text-xs font-medium uppercase tracking-wide text-ink-500">Selection</div>
+                  <p className="mt-2 caption-5 text-ink-400">Negative marking: {e.marking.label}</p>
+                  <div className="mt-3 body-6">
+                    <div className="caption-4 text-ink-500">Selection</div>
                     <ol className="mt-1 list-inside list-decimal space-y-0.5 text-ink-300">{e.selection.map(s => <li key={s}>{s}</li>)}</ol>
                   </div>
                 </div>
 
-                <div className="space-y-3 text-sm">
+                <div className="space-y-3 body-6">
                   <div><span className="text-ink-500">Age: </span>{e.age}</div>
                   <div><span className="text-ink-500">Education: </span>{e.education}</div>
                   <div><span className="text-ink-500">Held: </span>{e.frequency}</div>
-                  <div className="rounded-3xl bg-fg/[0.04] p-3">
+                  <div className="rounded-3xl bg-surface-2 p-3">
                     {e.dates.map(d => (
                       <div key={d.label} className="flex flex-wrap items-center justify-between gap-2 py-0.5">
                         <span>{d.label}</span>
                         <span className="flex items-center gap-2">
                           <span className="tabular-nums text-ink-300">{d.date ? `${fmtDate(d.date)} · ${daysUntil(d.date)}d` : 'TBA'}</span>
-                          <Badge tone={d.status === 'official' ? 'iris' : 'saffron'}>{d.status}</Badge>
+                          <Badge tone={d.status === 'official' ? 'verdant' : 'saffron'}>{d.status}</Badge>
                         </span>
-                        {d.note && <div className="w-full text-xs text-ink-500">{d.note}</div>}
+                        {d.note && <div className="w-full caption-5 text-ink-500">{d.note}</div>}
                       </div>
                     ))}
                     <div className="mt-2 flex items-end gap-2">
@@ -106,7 +106,7 @@ export default function Exams() {
             <Button disabled={!cName.trim() || !cDate} onClick={() => { db.customExams.add({ name: cName.trim(), date: cDate }); setCName(''); setCDate('') }}>Add</Button>
           </div>
           {custom.length > 0 && (
-            <ul className="mt-3 divide-y divide-fg/[0.06] text-sm">
+            <ul className="mt-3 divide-y divide-line body-6">
               {custom.map(c => (
                 <li key={c.id} className="flex items-center justify-between py-2">
                   <span>{c.name} <span className="text-ink-500">· {fmtDate(c.date)} · {daysUntil(c.date)}d</span></span>

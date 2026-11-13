@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { LAST_BACKUP_KEY, db, hasProgress } from '../lib/db'
 import { useDrive } from '../lib/DriveProvider'
+import { CloudArrowUpIcon } from '@phosphor-icons/react'
 import { Button } from './ui'
 
 const WEEK = 7 * 86_400_000
@@ -22,12 +23,13 @@ export function BackupReminder() {
 
   const days = d.last ? Math.floor((Date.now() - d.last) / 86_400_000) : null
   return (
-    <div className="flex flex-wrap items-center gap-4 rounded-3xl bg-saffron-400/[0.08] px-5 py-4">
-      <div className="min-w-[15rem] flex-1 text-sm">
-        <span className="text-ink-100">{days === null ? 'Your progress has never been backed up.' : `Last backup was ${days} days ago.`}</span>
-        <span className="ml-1 font-light text-ink-400">It lives only in this browser. Clearing browser data or losing the device would erase it.</span>
+    <div className="flex flex-wrap items-center gap-4 rounded-3xl border border-accent-500/30 bg-accent-500/[0.08] p-4 sm:px-6">
+      <CloudArrowUpIcon className="size-6 shrink-0 text-accent-300" aria-hidden />
+      <div className="min-w-60 flex-1 body-6">
+        <span className="body-5 text-fg">{days === null ? 'Your progress has never been backed up.' : `Last backup was ${days} days ago.`}</span>
+        <span className="ml-1 text-ink-300">It lives only in this browser. Clearing browser data or losing the device would erase it.</span>
       </div>
-      <a href="#/library"><Button size="sm">Back up now</Button></a>
+      <a href="#/library" tabIndex={-1}><Button size="sm">Back up now</Button></a>
       <Button variant="ghost" size="sm" onClick={() => { try { sessionStorage.setItem(SNOOZE_KEY, '1') } catch { /* ignore */ } setSnoozed(true) }}>Later</Button>
     </div>
   )

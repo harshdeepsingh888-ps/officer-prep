@@ -3,13 +3,13 @@ import { isLight } from '../lib/theme'
 import { FORMS, ambient, type Form, type V3 } from './shapes'
 import { SERVICES } from './Services'
 
-// Procedural "constellation" visuals: tiny outlined triangles in vivid colours.
-// Particles keep a palette index, so they recolour instantly when the theme changes.
+// Procedural "constellation" visual: tiny outlined triangles in the tricolour (the flag's saffron is also the app's
+// accent), with a little pale saffron and grey. Particles keep a palette index, so they recolour when the theme changes.
 
-//                iris       lilac      saffron    verdant    magenta    blue
-const DARK = ['#8052ff', '#b9a3ff', '#ffb829', '#2fb592', '#e04fd9', '#4f7bff']
-const LIGHT = ['#8052ff', '#9b7bff', '#e09600', '#15846e', '#cc3fc4', '#3f6bf0'] // deeper hues for white paper
-const WEIGHTS = [0.3, 0.14, 0.2, 0.16, 0.1, 0.1]
+//                saffron    white      green      pale       grey
+const DARK = ['#ff9933', '#ffffff', '#2fb05a', '#ffcc99', '#9b9b9b']
+const LIGHT = ['#e07b10', '#3d3d3d', '#138808', '#c2620a', '#8f8f8f'] // deeper shades for white paper
+const WEIGHTS = [0.34, 0.26, 0.2, 0.1, 0.1]
 const palette = () => (isLight() ? LIGHT : DARK)
 
 function pickColor() {
@@ -241,18 +241,17 @@ export function Constellation({ className = '', count = 1300 }: { className?: st
       {/* touch-pan-y: on phones a sideways swipe turns it and an up/down swipe still scrolls the page */}
       <canvas ref={ref} aria-hidden {...turn} onPointerCancel={turn.onPointerUp}
         className="block min-h-0 w-full flex-1 cursor-grab touch-pan-y select-none active:cursor-grabbing" />
-      <div className="overflow-x-auto px-5 [scrollbar-width:none] sm:px-0 [&::-webkit-scrollbar]:hidden">
-        <div role="group" aria-label="Choose a form" className="mx-auto flex w-max gap-5">
+      <div className="overflow-x-auto px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        <div role="group" aria-label="Choose a form" className="mx-auto flex w-max gap-1">
           {FORMS.map((f, i) => (
             <button key={f.name} aria-pressed={shown === i} onClick={() => pick(i)}
-              className={`label flex shrink-0 items-center gap-2 py-2 text-[11px] transition-colors ${shown === i ? 'text-fg' : 'text-ink-500 hover:text-fg'}`}>
-              <span className={`size-1.5 rounded-full ${shown === i ? 'bg-iris-500' : 'bg-transparent'}`} />
+              className={`shrink-0 rounded-full px-3 py-1 caption-4 transition-colors duration-300 ease-soft pointer-coarse:min-h-9 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-300 ${shown === i ? 'bg-fg/[0.1] text-fg' : 'text-ink-400 hover:text-fg'}`}>
               {f.name}
             </button>
           ))}
         </div>
       </div>
-      <p className="mt-1 flex min-h-5 items-center justify-center gap-2 px-5 text-center text-xs font-light text-ink-500" aria-live="polite">
+      <p className="mt-2 flex min-h-5 items-center justify-center gap-2 px-4 text-center caption-5 text-ink-400" aria-live="polite">
         {FORMS[shown].caption.service && <span className={`size-2 shrink-0 rounded-full ${SERVICES[FORMS[shown].caption.service].dot}`} aria-hidden />}
         {FORMS[shown].caption.text}
       </p>
@@ -260,58 +259,11 @@ export function Constellation({ className = '', count = 1300 }: { className?: st
   )
 }
 
-type P2 = { x: number; y: number; vx: number; vy: number; size: number; rot: number; spin: number; color: number; alpha: number }
-
-/** Sparse drifting triangles behind every page. */
-export function AmbientField() {
-  const pts = useRef<P2[]>([])
-  const last = useRef(0)
-  const ref = useCanvasLoop(
-    (ctx, w, h, t) => {
-      const dt = Math.min(0.05, t - last.current)
-      last.current = t
-      ctx.clearRect(0, 0, w, h)
-      ctx.lineWidth = 1
-      const pal = palette()
-      for (const p of pts.current) {
-        p.x += p.vx * dt
-        p.y += p.vy * dt
-        p.rot += p.spin * dt
-        if (p.y < -10) { p.y = h + 10; p.x = Math.random() * w }
-        if (p.x < -10) p.x = w + 10
-        if (p.x > w + 10) p.x = -10
-        ctx.globalAlpha = p.alpha
-        ctx.strokeStyle = pal[p.color]
-        ctx.beginPath()
-        triangle(ctx, p.x, p.y, p.size, p.rot)
-        ctx.stroke()
-      }
-      ctx.globalAlpha = 1
-    },
-    (w, h) => {
-      const n = Math.round(Math.min(90, (w * h) / 24000))
-      pts.current = Array.from({ length: n }, () => ({
-        x: Math.random() * w, y: Math.random() * h,
-        vx: (Math.random() - 0.5) * 6, vy: -(3 + Math.random() * 9),
-        size: 1.8 + Math.random() * 2.4, rot: Math.random() * 6.28, spin: (Math.random() - 0.5) * 0.5,
-        color: pickColor(), alpha: 0.18 + Math.random() * 0.27,
-      }))
-    },
-  )
-  return <canvas ref={ref} aria-hidden className="pointer-events-none fixed inset-0 h-full w-full" />
-}
-
-/** Brand mark: an upward chevron, violet fading to teal. */
+/** Brand mark: an upward chevron in saffron, as on the landing page. */
 export function Logo({ className = 'size-6' }: { className?: string }) {
   return (
-    <svg viewBox="0 0 24 24" className={className} aria-hidden>
-      <defs>
-        <linearGradient id="logo-grad" x1="0.2" y1="0" x2="0.8" y2="1">
-          <stop offset="0" stopColor="#8052ff" />
-          <stop offset="1" stopColor="#15846e" />
-        </linearGradient>
-      </defs>
-      <path d="M12 2.5 21.5 20 12 14.8 2.5 20Z" fill="url(#logo-grad)" />
+    <svg viewBox="0 0 24 24" className={`text-accent-500 ${className}`} aria-hidden>
+      <path d="M12 2.5 21.5 20 12 14.8 2.5 20Z" fill="currentColor" />
     </svg>
   )
 }
