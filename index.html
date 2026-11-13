@@ -1,30 +1,47 @@
 <!doctype html>
-<html lang="en" data-theme="dark">
+<html lang="en-IN">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
-    <meta name="color-scheme" content="dark light" />
+    <script>
+      // Links to the app from before it moved under app/ (…/officer-prep/#/practice) open the app at the same page,
+      // and an app installed before the move (its start page was this root) opens the app, not the landing page.
+      (function () {
+        var oldLink = location.hash.indexOf('#/') === 0
+        var installed = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true
+        if (oldLink || installed) location.replace('app/' + (oldLink ? location.hash : ''))
+      })()
+    </script>
+    <title>Officer Prep: free CDS, AFCAT and CAPF preparation app</title>
+    <meta name="description" content="Free mock tests with negative marking, official UPSC papers on an OMR sheet, study guides and SSB practice for CDS, AFCAT, CAPF, Coast Guard and CSE. No sign up." />
     <meta name="theme-color" content="#000000" />
-    <meta name="description" content="Self-study for CDS, AFCAT, CAPF, Coast Guard and UPSC CSE — planner, practice, past papers and SSB tests." />
+    <meta name="color-scheme" content="dark light" />
+    <link rel="canonical" href="https://harshdeepsingh888-ps.github.io/officer-prep/" />
     <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
     <link rel="icon" href="/favicon-64.png" type="image/png" sizes="64x64" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <title>Officer Prep</title>
-    <script>
-      // Apply the saved theme before first paint (see src/lib/theme.ts).
-      (function () {
-        var theme = 'dark'
-        try {
-          var pref = localStorage.getItem('officer-prep-theme')
-          theme = pref === 'light' || pref === 'dark' ? pref : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light'
-        } catch (e) {}
-        document.documentElement.dataset.theme = theme
-        document.querySelector('meta[name="theme-color"]').content = theme === 'light' ? '#ffffff' : '#000000'
-      })()
-    </script>
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Officer Prep" />
+    <meta property="og:title" content="Officer Prep: free CDS, AFCAT and CAPF preparation app" />
+    <meta property="og:description" content="Mock tests with real negative marking, official UPSC papers on an OMR sheet, a study path and SSB practice. Free, no sign up, works offline." />
+    <meta property="og:url" content="https://harshdeepsingh888-ps.github.io/officer-prep/" />
+    <meta property="og:image" content="https://harshdeepsingh888-ps.github.io/officer-prep/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Officer Prep: prepare for CDS, AFCAT and CAPF without coaching fees" />
+    <meta property="og:locale" content="en_IN" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Officer Prep: free CDS, AFCAT and CAPF preparation app" />
+    <meta name="twitter:description" content="Mock tests with real negative marking, official UPSC papers, a study path and SSB practice. Free, no sign up." />
+    <meta name="twitter:image" content="https://harshdeepsingh888-ps.github.io/officer-prep/og.png" />
   </head>
   <body>
     <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
+    <noscript>
+      <p>Officer Prep is a free preparation app for CDS, AFCAT, CAPF, Coast Guard and CSE. It needs JavaScript to run.</p>
+      <p><a href="app/">Open the app</a></p>
+    </noscript>
+    <script type="module" src="/src/landing/main.tsx"></script>
   </body>
 </html>

@@ -11,9 +11,15 @@ const VERSION = (() => {
 })()
 
 // Production builds (and `vite preview` of them) are served from GitHub Pages at /officer-prep/; dev runs at the root.
+// Four pages: the landing page at the root, the app under app/, the privacy and terms page, and the 404 page.
 export default defineConfig(({ command, isPreview }) => ({
   base: command === 'build' || isPreview ? '/officer-prep/' : '/',
   define: { __BUILD_TIME__: JSON.stringify(VERSION) }, // shown in Library → This device
+  build: {
+    rollupOptions: {
+      input: { landing: 'index.html', app: 'app/index.html', legal: 'legal.html', notFound: '404.html' },
+    },
+  },
   plugins: [
     react(),
     tailwindcss(),
@@ -29,6 +35,9 @@ export default defineConfig(({ command, isPreview }) => ({
         description: 'Self-study for CDS, AFCAT, CAPF, Coast Guard and UPSC CSE — planner, practice, past papers and SSB tests.',
         theme_color: '#000000',
         background_color: '#000000',
+        // The installed app opens on the app itself, not the landing page.
+        start_url: './app/',
+        scope: './',
         display: 'standalone',
         orientation: 'any',
         icons: [
@@ -40,6 +49,10 @@ export default defineConfig(({ command, isPreview }) => ({
       workbox: {
         // App shell + fonts work offline; Google APIs and UPSC links always go to the network.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        // The share image is only for link previews, so it is not stored offline.
+        globIgnores: ['og.png'],
+        // Offline, any address the cache doesn't know opens the app rather than the landing page.
+        navigateFallback: 'app/index.html',
         cleanupOutdatedCaches: true,
         // Headlines: always try for the latest, fall back to the last copy when offline.
         runtimeCaching: [{

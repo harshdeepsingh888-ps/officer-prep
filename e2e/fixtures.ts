@@ -21,9 +21,9 @@ export const test = base.extend<{ errors: string[]; allowConsole: (re: RegExp) =
 
 export { expect }
 
-/** Opens a route (e.g. "practice/papers") and waits for the page to render. */
+/** Opens an app route (e.g. "practice/papers") and waits for the page to render. The app lives under app/. */
 export async function open(page: Page, route = '') {
-  await page.goto(`#/${route}`)
+  await page.goto(`app/#/${route}`)
   await expect(page.locator('main')).not.toBeEmpty()
 }
 

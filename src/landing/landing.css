@@ -1,0 +1,92 @@
+@import "tailwindcss" source(none);
+@source "./";
+
+/* The landing page's visual system (from .claude/skills/landing-page-design): Poppins only, Tailwind's type scale
+   through named text styles, the spacing table, flat backgrounds (dark sections use only the skill's six dark
+   colours), one accent (saffron), a white to grey gradient on the hero heading's text and nowhere else, and one
+   motion curve. Dark and light sections alternate. The app keeps its own styles (src/index.css). */
+
+@theme {
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+
+  /* Dark sections: the skill's dark backgrounds only. */
+  --color-night: #000000;
+  --color-night-1: #181818;
+  --color-night-2: #1f1f1f;
+  --color-night-3: #272727;
+  --color-night-4: #313131;
+  /* Light sections. */
+  --color-paper: #ffffff;
+  --color-paper-2: #f6f4ef;
+
+  /* Text on dark: white, then mist (8.9:1 on black), then smoke for small print on black (4.8:1). */
+  --color-mist: #a3a3a3;
+  --color-smoke: #7a7a7a;
+  /* Text on light: ink, ink-2 (7.8:1 on white), ink-3 (5.3:1). */
+  --color-ink: #0a0a0a;
+  --color-ink-2: #525252;
+  --color-ink-3: #6b6b6b;
+
+  /* The one accent: saffron. Fills carry near-black text; on white, text uses the deep shade (6.9:1). */
+  --color-saffron: #ff9933;
+  --color-saffron-hover: #ffad5c;
+  --color-saffron-ink: #9a4a00;
+
+  /* Right and wrong, only inside the product illustrations. */
+  --color-good: #16a34a;
+  --color-bad: #dc2626;
+
+  --ease-soft: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html { scroll-behavior: smooth; scroll-padding-top: 96px; }
+body { @apply bg-night font-sans text-white antialiased; }
+::selection { background: color-mix(in srgb, #ff9933 40%, transparent); }
+
+/* Text styles: every text element uses one of these. Headings balance their lines; running text avoids orphans. */
+@utility heading-1 { font-size: 3.75rem; line-height: 1; font-weight: 600; text-wrap: balance; }
+@utility heading-2 { font-size: 3rem; line-height: 1; font-weight: 600; text-wrap: balance; }
+@utility heading-3 { font-size: 2.25rem; line-height: 2.5rem; font-weight: 600; text-wrap: balance; }
+@utility heading-4 { font-size: 1.875rem; line-height: 2.25rem; font-weight: 600; text-wrap: balance; }
+@utility heading-5 { font-size: 1.5rem; line-height: 2rem; font-weight: 600; text-wrap: balance; }
+@utility heading-6 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 600; text-wrap: balance; }
+@utility title-1 { font-size: 1.25rem; line-height: 1.75rem; font-weight: 500; text-wrap: balance; }
+@utility title-2 { font-size: 1.125rem; line-height: 1.75rem; font-weight: 500; text-wrap: balance; }
+@utility title-3 { font-size: 1rem; line-height: 1.5rem; font-weight: 500; text-wrap: balance; }
+@utility title-4 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+@utility title-5 { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
+@utility body-1 { font-size: 1rem; line-height: 1.5rem; font-weight: 600; text-wrap: pretty; }
+@utility body-2 { font-size: 1rem; line-height: 1.5rem; font-weight: 500; text-wrap: pretty; }
+@utility body-3 { font-size: 1rem; line-height: 1.5rem; font-weight: 400; text-wrap: pretty; }
+@utility body-4 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; text-wrap: pretty; }
+@utility body-5 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; text-wrap: pretty; }
+@utility body-6 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 400; text-wrap: pretty; }
+@utility button-lg { font-size: 1.125rem; line-height: 1.75rem; font-weight: 600; }
+@utility button-md { font-size: 1rem; line-height: 1.5rem; font-weight: 600; }
+@utility button-sm { font-size: 0.875rem; line-height: 1.25rem; font-weight: 600; }
+@utility button-xsm { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
+@utility caption-1 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 500; }
+@utility caption-2 { font-size: 0.875rem; line-height: 1.25rem; font-weight: 400; }
+@utility caption-3 { font-size: 0.75rem; line-height: 1rem; font-weight: 600; }
+@utility caption-4 { font-size: 0.75rem; line-height: 1rem; font-weight: 500; }
+@utility caption-5 { font-size: 0.75rem; line-height: 1rem; font-weight: 400; }
+
+/* The hero heading's one permitted gradient, on the text only. */
+@utility hero-text {
+  background-image: linear-gradient(to right, #ffffff, #9b9b9b);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  /* Line height 1 would clip the last line's descenders; pad the paint box without moving anything. */
+  padding-bottom: 0.12em;
+  margin-bottom: -0.12em;
+}
+
+/* An opened FAQ answer fades and settles into place. */
+@keyframes faq-in { from { opacity: 0; transform: translateY(-8px); } }
+details[open] .faq-answer { animation: faq-in 500ms var(--ease-soft); }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  details[open] .faq-answer { animation: none; }
+}

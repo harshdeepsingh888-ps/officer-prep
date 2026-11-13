@@ -3,7 +3,7 @@
 A self-study app for officer-level exams: **CDS, AFCAT, CAPF AC, Coast Guard AC (CGCAT) and UPSC CSE**. It covers planning, practice, past papers, SSB psych tests and interview prep.
 All data stays in your browser (IndexedDB). Back it up from **Library → This device & backups**, or sync it through Google Drive (**Documents**).
 
-**Live:** <https://harshdeepsingh888-ps.github.io/officer-prep/>
+**Live:** <https://harshdeepsingh888-ps.github.io/officer-prep/> is the landing page; the app itself is at <https://harshdeepsingh888-ps.github.io/officer-prep/app/>. Old links such as `/officer-prep/#/practice` redirect to the same page under `app/`.
 
 ## Install it as an app
 The app is a PWA. After the first visit it works offline.
@@ -23,7 +23,7 @@ The app is a PWA. After the first visit it works offline.
 
 ```bash
 npm install
-npm run dev        # http://localhost:5173
+npm run dev        # http://localhost:5173 (landing page); the app is at /app/
 npm run build      # production build in dist/ (served under /officer-prep/)
 npm run preview    # http://localhost:4173/officer-prep/
 ```
@@ -79,9 +79,16 @@ The look follows a "constellation on black velvet" design system:
 
 Tokens are in `src/index.css` (`ink`, `iris`, `saffron`, `verdant`, `ember`, plus `fg` and `canvas`). Shared pieces are in `src/components/ui.tsx`.
 
-**Light and dark mode:** the toggle at the top right offers Match system, Light or Dark. The choice is saved per device, and `index.html` applies it before the first paint so the page doesn't flash.
+**Light and dark mode:** the toggle at the top right offers Match system, Light or Dark. The choice is saved per device, and `app/index.html` applies it before the first paint so the page doesn't flash.
 - Each colour token has a dark value and a light value, set on `<html data-theme>`. Light mode deepens amber, teal and red so text stays readable on white.
 - Use `text-fg` and `bg-fg/[…]` for text and overlays, never `text-white` or `bg-white/…`. The one exception is white text on the violet `bg-iris-500` fill.
+
+## Landing page
+
+The site root is a landing page built separately from the app, following the `landing-page-design` skill (Poppins, Tailwind type scale through named text styles such as `heading-3` and `body-6`, flat backgrounds, Phosphor icons, saffron as the one accent). Vite builds four pages: `index.html` (landing), `app/index.html` (the app), `legal.html` (privacy and terms) and `404.html`.
+- Code is in `src/landing/`. All copy and the numbers it quotes are in `content.ts`; `content.test.ts` checks those numbers against the app's real data, so the page cannot claim more questions or papers than the app has.
+- Screenshots in `public/landing/` are real captures of the app. `public/og.png` is the 1200 by 630 share image shown when the link is pasted in Telegram or WhatsApp.
+- Testimonials are `{{testimonial}}` placeholders until there are real ones to quote.
 
 ## Sources
 
