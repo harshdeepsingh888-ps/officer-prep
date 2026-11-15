@@ -1,7 +1,8 @@
-import Dexie, { type EntityTable } from 'dexie'
+import Dexie, { type EntityTable, type Table } from 'dexie'
 import { useLiveQuery } from 'dexie-react-hooks'
 import type { ExamId } from '../data/exams'
 import type { Question } from '../data/questions'
+import type { ContentFiles, ContentPack } from '../content/types'
 import { isoOf, todayISO, addDays } from './util'
 
 // Everything is stored locally in the browser (IndexedDB). Use Library → Backup to export.
@@ -97,6 +98,18 @@ export type CustomLink = { id?: number; title: string; url: string; group: strin
 export type CustomExam = { id?: number; name: string; date: string }
 /** A current-affairs note: a headline you read, your key points, and where it came from. */
 export type NewsNote = { id?: number; date: string; category: string; title: string; text: string; link?: string; source?: string; carded?: boolean; at: number }
+/** The last published content this device downloaded (src/content/store.ts). */
+export type PublishedRow = { key: 'pack'; pack: ContentPack; at: number }
+/** Admin panel state on the owner's device: the draft, the version it started from, the connection and a publish log. */
+export type AdminRow =
+  | { key: 'draft'; pack: ContentPack; base: AdminBase; updatedAt: number }
+  | { key: 'connection'; owner: string; repo: string; branch: string }
+  | { key: 'log'; entries: PublishLog[] }
+/** The published version a draft started from: its commit (null when taken from this device's copy) and files. */
+export type AdminBase = { commit: string | null; files: ContentFiles; at: number }
+export type PublishLog = { at: number; commit: string; summary: string; merged: boolean }
+/** A picture file waiting to be published, or kept after publishing so the panel can show it straight away. */
+export type AdminBlob = { id: string; blob: Blob }
 
 class PrepDB extends Dexie {
   settings!: EntityTable<Setting, 'key'>
@@ -114,6 +127,9 @@ class PrepDB extends Dexie {
   cards!: EntityTable<Card, 'id'>
   reviews!: EntityTable<Review, 'id'>
   notes!: EntityTable<NewsNote, 'id'>
+  published!: EntityTable<PublishedRow, 'key'>
+  admin!: Table<AdminRow, AdminRow['key']>
+  adminBlobs!: EntityTable<AdminBlob, 'id'>
 
   constructor() {
     super('officer-prep')
@@ -139,6 +155,13 @@ class PrepDB extends Dexie {
     // v3: current-affairs notes.
     this.version(3).stores({
       notes: '++id, date, category',
+    })
+    // v4: published content (downloaded from the site) and the admin panel's draft. Neither is part of a backup:
+    // published content comes back from the site, and the draft belongs to the owner's device.
+    this.version(4).stores({
+      published: 'key',
+      admin: 'key',
+      adminBlobs: 'id',
     })
   }
 }

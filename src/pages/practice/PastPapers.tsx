@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { EXAMS, examById, subjectForPaper } from '../../data/exams'
-import { OFFICIAL_PAPERS, type OfficialPaper } from '../../data/sources'
+import type { OfficialPaper } from '../../data/sources'
+import { allPapers, getContent, paperKey, useContent } from '../../content'
 import { db, useSetting, type MistakeReason } from '../../lib/db'
 import { useDrive } from '../../lib/DriveProvider'
 import { useCountdown } from '../../lib/hooks'
@@ -16,19 +17,20 @@ type OmrRun = { paperId: string; n: number; minutes: number; resp: (number | nul
 
 export default function PastPapers() {
   const [targets] = useSetting<string[]>('targets', [])
-  const available = EXAMS.filter(e => OFFICIAL_PAPERS.some(p => p.exam === e.id))
+  const papers = allPapers(useContent())
+  const available = EXAMS.filter(e => papers.some(p => p.exam === e.id))
   const [filter, setFilter] = useState<string | null>(null)
   const active = filter ?? available.find(e => targets.includes(e.id))?.id ?? 'all'
   const [paper, setPaper] = useState<OfficialPaper | null>(null)
   const [resume, setResume] = useState<OmrRun | null>(null)
   const saved = useLiveQuery(async () => ((await db.settings.get(OMR_KEY))?.value as OmrRun | undefined) ?? null, [])
-  const savedPaper = saved ? OFFICIAL_PAPERS.find(p => p.id === saved.paperId) : undefined
+  const savedPaper = saved ? papers.find(p => p.id === saved.paperId) : undefined
   const drive = useDrive()
   const copyOf = (p: OfficialPaper) => drive.docs.find(d => d.appProperties?.paperId === p.id)
 
   if (paper) return <OMRSheet paper={paper} resume={resume} openUrl={copyOf(paper)?.webViewLink ?? paper.url} onExit={() => { setPaper(null); setResume(null) }} />
 
-  const list = OFFICIAL_PAPERS.filter(p => active === 'all' || p.exam === active)
+  const list = papers.filter(p => active === 'all' || p.exam === active)
   return (
     <div className="space-y-4">
       {saved && savedPaper && (
@@ -67,7 +69,7 @@ export default function PastPapers() {
               <li key={p.id} className="flex flex-wrap items-center gap-x-3 gap-y-2 py-3 sm:gap-y-1 sm:py-2">
                 <div className="w-full sm:w-auto sm:min-w-0 sm:flex-1">
                   <div className="body-5 text-ink-100">{p.sitting} — {p.paper}</div>
-                  <div className="caption-5 text-ink-500">{p.questions} Qs · {p.marks} marks · {p.minutes} min · PDF {p.size}</div>
+                  <div className="caption-5 text-ink-500">{p.questions} Qs · {p.marks} marks · {p.minutes} min · PDF{p.size ? ` ${p.size}` : ''}{paperKey(getContent(), p.id) ? ' · answer key included' : ''}</div>
                 </div>
                 {copy
                   ? <a href={copy.webViewLink} target="_blank" rel="noreferrer"><Button variant="ghost" size="sm">My Drive copy ↗</Button></a>
@@ -125,7 +127,9 @@ function OMRSheet({ paper, resume, openUrl, onExit }: { paper: OfficialPaper; re
   const [startedAt, setStartedAt] = useState(resume?.startedAt ?? 0)
   const [deadline, setDeadline] = useState(resume?.deadline ?? 0)
   const [attemptId, setAttemptId] = useState<number>()
-  const [keyRaw, setKeyRaw] = useState('')
+  // A key the site owner published for this paper is filled in; it can still be edited.
+  const publishedKey = paperKey(getContent(), paper.id)
+  const [keyRaw, setKeyRaw] = useState(publishedKey ?? '')
   const [res, setRes] = useState<ScoreResult | null>(null)
   const timer = useCountdown(() => finish())
 
@@ -176,7 +180,7 @@ function OMRSheet({ paper, resume, openUrl, onExit }: { paper: OfficialPaper; re
         <ol className="list-inside list-decimal space-y-3 body-6 text-ink-300">
           <li>
             {openUrl === paper.url
-              ? <>Open the official paper ({paper.size}) in another tab, window or printout: </>
+              ? <>Open the official paper{paper.size ? ` (${paper.size})` : ''} in another tab, window or printout: </>
               : <>Open your Drive copy of the paper in another tab, window or printout: </>}
             <a href={openUrl} target="_blank" rel="noreferrer" className="text-saffron-400 hover:underline">Open paper ↗</a>
           </li>
@@ -239,6 +243,7 @@ function OMRSheet({ paper, resume, openUrl, onExit }: { paper: OfficialPaper; re
           Answers saved. Type or paste the answer key — letters only, in order (e.g. <span className="font-mono">BADC…</span>). Numbers, spaces and dashes are ignored; use <span className="font-mono">X</span> for a dropped question.
           UPSC publishes official keys after the final result (Library → Answer keys). You can also score later from History.
         </p>
+        {publishedKey && <p className="mb-3 body-6 text-verdant-300">The answer key for this paper is filled in from the site. Check it against UPSC's official key if a score looks off.</p>}
         <textarea className={`${inputCls} h-32 font-mono`} value={keyRaw} onChange={e => setKeyRaw(e.target.value)} placeholder="1-B 2-A 3-D …  or  BADC…" />
         <div className="mt-2 flex items-center gap-2">
           <Badge tone={key.length === n ? 'accent' : 'saffron'}>{key.length}/{n} answers</Badge>

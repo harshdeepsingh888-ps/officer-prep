@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { EXAMS, type ExamId } from '../../data/exams'
 import { DIFFICULTY_LABEL, difficultyOf, parseQuestionImport, type Difficulty, type Question } from '../../data/questions'
-import { OFFICIAL_PAPERS } from '../../data/sources'
+import { allPapers, useContent } from '../../content'
 import { db } from '../../lib/db'
 import { answerKeyColumns, parseAnswerKey, parsePaper, parsePastedMCQs } from '../../lib/paste'
 import { downloadText, todayISO } from '../../lib/util'
@@ -125,14 +125,15 @@ export default function MyQuestions({ paperId }: { paperId?: string }) {
 
 /** A UPSC paper's text plus its answer key, turned into questions in your bank. */
 function PaperImport({ paperId, have, onDone }: { paperId?: string; have: { source?: string }[]; onDone: (m: string) => void }) {
-  const initial = OFFICIAL_PAPERS.find(p => p.id === paperId)
-  const [id, setId] = useState(initial?.id ?? OFFICIAL_PAPERS[0].id)
-  const paper = OFFICIAL_PAPERS.find(p => p.id === id)
+  const papers = allPapers(useContent())
+  const initial = papers.find(p => p.id === paperId)
+  const [id, setId] = useState(initial?.id ?? papers[0].id)
+  const paper = papers.find(p => p.id === id)
   const [other, setOther] = useState('')
-  const [subject, setSubject] = useState<Question['subject']>(subjectFor((initial ?? OFFICIAL_PAPERS[0]).paper))
-  const [topic, setTopic] = useState(`PYQ · ${(initial ?? OFFICIAL_PAPERS[0]).sitting}`)
+  const [subject, setSubject] = useState<Question['subject']>(subjectFor((initial ?? papers[0]).paper))
+  const [topic, setTopic] = useState(`PYQ · ${(initial ?? papers[0]).sitting}`)
   const [difficulty, setDifficulty] = useState<Difficulty>(3)
-  const [exams, setExams] = useState<ExamId[]>([(initial ?? OFFICIAL_PAPERS[0]).exam])
+  const [exams, setExams] = useState<ExamId[]>([(initial ?? papers[0]).exam])
   const [raw, setRaw] = useState('')
   const [keyRaw, setKeyRaw] = useState('')
   const [series, setSeries] = useState(0)
@@ -140,7 +141,7 @@ function PaperImport({ paperId, have, onDone }: { paperId?: string; have: { sour
 
   const choose = (next: string) => {
     setId(next)
-    const p = OFFICIAL_PAPERS.find(x => x.id === next)
+    const p = papers.find(x => x.id === next)
     if (p) { setSubject(subjectFor(p.paper)); setTopic(`PYQ · ${p.sitting}`); setExams([p.exam]) }
     else { setTopic('PYQ'); setExams(EXAMS.map(e => e.id)) }
   }
@@ -184,9 +185,9 @@ function PaperImport({ paperId, have, onDone }: { paperId?: string; have: { sour
         <div className="min-w-0">
           <label className={labelCls}>Paper</label>
           <select className={inputCls} value={id} onChange={e => choose(e.target.value)}>
-            {EXAMS.filter(e => OFFICIAL_PAPERS.some(p => p.exam === e.id)).map(e => (
+            {EXAMS.filter(e => papers.some(p => p.exam === e.id)).map(e => (
               <optgroup key={e.id} label={e.short}>
-                {OFFICIAL_PAPERS.filter(p => p.exam === e.id).map(p => <option key={p.id} value={p.id}>{p.sitting} — {p.paper}</option>)}
+                {papers.filter(p => p.exam === e.id).map(p => <option key={p.id} value={p.id}>{p.sitting} — {p.paper}</option>)}
               </optgroup>
             ))}
             <option value="">Another paper…</option>

@@ -9,6 +9,7 @@ const ROUTES = [
   'progress', 'news', 'news/notes', 'news/recap',
   'ssb', 'ssb/responses', 'ssb/olq', 'ssb/interview', 'ssb/pictures',
   'writing', 'documents', 'library',
+  'admin', 'admin/questions', 'admin/pictures', 'admin/ssb', 'admin/notes', 'admin/papers', 'admin/site', 'admin/publish',
 ]
 
 for (const route of ROUTES) {

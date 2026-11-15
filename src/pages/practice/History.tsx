@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { examById } from '../../data/exams'
 import { db, type Attempt } from '../../lib/db'
+import { getContent, paperKey } from '../../content'
 import { parseKey, scoreOMR } from '../../lib/scoring'
 import { fmtClock, fmtDateTime, round2 } from '../../lib/util'
 import { Badge, Button, Card, Empty, inputCls } from '../../components/ui'
@@ -35,7 +36,7 @@ export default function History() {
 }
 
 function Detail({ a }: { a: Attempt }) {
-  const [raw, setRaw] = useState(a.key ?? '')
+  const [raw, setRaw] = useState(a.key ?? paperKey(getContent(), a.paperId) ?? '')
   const key = parseKey(raw)
   const exam = examById(a.exam)
   const result = a.kind === 'omr' && a.key ? scoreOMR(a.responses, a.key, a.marksPerQ ?? 1, a.negative ?? 0) : null

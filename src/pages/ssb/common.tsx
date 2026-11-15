@@ -1,19 +1,39 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react'
-import { OLQ_FACTORS, TAT_SCENES, shuffle } from '../../data/ssb'
+import { OLQ_FACTORS, shuffle } from '../../data/ssb'
+import { getContent, picturesFor, pictureUrl, ssbList } from '../../content'
 import { db, type SSBItem, type SSBTest } from '../../lib/db'
 import { Button, Card, inputCls } from '../../components/ui'
 
-export type Pic = { kind: 'image'; blob: Blob } | { kind: 'text'; text: string } | { kind: 'blank' }
+/** A picture to write on: one you uploaded (blob), one the site published (url), a written scene, or the blank slide. */
+export type Pic =
+  | { kind: 'image'; blob: Blob; caption?: string }
+  | { kind: 'url'; src: string; caption?: string }
+  | { kind: 'text'; text: string }
+  | { kind: 'blank' }
 
-/** Your uploaded pictures if you have any, otherwise written scenes. */
-export async function pickPictures(count: number, withBlank: boolean): Promise<Pic[]> {
-  const imgs = await db.images.toArray()
+/**
+ * Pictures for a set: your own uploads and the site's published pictures for this test, mixed; if there are
+ * fewer than the set needs, written scenes fill the rest. TAT ends with the blank slide.
+ */
+export async function pickPictures(count: number, withBlank: boolean, test: 'TAT' | 'PPDT'): Promise<Pic[]> {
   const n = withBlank ? count - 1 : count
-  const pics: Pic[] = imgs.length
-    ? shuffle(imgs).slice(0, n).map(i => ({ kind: 'image' as const, blob: i.blob }))
-    : shuffle(TAT_SCENES).slice(0, n).map(text => ({ kind: 'text' as const, text }))
-  return withBlank ? [...pics, { kind: 'blank' }] : pics
+  const content = getContent()
+  const own: Pic[] = (await db.images.toArray()).map(i => ({ kind: 'image', blob: i.blob }))
+  const published = picturesFor(content, test)
+  // The owner previewing a draft sees pictures that aren't on the site yet from their own device.
+  const local = published.length ? await db.adminBlobs.bulkGet(published.map(p => p.id)) : []
+  const site: Pic[] = published.map((p, i) => local[i] ? { kind: 'image', blob: local[i]!.blob, caption: p.caption } : { kind: 'url', src: pictureUrl(p.file), caption: p.caption })
+  const pics = shuffle([...own, ...site]).slice(0, n)
+  const scenes: Pic[] = shuffle(ssbList(content, 'tat')).slice(0, n - pics.length).map(text => ({ kind: 'text', text }))
+  const set = shuffle([...pics, ...scenes])
+  // Start downloading the site's pictures now, so each is ready (and cached for offline) before its turn.
+  for (const p of set) if (p.kind === 'url') new Image().src = p.src
+  return withBlank ? [...set, { kind: 'blank' }] : set
 }
+
+/** How a picture is named in saved answers. */
+export const picLabel = (p: Pic, n?: number) =>
+  p.kind === 'text' ? p.text : p.kind === 'blank' ? 'Blank slide' : [n ? `Picture ${n}` : 'Picture', p.caption].filter(Boolean).join(' · ')
 
 export function BlobImage({ blob, className = '' }: { blob: Blob; className?: string }) {
   const [url, setUrl] = useState<string>()
@@ -25,8 +45,16 @@ export function BlobImage({ blob, className = '' }: { blob: Blob; className?: st
   return url ? <img src={url} alt="" className={className} /> : null
 }
 
+function UrlImage({ src, className }: { src: string; className: string }) {
+  const [failed, setFailed] = useState(false)
+  if (failed) return <div className="mx-auto flex h-64 max-w-lg items-center justify-center rounded-3xl bg-surface-2 px-6 text-center body-6 text-ink-400">This picture couldn't load. You may be offline: it is saved for offline use once it has been shown online.</div>
+  return <img src={src} alt="" className={className} onError={() => setFailed(true)} />
+}
+
 export function PicView({ pic, blur = false }: { pic: Pic; blur?: boolean }) {
-  if (pic.kind === 'image') return <BlobImage blob={pic.blob} className={`mx-auto max-h-[60vh] rounded-3xl ${blur ? 'blur-[1.5px] grayscale' : ''}`} />
+  const cls = `mx-auto max-h-[60vh] rounded-3xl ${blur ? 'blur-[1.5px] grayscale' : ''}`
+  if (pic.kind === 'image') return <BlobImage blob={pic.blob} className={cls} />
+  if (pic.kind === 'url') return <UrlImage key={pic.src} src={pic.src} className={cls} />
   if (pic.kind === 'blank') return <div className="mx-auto flex h-64 max-w-lg items-center justify-center rounded-3xl bg-white text-ink-600 ring-1 ring-line">Blank slide — picture your own scene</div>
   return (
     <div className="mx-auto max-w-lg rounded-3xl bg-surface-2 p-8 text-center title-2 italic text-ink-200">

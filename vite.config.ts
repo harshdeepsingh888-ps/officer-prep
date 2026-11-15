@@ -49,8 +49,9 @@ export default defineConfig(({ command, isPreview }) => ({
       workbox: {
         // App shell + fonts work offline; Google APIs and UPSC links always go to the network.
         globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
-        // The share image is only for link previews, so it is not stored offline.
-        globIgnores: ['og.png'],
+        // The share image is only for link previews, so it is not stored offline. The admin panel is for the site
+        // owner, who is online to publish anyway, so students' devices don't store it either.
+        globIgnores: ['og.png', 'assets/Admin-*.js'],
         // Offline, any address the cache doesn't know opens the app rather than the landing page.
         navigateFallback: 'app/index.html',
         cleanupOutdatedCaches: true,
@@ -59,6 +60,12 @@ export default defineConfig(({ command, isPreview }) => ({
           urlPattern: ({ url }) => url.pathname.endsWith('/news/latest.json'),
           handler: 'NetworkFirst',
           options: { cacheName: 'news', networkTimeoutSeconds: 8, expiration: { maxEntries: 2 } },
+        }, {
+          // Published TAT/PPDT pictures: each file name is unique and never changes, so once shown it is kept for
+          // offline use. (The published content files themselves are kept in IndexedDB by src/content/store.ts.)
+          urlPattern: ({ url }) => url.pathname.includes('/content/pictures/'),
+          handler: 'CacheFirst',
+          options: { cacheName: 'content-pictures', expiration: { maxEntries: 500, maxAgeSeconds: 365 * 86_400 }, cacheableResponse: { statuses: [200] } },
         }],
       },
     }),

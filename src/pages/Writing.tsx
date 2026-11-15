@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { ESSAY_TOPICS } from '../data/ssb'
+import { ssbList, useContent } from '../content'
 import { DESCRIPTIVE_PAPERS } from '../data/sources'
 import { db } from '../lib/db'
 import { useCountdown } from '../lib/hooks'
@@ -16,6 +16,8 @@ const KINDS = [
 ]
 
 export default function Writing() {
+  const essays = ssbList(useContent(), 'essay')
+  const randomTopic = () => essays[Math.floor(Math.random() * essays.length)]
   const history = useLiveQuery(() => db.writings.orderBy('at').reverse().toArray(), []) ?? []
   const [kind, setKind] = useState(KINDS[0])
   const [topic, setTopic] = useState('')
@@ -27,7 +29,7 @@ export default function Writing() {
   const timer = useCountdown(() => { beep(); finish() })
 
   const start = () => {
-    if (!topic.trim()) setTopic(ESSAY_TOPICS[Math.floor(Math.random() * ESSAY_TOPICS.length)])
+    if (!topic.trim()) setTopic(randomTopic())
     setText('')
     setStartedAt(Date.now())
     setPhase('write')
@@ -63,7 +65,7 @@ export default function Writing() {
           <div className="mt-3">
             <label className={labelCls}>Topic, or paste a passage for précis (leave empty for a random topic)</label>
             <textarea className={`${inputCls} h-24`} value={topic} onChange={e => setTopic(e.target.value)} />
-            <Button variant="ghost" size="sm" className="mt-1" onClick={() => setTopic(ESSAY_TOPICS[Math.floor(Math.random() * ESSAY_TOPICS.length)])}>🎲 Random topic</Button>
+            <Button variant="ghost" size="sm" className="mt-1" onClick={() => setTopic(randomTopic())}>🎲 Random topic</Button>
           </div>
           <Button size="lg" className="mt-3" onClick={start}>Start writing</Button>
           <div className="mt-10 body-6">

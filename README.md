@@ -35,18 +35,21 @@ npm test           # unit and module tests (Vitest), about 10 seconds
 npm run test:e2e   # browser regression tests (Playwright): builds, then drives your installed Chrome
 ```
 
-- **Unit and module tests** sit next to the code (`src/**/*.test.ts`). They cover the parsers (paste, past papers, answer keys, CSV/JSON import), OMR scoring, spaced repetition, dates, levels, the test builders (every mock full length with the right time and marking), analytics, the database and backups (in an in-memory IndexedDB), the learning loop, every one of the generator templates (400 random runs each), and the integrity of all built-in content: every question, guide, paper, deck and SSB list.
+- **Unit and module tests** sit next to the code (`src/**/*.test.ts`). They cover the parsers (paste, past papers, answer keys, CSV/JSON import), OMR scoring, spaced repetition, dates, levels, the test builders (every mock full length with the right time and marking), analytics, the database and backups (in an in-memory IndexedDB), the learning loop, every one of the generator templates (400 random runs each), and the integrity of all built-in content: every question, guide, paper, deck and SSB list. They also cover published content: reading and checking the files, merging two people's edits, the store every device uses, publishing against an in-memory GitHub repository, and a check of the files committed in `public/content/`.
 - **Browser regression tests** (`e2e/`) open every page, tab and study guide on a desktop and on a phone in dark mode, failing on any error or sideways scrolling. They also walk through the main flows end to end:
   - Practice: Quick 10, resuming after a reload, a full AFCAT mock, OMR scoring and past-paper import.
   - Your question bank, flashcards and the mistake notebook.
   - Study status, the planner and streaks, and exam dates.
   - News notes and the recap, SSB, Writing.
   - Backup and restore, the theme, the phone menu and Documents.
+  - The content admin: a drafted question and notice previewed in the app, a PPDT picture used in the test, and a publish through a stubbed GitHub API.
 
   Most flow tests run with reduced motion, since the animated backgrounds slow automated clicks down a lot. A full run takes about 7 minutes; the report is written to `e2e-report/`. These tests are not part of the deploy, so run them before a bigger change.
 
 ## Deploy
 Every push to `main` builds and publishes to GitHub Pages through `.github/workflows/deploy.yml`. Nothing else is needed. The unit and module tests run first; if any fails, nothing is deployed.
+
+Publishing from the content admin is also a push to `main` (a commit made through GitHub's API), so it deploys the same way. **Pull before you push code**, or your push will be rejected.
 
 The same workflow also runs at 07:00 and 19:00 IST to refresh the current-affairs headlines (`scripts/fetch-news.mjs`, or `npm run news` locally). Rebuilding unchanged code gives identical files, so these runs don't trigger the update toast. GitHub pauses scheduled workflows in a repository with no activity for 60 days; if the headlines stop updating, re-enable the workflow under **Actions** or push any change.
 
@@ -68,6 +71,7 @@ To change the app icons, edit `scripts/make_icons.py` and run `python scripts/ma
 | Writing | Timed essay / précis / report with word count (CAPF Paper II, CSE Mains) |
 | Documents | **Google Drive:** upload or pick papers, notes and books (tagged by exam and type), open them on any device, and back up / restore progress between phone and laptop. Setup: [docs/google-drive-setup.md](docs/google-drive-setup.md) |
 | Library | Official links (UPSC, AFCAT, ICG, Army, NCERT, PIB), all 2024–26 UPSC paper PDFs, your links, backup/restore |
+| Content admin | For whoever runs the site (`#/admin`, linked at the bottom of Library). Manages everything students see beyond the built-in content:<br>• questions: one at a time, or a pasted paper with its official key; hide a built-in question<br>• TAT and PPDT pictures<br>• SSB lists: WAT, SRT, scenes, lecturette, GD, essay and interview questions<br>• extra study notes<br>• past papers and answer keys, which score OMR sheets automatically<br>• notices on Today, and exam dates<br><br>Edits stay a draft on that device, with a preview in the app, until they are published: one commit to `public/content/` through GitHub's API. Then the normal deploy publishes them. Guide: [docs/admin-panel.md](docs/admin-panel.md) |
 
 ## Design
 
@@ -98,6 +102,7 @@ The site root is a landing page built separately from the app, following the `la
 - 2027 dates come from the UPSC Annual Calendar 2027 (CDS I 11 Apr, CSE Prelims 23 May, CAPF 4 Jul, CDS II 19 Sep). AFCAT and CGCAT dates are estimates until their notifications are out.
 - NCERT forbids bundling its books in apps, so the Library links to ncert.nic.in instead.
 - Starter questions, WAT words, SRT situations, TAT scenes and topics were written for this app.
+- Content published from the admin panel lives in `public/content/`. Whoever publishes it is responsible for having the right to: own or licensed pictures, official papers and keys with their source.
 
 Edit `src/data/exams.ts` when a new notification changes a date or pattern, and `src/data/sources.ts` to add newer papers.
 

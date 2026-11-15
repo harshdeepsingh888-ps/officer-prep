@@ -187,9 +187,9 @@ export function subjectForPaper(examId: string, title: string): string | undefin
   return subjects.filter(s => t.includes(s.toLowerCase())).sort((a, b) => b.length - a.length)[0] ?? subjects[0]
 }
 
-/** Next upcoming date for an exam, honouring a user override. */
-export function nextDate(exam: Exam, overrides: Record<string, string>): ExamDate | null {
+/** Next upcoming date for an exam, honouring a user override. `dates` defaults to the built-in ones (see datesOf). */
+export function nextDate(exam: Exam, overrides: Record<string, string>, dates: ExamDate[] = exam.dates): ExamDate | null {
   if (overrides[exam.id]) return { label: exam.short, date: overrides[exam.id], status: 'official', note: 'Your date' }
   const today = todayISO()
-  return exam.dates.find(d => d.date && d.date >= today) ?? exam.dates.find(d => !d.date) ?? null
+  return dates.find(d => d.date && d.date >= today) ?? dates.find(d => !d.date) ?? null
 }

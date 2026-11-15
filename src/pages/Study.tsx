@@ -2,6 +2,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { EXAMS, nextDate, type ExamId } from '../data/exams'
 import { guideById, guideRows, guideStatus, tracksFor, uncoveredTopics, type Guide } from '../data/study'
 import { db, useSetting } from '../lib/db'
+import { datesOf, useContent } from '../content'
 import { addDays, daysUntil, fmtDate, todayISO } from '../lib/util'
 import { Badge, Card, Empty, PageHeader, Progress, Chip, focusRing } from '../components/ui'
 import TopicPage from './study/TopicPage'
@@ -16,6 +17,7 @@ export default function Study({ sub }: { sub?: string }) {
 }
 
 function StudyPath() {
+  const content = useContent()
   const [targets] = useSetting<string[]>('targets', [])
   const [overrides] = useSetting<Record<string, string>>('examDates', {})
   const list = targets.length ? EXAMS.filter(e => targets.includes(e.id)) : EXAMS
@@ -27,7 +29,7 @@ function StudyPath() {
   const statusOf = (gd: Guide) => guideStatus(gd, exam.id, rows)
 
   // Spread the remaining topics of each track evenly up to three weeks before the exam.
-  const d = nextDate(exam, overrides)
+  const d = nextDate(exam, overrides, datesOf(exam, content))
   const daysLeft = d?.date ? daysUntil(d.date) : null
   const span = daysLeft === null ? 90 : Math.max(7, daysLeft - FINAL_DAYS)
   const targetFor = (track: Guide[], gd: Guide) => {

@@ -8,6 +8,8 @@ import { Constellation } from '../components/Particles'
 import { DailyMission } from '../components/DailyMission'
 import { ReadinessPanel } from '../components/ReadinessPanel'
 import { BackupReminder } from '../components/BackupReminder'
+import { Notices } from '../components/Notices'
+import { datesOf, useContent } from '../content'
 import { ServiceStripe } from '../components/Services'
 import { levelFor } from '../lib/level'
 
@@ -20,6 +22,7 @@ const statTile = 'min-w-0 rounded-3xl bg-surface p-4 sm:p-8'
 
 export default function Dashboard() {
   const today = todayISO()
+  const content = useContent()
   const [targets] = useSetting<string[]>('targets', [])
   const [overrides] = useSetting<Record<string, string>>('examDates', {})
   const custom = useLiveQuery(() => db.customExams.toArray(), []) ?? []
@@ -39,7 +42,7 @@ export default function Dashboard() {
   const studyHours = round2(sessions.reduce((s, x) => s + x.minutes, 0) / 60)
 
   const countdowns = [
-    ...targetExams.map(e => ({ key: e.id, title: e.short, d: nextDate(e, overrides) })),
+    ...targetExams.map(e => ({ key: e.id, title: e.short, d: nextDate(e, overrides, datesOf(e, content)) })),
     ...custom.filter(c => c.date >= today).map(c => ({ key: `c${c.id}`, title: c.name, d: { label: c.name, date: c.date, status: 'official' as const, note: 'Custom' } })),
   ]
   const nearest = countdowns.filter(c => c.d?.date).sort((a, b) => a.d!.date!.localeCompare(b.d!.date!))[0]
@@ -54,6 +57,7 @@ export default function Dashboard() {
   return (
     <div className="space-y-12 sm:space-y-16">
       <BackupReminder />
+      <Notices />
 
       {/* The greeting and the day's one action; the animation sits in its own tile beside it. */}
       <section className="grid items-center gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)] lg:gap-12">

@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { EMPTY_PROFILE, GD_TOPICS, OLQ_FACTORS, interviewQuestions, type InterviewProfile } from '../data/ssb'
+import { EMPTY_PROFILE, OLQ_FACTORS, interviewQuestions, type InterviewProfile } from '../data/ssb'
+import { picturesFor, ssbList, useContent } from '../content'
 import { db, useSetting, type SSBTest } from '../lib/db'
 import { go } from '../lib/hooks'
 import { fmtDateTime } from '../lib/util'
@@ -49,6 +50,7 @@ export default function SSB({ sub }: { sub?: string }) {
 
 function TestsTab() {
   const [gd, setGd] = useState<string | null>(null)
+  const gdTopics = ssbList(useContent(), 'gd')
   return (
     <div className="space-y-4">
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -67,7 +69,7 @@ function TestsTab() {
       </div>
       <Card title="Group discussion topic">
         <div className="flex flex-wrap items-center gap-3">
-          <Button variant="subtle" onClick={() => setGd(GD_TOPICS[Math.floor(Math.random() * GD_TOPICS.length)])}>Draw a topic</Button>
+          <Button variant="subtle" onClick={() => setGd(gdTopics[Math.floor(Math.random() * gdTopics.length)])}>Draw a topic</Button>
           {gd && <span className="text-ink-100">{gd}</span>}
         </div>
         <p className="mt-2 caption-5 text-ink-500">Practise with friends: 15–20 minutes. Open with facts, build on others' points, and help the group reach a conclusion.</p>
@@ -194,7 +196,8 @@ function Interview() {
   const [profile, setProfile] = useSetting<InterviewProfile>('profile', EMPTY_PROFILE)
   const [draft, setDraft] = useState<InterviewProfile | null>(null)
   const p = draft ?? profile
-  const questions = interviewQuestions(profile)
+  // Questions built from your PIQ, then the commonly asked ones the site owner published.
+  const questions = [...interviewQuestions(profile), ...useContent().ssb.interview]
   const areas = [...new Set(questions.map(q => q.area))]
 
   return (
@@ -218,7 +221,7 @@ function Interview() {
             <div key={a}>
               <div className="mb-1 caption-4 text-accent-400">{a}</div>
               <ul className="list-inside list-disc space-y-1 body-6 text-ink-200">
-                {questions.filter(q => q.area === a).map(q => <li key={q.q}>{q.q}</li>)}
+                {questions.filter(q => q.area === a).map((q, i) => <li key={i}>{q.q}</li>)}
               </ul>
             </div>
           ))}
@@ -230,6 +233,8 @@ function Interview() {
 
 function Pictures() {
   const images = useLiveQuery(() => db.images.toArray(), []) ?? []
+  const content = useContent()
+  const tat = picturesFor(content, 'TAT').length, ppdt = picturesFor(content, 'PPDT').length
   const fileRef = useRef<HTMLInputElement>(null)
 
   const add = async (files: FileList) => {
@@ -241,7 +246,9 @@ function Pictures() {
       <Card>
         <p className="body-6 text-ink-400">
           Add practice pictures for TAT and PPDT: scans from your SSB practice books, photos you take, or images you're allowed to use. They stay in this browser.
-          Until you add some, the tests use written scene descriptions.
+          {tat || ppdt
+            ? <> The tests also use the site's own practice pictures ({tat} for TAT, {ppdt} for PPDT), mixed with yours; written scene descriptions fill any gap.</>
+            : <> Until you add some, the tests use written scene descriptions.</>}
         </p>
         <Button className="mt-3" onClick={() => fileRef.current?.click()}>Add pictures…</Button>
         <input ref={fileRef} type="file" accept="image/*" multiple className="hidden" onChange={e => { if (e.target.files) add(e.target.files); e.target.value = '' }} />

@@ -4,6 +4,7 @@ import { useLiveQuery } from 'dexie-react-hooks'
 import { examById, type ExamId } from '../../data/exams'
 import { guideRows, guideStatus, type Guide, type NoteBlock } from '../../data/study'
 import { db, useSetting } from '../../lib/db'
+import { notesFor, questionBank, useContent } from '../../content'
 import { openQuiz } from '../../lib/learning'
 import { Badge, Button, Card, Empty } from '../../components/ui'
 import { STATUS } from './status'
@@ -16,7 +17,7 @@ function rich(text: string): ReactNode {
       : <Fragment key={i}>{part}</Fragment>)
 }
 
-function Block({ b }: { b: NoteBlock }) {
+export function NoteBlockView({ b }: { b: NoteBlock }) {
   return (
     <div>
       <h3 className="mb-3 title-1 text-fg">{b.h}</h3>
@@ -51,6 +52,10 @@ function Block({ b }: { b: NoteBlock }) {
 }
 
 export default function TopicPage({ guide: g }: { guide: Guide }) {
+  const content = useContent()
+  // Built-in notes, then any the site owner published; questions likewise (minus any hidden).
+  const notes = [...g.notes, ...notesFor(content, g.id)]
+  const questionCount = questionBank(content).filter(q => q.subject === g.subject && q.topic === g.topic).length
   const [targets] = useSetting<string[]>('targets', [])
   const [studyExam] = useSetting<ExamId | null>('studyExam', null)
   // The exam to practise under: the one you're studying for if this topic is in it, else one that tests it.
@@ -82,7 +87,7 @@ export default function TopicPage({ guide: g }: { guide: Guide }) {
 
       <div className="grid gap-4 lg:grid-cols-[minmax(0,1.6fr)_minmax(0,1fr)]">
         <div className="space-y-4">
-          {g.notes.length ? g.notes.map((b, i) => <Block key={i} b={b} />) : (
+          {notes.length ? notes.map((b, i) => <NoteBlockView key={i} b={b} />) : (
             <Empty>Notes for this topic arrive in the next content batch. Start with the reading list: it tells you exactly what to read.</Empty>
           )}
           {g.traps.length > 0 && (
@@ -101,10 +106,10 @@ export default function TopicPage({ guide: g }: { guide: Guide }) {
 
         <aside className="space-y-4">
           <Card title="Practise">
-            {g.questions.length > 0 ? (
+            {questionCount > 0 ? (
               <>
                 <p className="mb-4 body-6 text-ink-400">
-                  {g.questions.length} questions on this topic, from easy to exam level{hasGenerators({ subject: g.subject, topic: g.topic }) ? ', plus endless freshly generated ones with new numbers every time' : ''}. Wrong answers go to your mistake notebook automatically.
+                  {questionCount} questions on this topic, from easy to exam level{hasGenerators({ subject: g.subject, topic: g.topic }) ? ', plus endless freshly generated ones with new numbers every time' : ''}. Wrong answers go to your mistake notebook automatically.
                 </p>
                 <Button size="lg" onClick={() => openQuiz({ subject: g.subject, topic: g.topic, exam })}>Practise {g.topic}</Button>
               </>

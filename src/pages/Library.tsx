@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { OFFICIAL_LINKS, OFFICIAL_PAPERS, DESCRIPTIVE_PAPERS } from '../data/sources'
+import { OFFICIAL_LINKS, DESCRIPTIVE_PAPERS } from '../data/sources'
+import { allPapers, useContent } from '../content'
 import { EXAMS } from '../data/exams'
 import { db } from '../lib/db'
 import { Button, Card, PageHeader, inputCls, labelCls } from '../components/ui'
@@ -12,8 +13,9 @@ export default function Library() {
   const [url, setUrl] = useState('')
   const [group, setGroup] = useState('')
 
+  const papers = allPapers(useContent())
   const groups = [...new Set(OFFICIAL_LINKS.map(l => l.group))]
-  const paperExams = EXAMS.filter(e => OFFICIAL_PAPERS.some(p => p.exam === e.id))
+  const paperExams = EXAMS.filter(e => papers.some(p => p.exam === e.id))
 
   return (
     <div className="space-y-4">
@@ -41,7 +43,7 @@ export default function Library() {
             <div key={e.id}>
               <div className="mb-1 body-4 text-ink-300">{e.short}</div>
               <ul className="grid grid-cols-1 gap-x-4 gap-y-1 body-6 sm:grid-cols-2 pointer-coarse:gap-y-3">
-                {OFFICIAL_PAPERS.filter(p => p.exam === e.id).map(p => (
+                {papers.filter(p => p.exam === e.id).map(p => (
                   <li key={p.id} className="flex justify-between gap-2">
                     <a href={p.url} target="_blank" rel="noreferrer" className="min-w-0 truncate hover:text-fg">{p.sitting} — {p.paper}</a>
                     <span className="shrink-0 caption-5 text-ink-500">{p.size}</span>
@@ -80,6 +82,10 @@ export default function Library() {
       </Card>
 
       <div id="backup"><DeviceCard /></div>
+
+      <p className="pt-4 text-center caption-5 text-ink-500">
+        Run this site? Add questions, pictures and notes for everyone in the <a href="#/admin" className="text-ink-300 hover:text-fg hover:underline">content admin</a>.
+      </p>
     </div>
   )
 }

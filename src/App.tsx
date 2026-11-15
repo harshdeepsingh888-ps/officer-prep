@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { Suspense, lazy, useEffect, useRef, useState } from 'react'
 import { useRoute } from './lib/hooks'
 import { DriveProvider } from './lib/DriveProvider'
 import { Logo } from './components/Particles'
@@ -6,6 +6,7 @@ import { ThemeToggle } from './components/ThemeToggle'
 import { InstallButton, UpdateToast } from './components/AppUpdates'
 import { Icon } from './components/icons'
 import { focusRing } from './components/ui'
+import { setPreview, usePreviewing } from './content/store'
 import Dashboard from './pages/Dashboard'
 import Documents from './pages/Documents'
 import Exams from './pages/Exams'
@@ -18,6 +19,9 @@ import News from './pages/News'
 import SSB from './pages/SSB'
 import Writing from './pages/Writing'
 import Library from './pages/Library'
+
+// The content admin panel is for the site owner, so it loads only when opened.
+const Admin = lazy(() => import('./pages/Admin'))
 
 const NAV = [
   { id: '', label: 'Today' },
@@ -63,6 +67,7 @@ export default function App() {
       case 'writing': return <Writing />
       case 'documents': return <Documents />
       case 'library': return <Library />
+      case 'admin': return <Suspense fallback={<p className="body-6 text-ink-400">Loading the admin panel…</p>}><Admin sub={route[1]} /></Suspense>
       default: return <Dashboard />
     }
   })()
@@ -99,11 +104,25 @@ export default function App() {
             </div>
           </div>
         </header>
+        <PreviewBanner page={page} />
         <main id="main" tabIndex={-1} className="pb-[calc(8rem+env(safe-area-inset-bottom))] pt-4 outline-none md:pb-24 md:pt-8">{view}</main>
       </div>
       <BottomBar page={page} />
       <UpdateToast />
     </DriveProvider>
+  )
+}
+
+/** While the owner previews an unpublished draft, every page says so. */
+function PreviewBanner({ page }: { page: string }) {
+  const previewing = usePreviewing()
+  if (!previewing) return null
+  return (
+    <div role="status" className="flex flex-wrap items-center gap-x-4 gap-y-2 rounded-3xl bg-saffron-400/[0.12] px-6 py-3 body-6 text-saffron-200">
+      <span className="min-w-0 flex-1">Previewing your unpublished draft. Students don't see these changes yet.</span>
+      {page !== 'admin' && <a href="#/admin" className={`rounded-lg button-sm text-fg hover:underline ${focusRing}`}>Back to admin</a>}
+      <button onClick={() => setPreview(null)} className={`rounded-lg button-sm text-fg hover:underline ${focusRing}`}>Stop preview</button>
+    </div>
   )
 }
 

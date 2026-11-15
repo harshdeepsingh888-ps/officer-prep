@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
-import { BUILTIN_QUESTIONS, DIFFICULTY_LABEL, difficultyOf, type Question } from '../../data/questions'
+import { DIFFICULTY_LABEL, difficultyOf, type Question } from '../../data/questions'
+import { questionBank, useContent } from '../../content'
 import { examById, type ExamId } from '../../data/exams'
 import { db, useSetting, type AttemptItem, type MistakeReason } from '../../lib/db'
 import { useCountdown } from '../../lib/hooks'
@@ -16,6 +17,7 @@ type Result = { run: Run; items: AttemptItem[]; correct: number; wrong: number; 
 
 export default function Quiz() {
   const [targets] = useSetting<string[]>('targets', [])
+  const content = useContent()
   const userQs = useLiveQuery(() => db.questions.toArray(), []) ?? []
   const mistakeQs = useLiveQuery(async () => (await db.mistakes.where('status').equals('active').toArray()).flatMap(m => (m.question ? [m.question] : [])), []) ?? []
   const attempts = useLiveQuery(() => db.attempts.toArray(), []) ?? []
@@ -30,7 +32,8 @@ export default function Quiz() {
   const entered = useRef(Date.now())
 
   const mine: Question[] = userQs.map(u => ({ ...u, id: `u${u.id}` }))
-  const pools: Pools = { bank: [...BUILTIN_QUESTIONS, ...mine], mine, mistakes: mistakeQs }
+  // Built-in questions (minus any the site owner hid), published ones from the admin panel, then your own.
+  const pools: Pools = { bank: [...questionBank(content), ...mine], mine, mistakes: mistakeQs }
 
   /** Builds a fresh test from its recipe. */
   const make = (s: TestSpec): Run =>

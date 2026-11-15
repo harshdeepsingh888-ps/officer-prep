@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { useLiveQuery } from 'dexie-react-hooks'
 import { EXAMS } from '../data/exams'
 import { db, updateSetting, useSetting } from '../lib/db'
+import { datesOf, useContent } from '../content'
 import { daysUntil, fmtDate } from '../lib/util'
 import { Badge, Button, Card, PageHeader, inputCls, labelCls } from '../components/ui'
 import { ServiceTags } from '../components/Services'
 
 export default function Exams() {
+  const content = useContent()
   const [targets] = useSetting<string[]>('targets', [])
   const [overrides] = useSetting<Record<string, string>>('examDates', {})
   const custom = useLiveQuery(() => db.customExams.toArray(), []) ?? []
@@ -74,8 +76,8 @@ export default function Exams() {
                   <div><span className="text-ink-500">Education: </span>{e.education}</div>
                   <div><span className="text-ink-500">Held: </span>{e.frequency}</div>
                   <div className="rounded-3xl bg-surface-2 p-3">
-                    {e.dates.map(d => (
-                      <div key={d.label} className="flex flex-wrap items-center justify-between gap-2 py-0.5">
+                    {datesOf(e, content).map((d, i) => (
+                      <div key={i} className="flex flex-wrap items-center justify-between gap-2 py-0.5">
                         <span>{d.label}</span>
                         <span className="flex items-center gap-2">
                           <span className="tabular-nums text-ink-300">{d.date ? `${fmtDate(d.date)} · ${daysUntil(d.date)}d` : 'TBA'}</span>

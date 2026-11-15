@@ -1,11 +1,12 @@
 import { useState, type ReactNode } from 'react'
-import { LECTURETTE_TOPICS, SRT_SITUATIONS, WAT_WORDS, shuffle } from '../../data/ssb'
+import { shuffle } from '../../data/ssb'
+import { getContent, ssbList } from '../../content'
 import { useCountdown } from '../../lib/hooks'
 import { TAT_WORDS, boxFlags, narrationOrder, setFlags, storyFlags, watFlags, watSetFlags, type BoxChar } from '../../lib/psych'
 import { db } from '../../lib/db'
 import { beep, wordCount } from '../../lib/util'
 import { Button, Card, TimerBar, inputBase, inputCls, labelCls, Chip } from '../../components/ui'
-import { FlagList, PicView, Recorder, SaveSet, pickPictures, type Pic } from './common'
+import { FlagList, PicView, Recorder, SaveSet, picLabel, pickPictures, type Pic } from './common'
 import { BlankSlideIdeas, CharacterBox, SetPatterns, TatStoryReview } from './Review'
 
 type RunnerProps = { onExit: () => void }
@@ -48,7 +49,7 @@ export function WAT({ onExit }: RunnerProps) {
     for (const set of await db.ssb.where('test').equals('WAT').toArray())
       for (const it of set.items) if (it.response.trim()) past.set(it.prompt, [...(past.get(it.prompt) ?? []), it.response])
     setBefore(past)
-    setWords(shuffle(WAT_WORDS).slice(0, count))
+    setWords(shuffle(ssbList(getContent(), 'wat')).slice(0, count))
     setResp([])
     setCur('')
     setI(0)
@@ -97,7 +98,7 @@ export function SRT({ onExit }: RunnerProps) {
   const timer = useCountdown(() => { beep(); setPhase('done') })
 
   const start = () => {
-    const s = shuffle(SRT_SITUATIONS).slice(0, count)
+    const s = shuffle(ssbList(getContent(), 'srt')).slice(0, count)
     setSits(s)
     setResp(s.map(() => ''))
     setPhase('run')
@@ -147,7 +148,7 @@ export function TAT({ onExit }: RunnerProps) {
   const timer = useCountdown(() => advance())
 
   const start = async () => {
-    const p = await pickPictures(count, true)
+    const p = await pickPictures(count, true, 'TAT')
     setPics(p)
     setStories(p.map(() => ''))
     setReviews(p.map(() => ({})))
@@ -175,7 +176,7 @@ export function TAT({ onExit }: RunnerProps) {
   if (idx >= pics.length) return (
     <SaveSet test="TAT" onAgain={() => setIdx(-1)} onExit={onExit}
       items={pics.map((p, k) => ({
-        prompt: p.kind === 'text' ? p.text : p.kind === 'blank' ? 'Blank slide' : `Picture ${k + 1}`, response: stories[k],
+        prompt: picLabel(p, k + 1), response: stories[k],
         review: reviews[k], flags: storyFlags(stories[k], { blank: p.kind === 'blank' }).map(f => f.text),
       }))}
       itemNotes={k => <TatStoryReview story={stories[k]} blank={pics[k].kind === 'blank'} review={reviews[k]} onChange={r => setReviews(rs => rs.map((x, j) => (j === k ? r : x)))} />}
@@ -218,7 +219,7 @@ export function PPDT({ onExit }: RunnerProps) {
   })
 
   const start = async () => {
-    setPic((await pickPictures(1, false))[0])
+    setPic((await pickPictures(1, false, 'PPDT'))[0])
     setChars([])
     setHero(null)
     setAction('')
@@ -238,7 +239,7 @@ export function PPDT({ onExit }: RunnerProps) {
     const read = narrationOrder(chars, hero, action)
     return <SaveSet test="PPDT" onAgain={() => setStage('setup')} onExit={onExit}
       items={[
-        { prompt: 'Picture', response: pic?.kind === 'text' ? pic.text : 'Uploaded picture' },
+        { prompt: 'Picture', response: !pic ? '' : pic.kind === 'image' && !pic.caption ? 'Uploaded picture' : picLabel(pic) },
         { prompt: 'Characters', response: read.slice(0, hero !== null && chars[hero] ? 5 : 4).join(' · ') },
         { prompt: 'Action', response: action },
         { prompt: 'Story', response: story, flags: flags.map(f => f.text) },
@@ -339,7 +340,7 @@ export function Lecturette({ onExit }: RunnerProps) {
   })
 
   if (stage === 'setup') return (
-    <Setup title="Lecturette" onStart={() => { setOptions(shuffle(LECTURETTE_TOPICS).slice(0, 4)); setNotes(''); setStage('choose') }} onExit={onExit}>
+    <Setup title="Lecturette" onStart={() => { setOptions(shuffle(ssbList(getContent(), 'lecturette')).slice(0, 4)); setNotes(''); setStage('choose') }} onExit={onExit}>
       <p>Pick one of four topics. You get 3 minutes to prepare, then speak for 3 minutes. Record yourself and play it back: check your pace, filler words and structure (introduction, three points, conclusion).</p>
     </Setup>
   )
